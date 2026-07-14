@@ -1,0 +1,2519 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Animaux d'abord · Cabinet Vétérinaire de Manouba</title>
+<meta name="description" content="Suivi santé de votre animal, rendez-vous, boutique et conseils du Dr. Asma Gnaoui — Cabinet Vétérinaire de Manouba." />
+<link rel="icon" type="image/png" href="icon-192.png" />
+
+<!-- PWA : installable sur l'écran d'accueil -->
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#FF3E7F" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Animaux d'abord" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+
+<!-- =====================================================================
+  ANIMAUX D'ABORD — Application du Cabinet Vétérinaire de Manouba 🇹🇳
+  Dr. Asma Gnaoui | Médecin Vétérinaire
+  Tout dans un seul fichier (HTML + CSS + JS).
+  Données : localStorage (lecture instantanée) synchronisé avec Firebase
+  Firestore pour le partage multi-appareils — voir « COUCHE DONNÉES » dans
+  le premier <script> et le module Firebase en bas de page. Collections :
+  users, animals, records, products, orders, rdv, questions, posts, advices,
+  notifs (+ settings). Sans réseau, l'app reste 100% fonctionnelle en local.
+  Hébergement : déposez tous les fichiers du dossier sur GitHub puis activez
+  GitHub Pages.
+  Compte admin par défaut :  identifiant = admin   /   mot de passe = admin
+  ===================================================================== -->
+
+<!-- QR code (mis en cache hors-ligne par le service worker) -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" crossorigin="anonymous"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+
+:root{
+  --cream:#FFF6F1; --cream-2:#FFEFE8; --surface:#FFFFFF; --surface-2:#FFF8F4;
+  --rose:#FF3E7F; --rose-deep:#E11D63; --rose-soft:#FFD9E6; --rose-tint:#FFF0F5;
+  --mango:#FF8A3C; --mango-deep:#F26419; --mango-soft:#FFE6D2; --mango-tint:#FFF4EC;
+  --ink:#3B2430; --ink-2:#6B4E5B; --muted:#A38B96; --line:#F4DDE4;
+  --ok:#26A96B; --ok-soft:#DFF5EA; --warn:#E8862B; --warn-soft:#FDECD8;
+  --danger:#E23B4E; --danger-soft:#FCE1E4; --info:#3E7BFF;
+  --grad:linear-gradient(135deg,#FF3E7F 0%,#FF6B57 55%,#FF8A3C 100%);
+  --grad-soft:linear-gradient(135deg,#FFE3EE,#FFECDD);
+  --shadow-sm:0 4px 14px rgba(226,59,78,.10);
+  --shadow:0 14px 34px rgba(226,59,78,.16);
+  --shadow-lg:0 24px 60px rgba(226,59,78,.22);
+  --radius:16px; --radius-lg:22px; --radius-sm:11px;
+  --display:'Baloo 2',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif;
+  --maxw:560px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--body); color:var(--ink); min-height:100dvh; line-height:1.55;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  background:
+    radial-gradient(1100px 520px at 8% -8%, #FFE4EC 0%, transparent 55%),
+    radial-gradient(1000px 520px at 100% 4%, #FFEAD6 0%, transparent 52%),
+    radial-gradient(900px 600px at 50% 118%, #FFE0E9 0%, transparent 60%),
+    var(--cream);
+  overflow-x:hidden;
+}
+/* pattes flottantes en fond (ambiance) */
+.paws{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.paws span{position:absolute;font-size:26px;opacity:.06;animation:floatUp linear infinite;filter:grayscale(.1)}
+@keyframes floatUp{
+  0%{transform:translateY(20px) rotate(0deg);opacity:0}
+  10%{opacity:.08}
+  90%{opacity:.05}
+  100%{transform:translateY(-115vh) rotate(35deg);opacity:0}
+}
+
+.app{max-width:var(--maxw);margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;position:relative;z-index:1}
+.screen{display:none;flex:1;flex-direction:column;animation:fadeScreen .35s ease}
+.screen.active{display:flex}
+@keyframes fadeScreen{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.screen-tab{display:none}
+.screen-tab.active{display:block;animation:tabIn .32s ease}
+@keyframes tabIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.pad{padding:16px 16px 96px}
+
+/* ---------- appbar / navigation haute ---------- */
+.appbar{position:sticky;top:0;z-index:30;background:rgba(255,246,241,.86);backdrop-filter:saturate(160%) blur(12px);border-bottom:1px solid var(--line)}
+header.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 8px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand .mark{width:42px;height:42px;border-radius:50%;flex:none;display:grid;place-items:center;overflow:hidden;
+  background:var(--grad);box-shadow:0 6px 16px rgba(255,62,127,.4);border:2px solid #fff}
+.brand .mark img{width:100%;height:100%;object-fit:cover}
+.brand .name{font-family:var(--display);font-weight:800;letter-spacing:.2px;font-size:1.12rem;line-height:1;color:var(--ink);white-space:nowrap}
+.brand .name span{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.brand .tag{font-size:.7rem;color:var(--muted);font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-actions{display:flex;align-items:center;gap:8px;flex:none}
+.icon-btn{border:1px solid var(--line);background:#fff;color:var(--rose-deep);width:40px;height:40px;border-radius:13px;cursor:pointer;font-size:17px;display:grid;place-items:center;transition:.18s;box-shadow:var(--shadow-sm)}
+.icon-btn:hover{border-color:var(--rose);transform:translateY(-1px)}
+.icon-btn:active{transform:scale(.94)}
+
+.topnav{display:flex;gap:6px;padding:6px;margin:0 16px 10px;background:#fff;border:1px solid var(--line);border-radius:15px;overflow-x:auto;scrollbar-width:none;box-shadow:var(--shadow-sm)}
+.topnav::-webkit-scrollbar{display:none}
+.topnav button{flex:0 0 auto;border:0;background:transparent;color:var(--ink-2);font-family:var(--display);font-weight:700;font-size:.82rem;padding:9px 13px;border-radius:11px;cursor:pointer;transition:.18s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.topnav button .ic{font-size:16px}
+.topnav button.on{background:var(--grad);color:#fff;box-shadow:0 6px 14px rgba(255,62,127,.35)}
+.topnav button:not(.on):hover{background:var(--rose-tint);color:var(--rose-deep)}
+
+/* ---------- écran d'authentification ---------- */
+.auth-hero{background:var(--grad);color:#fff;padding:40px 24px 60px;text-align:center;position:relative;overflow:hidden;border-bottom-left-radius:34px;border-bottom-right-radius:34px;box-shadow:var(--shadow)}
+.auth-hero::before,.auth-hero::after{content:"🐾";position:absolute;font-size:120px;opacity:.12;line-height:1}
+.auth-hero::before{top:-20px;left:-24px;transform:rotate(-18deg)}
+.auth-hero::after{bottom:-34px;right:-20px;transform:rotate(22deg)}
+.auth-logo{width:104px;height:104px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;overflow:hidden;background:#fff;border:4px solid rgba(255,255,255,.6);box-shadow:0 16px 40px rgba(0,0,0,.2);animation:pop .6s cubic-bezier(.2,.9,.3,1.4)}
+.auth-logo img{width:100%;height:100%;object-fit:cover}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+.auth-hero h1{font-family:var(--display);font-weight:800;font-size:2rem;letter-spacing:.3px}
+.auth-hero .sub{opacity:.94;font-weight:600;margin-top:4px}
+.auth-hero .doc{display:inline-flex;align-items:center;gap:7px;margin-top:14px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:7px 14px;border-radius:999px;font-weight:700;font-size:.86rem;backdrop-filter:blur(4px)}
+.auth-wrap{padding:0 16px 40px;margin-top:-34px}
+.tabs-pill{display:flex;gap:6px;background:#fff;padding:6px;border-radius:15px;margin-bottom:16px;border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.tabs-pill button{flex:1;border:0;background:transparent;color:var(--ink-2);font-family:var(--display);font-weight:700;font-size:.9rem;padding:11px;border-radius:11px;cursor:pointer;transition:.16s}
+.tabs-pill button.on{background:var(--grad);color:#fff;box-shadow:0 6px 14px rgba(255,62,127,.3)}
+
+/* ---------- cartes & sections ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)}
+.card+.card{margin-top:12px}
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:4px 2px 14px}
+.section-head h2{font-family:var(--display);font-weight:800;font-size:1.5rem;line-height:1.1;color:var(--ink)}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;color:var(--rose-deep);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;font-weight:800;margin-bottom:2px}
+.eyebrow::before{content:"";width:16px;height:3px;border-radius:3px;background:var(--grad)}
+.stagger>*{opacity:0;animation:riseIn .5s ease forwards}
+.stagger>*:nth-child(1){animation-delay:.03s}.stagger>*:nth-child(2){animation-delay:.08s}
+.stagger>*:nth-child(3){animation-delay:.13s}.stagger>*:nth-child(4){animation-delay:.18s}
+.stagger>*:nth-child(5){animation-delay:.23s}.stagger>*:nth-child(6){animation-delay:.28s}
+.stagger>*:nth-child(7){animation-delay:.33s}.stagger>*:nth-child(8){animation-delay:.38s}
+.stagger>*:nth-child(n+9){animation-delay:.42s}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- boutons ---------- */
+.btn{font-family:var(--display);font-weight:700;font-size:.92rem;border:0;border-radius:13px;padding:12px 18px;cursor:pointer;transition:.16s;display:inline-flex;align-items:center;gap:8px;justify-content:center;line-height:1}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 8px 18px rgba(255,62,127,.35)}
+.btn-primary:hover{filter:brightness(1.05);box-shadow:0 10px 22px rgba(255,62,127,.42)}
+.btn-mango{background:linear-gradient(135deg,var(--mango),var(--mango-deep));color:#fff;box-shadow:0 8px 18px rgba(242,100,25,.32)}
+.btn-ghost{background:#fff;border:1.5px solid var(--line);color:var(--ink-2)}
+.btn-ghost:hover{border-color:var(--rose);color:var(--rose-deep)}
+.btn-soft{background:var(--rose-tint);color:var(--rose-deep)}
+.btn-soft:hover{background:var(--rose-soft)}
+.btn-ok{background:var(--ok);color:#fff}
+.btn-danger{background:#fff;border:1.5px solid var(--danger-soft);color:var(--danger)}
+.btn-danger:hover{background:var(--danger-soft)}
+.btn-sm{padding:8px 13px;font-size:.8rem;border-radius:10px}
+.btn-lg{padding:15px 22px;font-size:1rem}
+.btn-block{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.link-btn{background:none;border:0;color:var(--rose-deep);cursor:pointer;font-family:var(--body);font-weight:700;font-size:.88rem;text-decoration:underline}
+
+/* ---------- formulaires ---------- */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.8rem;color:var(--ink-2);margin-bottom:6px;font-weight:700}
+.input,textarea,select{width:100%;font-family:var(--body);font-weight:600;font-size:1rem;color:var(--ink);background:var(--surface-2);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;transition:.16s}
+.input::placeholder,textarea::placeholder{color:var(--muted);font-weight:500}
+.input:focus,textarea:focus,select:focus{outline:none;border-color:var(--rose);background:#fff;box-shadow:0 0 0 4px rgba(255,62,127,.12)}
+textarea{resize:vertical;min-height:84px}
+select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A38B96' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* ---------- badges & chips ---------- */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;letter-spacing:.02em;font-weight:800;padding:4px 10px;border-radius:999px;font-family:var(--body)}
+.b-rose{background:var(--rose-soft);color:var(--rose-deep)}
+.b-mango{background:var(--mango-soft);color:var(--mango-deep)}
+.b-ok{background:var(--ok-soft);color:var(--ok)}
+.b-warn{background:var(--warn-soft);color:var(--warn)}
+.b-danger{background:var(--danger-soft);color:var(--danger)}
+.b-info{background:#E4EDFF;color:var(--info)}
+.b-grey{background:#F1E7EB;color:var(--ink-2)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#fff;border:1.5px solid var(--line);font-weight:700;font-size:.84rem;color:var(--ink-2);cursor:pointer;transition:.15s;white-space:nowrap}
+.chip:hover{border-color:var(--rose)}
+.chip.on{background:var(--grad);color:#fff;border-color:transparent}
+.chip-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.chip-row::-webkit-scrollbar{display:none}
+
+/* ---------- accueil : bannière & urgence ---------- */
+.hero-card{position:relative;overflow:hidden;background:var(--grad);color:#fff;border-radius:var(--radius-lg);padding:22px 20px;box-shadow:var(--shadow);margin-bottom:14px}
+.hero-card::after{content:"🐾";position:absolute;right:-14px;bottom:-24px;font-size:110px;opacity:.14;transform:rotate(16deg)}
+.hero-card .h-eyebrow{font-weight:800;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;opacity:.9}
+.hero-card h2{font-family:var(--display);font-weight:800;font-size:1.6rem;margin:6px 0 4px;line-height:1.12}
+.hero-card p{opacity:.95;font-weight:600;font-size:.94rem;max-width:88%}
+.hero-card .h-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.hero-card .btn-ghost{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.4);color:#fff}
+.hero-card .btn-ghost:hover{background:rgba(255,255,255,.26)}
+.hero-card .btn-white{background:#fff;color:var(--rose-deep)}
+
+.emergency{display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid var(--danger-soft);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);margin-bottom:14px}
+.emergency .pulse{width:48px;height:48px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:22px;color:#fff;background:linear-gradient(135deg,#FF5A6E,var(--danger));position:relative}
+.emergency .pulse::before{content:"";position:absolute;inset:0;border-radius:50%;background:var(--danger);animation:heartbeat 1.8s ease-out infinite;z-index:-1}
+@keyframes heartbeat{0%{transform:scale(1);opacity:.6}70%{transform:scale(1.9);opacity:0}100%{opacity:0}}
+.emergency .e-txt{flex:1;min-width:0}
+.emergency .e-txt .t{font-family:var(--display);font-weight:800;font-size:1.02rem;color:var(--ink)}
+.emergency .e-txt .s{font-size:.8rem;color:var(--muted);font-weight:600}
+
+/* tuiles raccourcis */
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.quick{display:flex;flex-direction:column;gap:8px;padding:15px;border-radius:var(--radius);background:#fff;border:1px solid var(--line);cursor:pointer;transition:.18s;box-shadow:var(--shadow-sm);text-align:left}
+.quick:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.quick:active{transform:scale(.98)}
+.quick .qic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:20px}
+.quick .qt{font-family:var(--display);font-weight:700;font-size:1rem;color:var(--ink)}
+.quick .qs{font-size:.76rem;color:var(--muted);font-weight:600}
+
+/* ---------- blog / astuces ---------- */
+.post{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:14px}
+.post .cover{height:150px;background:var(--grad-soft);display:grid;place-items:center;font-size:52px;overflow:hidden;position:relative}
+.post .cover img{width:100%;height:100%;object-fit:cover}
+.post .body{padding:14px 16px}
+.post .body .pt-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.post .body h3{font-family:var(--display);font-weight:800;font-size:1.15rem;color:var(--ink);line-height:1.2}
+.post .body p{color:var(--ink-2);font-size:.92rem;font-weight:500;white-space:pre-wrap}
+.post .body .dt{font-size:.72rem;color:var(--muted);font-weight:700}
+.astuce{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,var(--mango-tint),#fff);border:1px solid var(--mango-soft);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.astuce .ai{width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:19px;background:var(--mango-soft);color:var(--mango-deep)}
+.astuce .at{font-family:var(--display);font-weight:700;color:var(--ink)}
+.astuce .as{font-size:.88rem;color:var(--ink-2);font-weight:500;white-space:pre-wrap}
+
+/* ---------- carnet de santé (signature) ---------- */
+.pet-card{position:relative;background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px}
+.pet-card .pc-band{height:88px;background:var(--grad);position:relative}
+.pet-card .pc-band::after{content:"🐾";position:absolute;right:12px;top:10px;font-size:44px;opacity:.22}
+.pet-card .pc-photo{width:84px;height:84px;border-radius:22px;border:4px solid #fff;position:absolute;left:18px;top:44px;object-fit:cover;background:var(--rose-soft);display:grid;place-items:center;font-size:38px;box-shadow:0 8px 20px rgba(0,0,0,.14);overflow:hidden}
+.pet-card .pc-photo img{width:100%;height:100%;object-fit:cover}
+.pet-card .pc-head{padding:14px 18px 8px 116px;min-height:52px}
+.pet-card .pc-head .nm{font-family:var(--display);font-weight:800;font-size:1.3rem;color:var(--ink);line-height:1.1}
+.pet-card .pc-head .meta{font-size:.82rem;color:var(--muted);font-weight:700;display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.pet-card .pc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);margin:6px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.pc-stat{background:#fff;padding:11px 8px;text-align:center}
+.pc-stat .v{font-family:var(--display);font-weight:800;font-size:1.05rem;color:var(--rose-deep)}
+.pc-stat .k{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:800}
+.pet-card .pc-actions{display:flex;gap:8px;padding:12px 16px;flex-wrap:wrap}
+
+.vax-alert{display:flex;align-items:center;gap:10px;margin:0 16px 12px;padding:11px 14px;border-radius:12px;background:var(--warn-soft);border:1px solid #F6D9AE;font-weight:700;font-size:.86rem;color:var(--mango-deep)}
+.vax-alert.overdue{background:var(--danger-soft);border-color:#F6C2C8;color:var(--danger)}
+.vax-alert .vic{font-size:18px;animation:wiggle 2s ease-in-out infinite}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
+
+/* dossier médical : lignes */
+.rec-tabs{display:flex;gap:6px;margin:12px 0}
+.rec-tabs button{flex:1;border:1.5px solid var(--line);background:#fff;color:var(--ink-2);font-family:var(--display);font-weight:700;font-size:.78rem;padding:9px 6px;border-radius:11px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:2px}
+.rec-tabs button .rc-n{font-size:.62rem;color:var(--muted)}
+.rec-tabs button.on{border-color:transparent;color:#fff;background:var(--grad)}
+.rec-tabs button.on .rc-n{color:rgba(255,255,255,.85)}
+.rec{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:10px;position:relative}
+.rec .r-ic{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;font-size:18px}
+.rec .r-body{flex:1;min-width:0}
+.rec .r-body .r-title{font-family:var(--display);font-weight:700;color:var(--ink)}
+.rec .r-body .r-dt{font-size:.74rem;color:var(--muted);font-weight:700}
+.rec .r-body .r-det{font-size:.88rem;color:var(--ink-2);font-weight:500;margin-top:3px;white-space:pre-wrap}
+.rec .r-next{margin-top:6px;font-size:.76rem;font-weight:800;color:var(--mango-deep);display:inline-flex;align-items:center;gap:5px}
+
+/* ---------- boutique ---------- */
+.shop-search{position:relative;margin-bottom:12px}
+.shop-search input{padding-left:42px}
+.shop-search .si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px}
+.prod-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.prod{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;transition:.18s;position:relative}
+.prod:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.prod .p-img{aspect-ratio:1;background:var(--grad-soft);display:grid;place-items:center;font-size:44px;overflow:hidden;position:relative}
+.prod .p-img img{width:100%;height:100%;object-fit:cover}
+.prod .p-cat{position:absolute;top:8px;left:8px;font-size:.62rem;font-weight:800;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.92);color:var(--rose-deep);backdrop-filter:blur(2px)}
+.prod .p-body{padding:11px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.prod .p-nm{font-family:var(--display);font-weight:700;font-size:.98rem;color:var(--ink);line-height:1.15}
+.prod .p-desc{font-size:.76rem;color:var(--muted);font-weight:600;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.prod .p-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:2px}
+.prod .p-price{font-family:var(--display);font-weight:800;font-size:1.08rem;color:var(--rose-deep);white-space:nowrap}
+.prod .p-price small{font-size:.62rem;color:var(--muted);font-weight:700}
+.p-add{width:36px;height:36px;border-radius:11px;border:0;background:var(--grad);color:#fff;font-size:20px;cursor:pointer;display:grid;place-items:center;flex:none;transition:.15s;box-shadow:0 4px 10px rgba(255,62,127,.35)}
+.p-add:active{transform:scale(.85)}
+.p-out{font-size:.7rem;font-weight:800;color:var(--danger);background:var(--danger-soft);padding:3px 8px;border-radius:8px}
+
+/* panier flottant */
+.cart-fab{position:fixed;right:16px;bottom:18px;z-index:40;background:var(--grad);color:#fff;border:0;border-radius:18px;padding:13px 18px;font-family:var(--display);font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:9px;transition:.2s;max-width:calc(var(--maxw) - 32px)}
+.cart-fab:active{transform:scale(.95)}
+.cart-fab.bump{animation:bump .4s ease}
+@keyframes bump{0%,100%{transform:scale(1)}40%{transform:scale(1.12)}}
+.cart-fab .cf-count{background:#fff;color:var(--rose-deep);min-width:22px;height:22px;border-radius:11px;display:grid;place-items:center;font-size:.78rem;padding:0 6px}
+
+/* ---------- modal / sheet ---------- */
+.sheet-backdrop{position:fixed;inset:0;z-index:50;background:rgba(59,36,48,.5);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;padding:0}
+.sheet-backdrop.show{display:flex;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet{width:100%;max-width:var(--maxw);background:var(--cream);border-top-left-radius:26px;border-top-right-radius:26px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 -20px 50px rgba(0,0,0,.28);animation:slideUp .32s cubic-bezier(.2,.8,.3,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+.sheet-grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:10px auto 4px;flex:none}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 18px 12px;border-bottom:1px solid var(--line)}
+.sheet-head .st{font-family:var(--display);font-weight:800;font-size:1.2rem;color:var(--ink)}
+.sheet-body{overflow-y:auto;padding:16px 18px;-webkit-overflow-scrolling:touch}
+.sheet-foot{padding:12px 18px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--cream)}
+
+/* avatar upload */
+.photo-pick{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:8px}
+.photo-pick .pv{width:100px;height:100px;border-radius:26px;background:var(--rose-tint);border:2px dashed var(--rose-soft);display:grid;place-items:center;font-size:40px;overflow:hidden;cursor:pointer;color:var(--rose);position:relative}
+.photo-pick .pv img{width:100%;height:100%;object-fit:cover}
+
+/* ---------- calendrier / rdv ---------- */
+.cal{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-head .m{font-family:var(--display);font-weight:800;font-size:1.1rem;text-transform:capitalize;color:var(--ink)}
+.cal-nav{border:1px solid var(--line);background:#fff;color:var(--rose-deep);width:36px;height:36px;border-radius:11px;cursor:pointer;font-size:16px;display:grid;place-items:center;transition:.15s}
+.cal-nav:hover{border-color:var(--rose);background:var(--rose-tint)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-dow{text-align:center;font-size:.66rem;color:var(--muted);text-transform:uppercase;font-weight:800;padding:2px 0}
+.cal-cell{aspect-ratio:1;border-radius:11px;border:1.5px solid transparent;background:var(--surface-2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;transition:.14s;color:var(--ink);font-weight:700;font-size:.92rem}
+.cal-cell.blank{background:transparent;cursor:default}
+.cal-cell:not(.blank):not(.off):hover{border-color:var(--rose)}
+.cal-cell.today{border-color:var(--mango);color:var(--mango-deep)}
+.cal-cell.sel{background:var(--grad);color:#fff}
+.cal-cell.off{opacity:.32;cursor:not-allowed;background:transparent}
+.cal-cell.past{opacity:.3;cursor:not-allowed}
+.cal-dot{width:5px;height:5px;border-radius:50%;background:var(--rose)}
+.cal-cell.sel .cal-dot{background:#fff}
+.cal-cnt{position:absolute;top:3px;right:5px;font-size:.56rem;color:var(--rose-deep);font-weight:800}
+.cal-cell.sel .cal-cnt{color:#fff}
+.slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-top:8px}
+.slot{border:1.5px solid var(--line);background:#fff;color:var(--ink);font-family:var(--display);font-weight:700;font-size:.9rem;padding:10px 4px;border-radius:11px;cursor:pointer;transition:.14s;text-align:center}
+.slot:hover{border-color:var(--rose);background:var(--rose-tint)}
+.slot.on{background:var(--grad);color:#fff;border-color:transparent}
+.slot.taken{background:var(--danger-soft);color:var(--danger);border-color:transparent;cursor:not-allowed;opacity:.75;text-decoration:line-through}
+
+.rdv-row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--radius);background:#fff;border:1px solid var(--line);margin-bottom:10px;box-shadow:var(--shadow-sm)}
+.rdv-row .rdv-day{width:52px;flex:none;text-align:center;background:var(--rose-tint);border-radius:12px;padding:7px 4px;line-height:1.05}
+.rdv-row .rdv-day .d{font-family:var(--display);font-weight:800;font-size:1.3rem;color:var(--rose-deep)}
+.rdv-row .rdv-day .mo{font-size:.62rem;text-transform:uppercase;font-weight:800;color:var(--muted)}
+.rdv-row .rdv-body{flex:1;min-width:0}
+.rdv-row .rdv-who{font-family:var(--display);font-weight:700;color:var(--ink)}
+.rdv-row .rdv-sub{font-size:.78rem;color:var(--muted);font-weight:600}
+.rdv-row .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.mini-btn{border:1.5px solid var(--line);background:#fff;color:var(--ink-2);font-size:.74rem;font-weight:800;padding:6px 10px;border-radius:9px;cursor:pointer;transition:.14s;font-family:var(--body)}
+.mini-btn:hover{border-color:var(--rose);color:var(--rose-deep)}
+.mini-btn.ok{border-color:var(--ok-soft);color:var(--ok)}.mini-btn.ok:hover{background:var(--ok-soft)}
+.mini-btn.danger{border-color:var(--danger-soft);color:var(--danger)}.mini-btn.danger:hover{background:var(--danger-soft)}
+
+/* ---------- messages / Q&A ---------- */
+.thread{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:var(--shadow-sm)}
+.thread .q-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.thread .q-head .who{font-family:var(--display);font-weight:700;color:var(--ink)}
+.bubble{border-radius:14px;padding:11px 13px;font-size:.92rem;font-weight:500;line-height:1.5;max-width:100%}
+.bubble.q{background:var(--rose-tint);color:var(--ink);border-bottom-left-radius:4px}
+.bubble.a{background:var(--grad);color:#fff;border-bottom-right-radius:4px;margin-top:8px}
+.bubble .b-who{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;opacity:.8;margin-bottom:3px;display:block}
+.bubble.a .b-who{opacity:.9}
+.q-meta{font-size:.72rem;color:var(--muted);font-weight:700;margin-top:8px;display:flex;justify-content:space-between;align-items:center}
+
+/* conseil du véto */
+.advice{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,var(--rose-tint),#fff);border:1px solid var(--rose-soft);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.advice .adi{width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:19px;background:var(--rose-soft);color:var(--rose-deep)}
+.advice .adt{font-family:var(--display);font-weight:700;color:var(--ink)}
+.advice .ads{font-size:.88rem;color:var(--ink-2);font-weight:500;white-space:pre-wrap}
+.advice .add{font-size:.7rem;color:var(--muted);font-weight:700;margin-top:4px}
+
+/* ---------- commandes ---------- */
+.order{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:var(--shadow-sm)}
+.order .o-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.order .o-id{font-family:var(--display);font-weight:800;color:var(--ink)}
+.order .o-items{font-size:.86rem;color:var(--ink-2);font-weight:600}
+.order .o-line{display:flex;justify-content:space-between;padding:3px 0}
+.order .o-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.order .o-total{font-family:var(--display);font-weight:800;font-size:1.1rem;color:var(--rose-deep)}
+
+/* ---------- listes génériques (patients, produits admin) ---------- */
+.list-row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--radius);background:#fff;border:1px solid var(--line);margin-bottom:10px;box-shadow:var(--shadow-sm);cursor:pointer;transition:.15s}
+.list-row:hover{transform:translateY(-1px);border-color:var(--rose-soft)}
+.list-row .lr-av{width:46px;height:46px;border-radius:14px;flex:none;display:grid;place-items:center;font-size:22px;background:var(--grad-soft);overflow:hidden}
+.list-row .lr-av img{width:100%;height:100%;object-fit:cover}
+.list-row .lr-body{flex:1;min-width:0}
+.list-row .lr-t{font-family:var(--display);font-weight:700;color:var(--ink)}
+.list-row .lr-s{font-size:.78rem;color:var(--muted);font-weight:600}
+.list-row .lr-go{color:var(--rose);font-size:1.4rem;flex:none}
+
+/* stats dashboard */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:15px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.stat-card .sc-ic{position:absolute;right:-6px;bottom:-8px;font-size:44px;opacity:.1}
+.stat-card .sc-v{font-family:var(--display);font-weight:800;font-size:1.9rem;color:var(--rose-deep);line-height:1}
+.stat-card .sc-l{font-size:.74rem;color:var(--muted);font-weight:700;margin-top:2px}
+
+/* réglages : horaires */
+.day-row{display:grid;grid-template-columns:80px 1fr auto;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.day-row:last-child{border-bottom:0}
+.day-name{font-weight:800;font-size:.88rem;color:var(--ink)}
+.day-times{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.day-times.off{opacity:.35;pointer-events:none}
+.day-times input{font-family:var(--body);font-weight:700;background:var(--surface-2);border:1.5px solid var(--line);border-radius:9px;color:var(--ink);padding:7px 8px;font-size:.82rem}
+.switch{position:relative;display:inline-block;width:46px;height:27px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.slider-sw{position:absolute;inset:0;background:#EBD6DE;border-radius:999px;transition:.2s;cursor:pointer}
+.slider-sw::before{content:"";position:absolute;width:21px;height:21px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+.switch input:checked+.slider-sw{background:var(--rose)}
+.switch input:checked+.slider-sw::before{transform:translateX(19px)}
+.set-card{margin-bottom:16px}
+.set-card>.hd{font-family:var(--display);font-weight:800;font-size:1rem;color:var(--rose-deep);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+/* ---------- à propos ---------- */
+.about-card{padding:0;overflow:hidden}
+.about-brand{display:flex;align-items:center;gap:13px;padding:18px;background:var(--grad-soft)}
+.about-brand .mark{width:56px;height:56px;border-radius:50%;overflow:hidden;flex:none;border:3px solid #fff;box-shadow:var(--shadow-sm)}
+.about-brand .mark img{width:100%;height:100%;object-fit:cover}
+.about-brand .nm{font-family:var(--display);font-weight:800;font-size:1.25rem;color:var(--ink)}
+.about-brand .nm span{color:var(--rose-deep)}
+.about-brand .tg{font-size:.8rem;color:var(--ink-2);font-weight:700}
+.about-row{display:flex;gap:13px;align-items:center;padding:14px 18px;border-top:1px solid var(--line)}
+.about-row .ic{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;font-size:17px;background:var(--rose-tint);color:var(--rose-deep)}
+.about-row .lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:800}
+.about-row .val{font-weight:700;color:var(--ink)}
+.about-row a.val{color:var(--rose-deep);text-decoration:none}
+.about-actions{display:flex;gap:8px;padding:14px 18px 4px}
+.about-map{width:100%;height:230px;border:0;display:block}
+.hours-list{padding:6px 18px 14px}
+.hour-line{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line);font-weight:700;font-size:.88rem}
+.hour-line:last-child{border-bottom:0}
+.hour-line.today-h{color:var(--rose-deep)}
+.hour-line .cl{color:var(--muted);font-weight:800}
+
+.status-banner{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:var(--radius);margin-bottom:14px;border:1px solid var(--line);background:#fff;box-shadow:var(--shadow-sm)}
+.status-banner .dot{width:11px;height:11px;border-radius:50%;flex:none}
+.status-banner.is-open .dot{background:var(--ok);box-shadow:0 0 0 4px var(--ok-soft)}
+.status-banner.is-closed .dot{background:var(--danger);box-shadow:0 0 0 4px var(--danger-soft)}
+.status-banner .st-main{font-family:var(--display);font-weight:800;font-size:.95rem;color:var(--ink)}
+.status-banner .st-sub{font-size:.78rem;color:var(--muted);font-weight:600}
+
+/* ---------- notifications ---------- */
+.bell-btn{position:relative}
+.bell-btn.ring{animation:ring .6s ease}
+@keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(-16deg)}40%{transform:rotate(14deg)}60%{transform:rotate(-10deg)}80%{transform:rotate(6deg)}}
+.bell-badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--danger);color:#fff;font-size:.62rem;font-weight:800;display:grid;place-items:center;border:2px solid var(--cream);line-height:1}
+.notif-backdrop{position:fixed;inset:0;z-index:55;background:rgba(59,36,48,.4);display:none}
+.notif-backdrop.show{display:block;animation:fadeIn .2s ease}
+.notif-panel{position:fixed;left:0;right:0;top:0;z-index:60;display:none;justify-content:center;padding:10px}
+.notif-panel.show{display:flex}
+.notif-card{width:100%;max-width:var(--maxw);background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);max-height:82vh;display:flex;flex-direction:column;overflow:hidden;animation:dropIn .28s cubic-bezier(.2,.8,.3,1)}
+@keyframes dropIn{from{transform:translateY(-16px);opacity:0}to{transform:none;opacity:1}}
+.notif-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.notif-head .ttl{font-family:var(--display);font-weight:800;font-size:1.1rem;color:var(--ink)}
+.notif-list{overflow-y:auto;padding:8px}
+.notif-item{display:flex;gap:11px;align-items:flex-start;padding:11px 12px;border-radius:12px;background:#fff;border:1px solid var(--line);margin-bottom:8px;cursor:pointer;transition:.15s}
+.notif-item:hover{border-color:var(--rose-soft);transform:translateY(-1px)}
+.notif-item.unread{background:var(--rose-tint);border-color:var(--rose-soft)}
+.notif-item .ni-ic{width:36px;height:36px;border-radius:11px;flex:none;display:grid;place-items:center;font-size:17px;background:var(--grad-soft)}
+.notif-item .ni-txt{flex:1;min-width:0}
+.notif-item .ni-main{font-size:.9rem;color:var(--ink);font-weight:600}
+.notif-item .ni-main b{font-weight:800}
+.notif-item .ni-sub{font-size:.74rem;color:var(--muted);font-weight:700;margin-top:2px}
+
+/* ---------- divers ---------- */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:13px 20px;border-radius:999px;font-weight:700;font-size:.92rem;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:.28s;z-index:80;max-width:90%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{background:var(--ok)}.toast.err{background:var(--danger)}
+.empty{text-align:center;color:var(--muted);padding:44px 20px;font-weight:600}
+.empty .ic{font-size:46px;margin-bottom:10px;display:block;opacity:.7}
+.empty .et{font-family:var(--display);font-weight:700;color:var(--ink-2);font-size:1.05rem;margin-bottom:4px}
+.hint{font-size:.84rem;color:var(--muted);font-weight:600}
+.center{text-align:center}.mt{margin-top:14px}.mt-s{margin-top:8px}.mb{margin-bottom:14px}
+.divider{height:1px;background:var(--line);margin:16px 0}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grow{flex:1}
+.qty-ctrl{display:inline-flex;align-items:center;gap:0;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.qty-ctrl button{border:0;background:#fff;color:var(--rose-deep);width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:800}
+.qty-ctrl button:active{background:var(--rose-tint)}
+.qty-ctrl .qn{min-width:30px;text-align:center;font-weight:800;font-family:var(--display)}
+
+/* boot / splash */
+#boot{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;
+  background:radial-gradient(circle at 50% 38%, #FFE6EE 0%, var(--cream) 70%)}
+#boot.show{display:flex}
+#boot .boot-badge{width:110px;height:110px;border-radius:50%;overflow:hidden;background:var(--grad);border:4px solid #fff;box-shadow:var(--shadow);display:grid;place-items:center;animation:bootPop .7s cubic-bezier(.2,.9,.3,1.4), floaty 2.6s ease-in-out 0.7s infinite}
+#boot .boot-badge img{width:100%;height:100%;object-fit:cover}
+@keyframes bootPop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+#boot .boot-title{font-family:var(--display);font-weight:800;font-size:1.5rem;color:var(--ink)}
+#boot .boot-title span{color:var(--rose-deep)}
+#boot .boot-spin{display:flex;gap:6px}
+#boot .boot-spin i{width:10px;height:10px;border-radius:50%;background:var(--rose);animation:dots 1s ease-in-out infinite}
+#boot .boot-spin i:nth-child(2){background:var(--mango);animation-delay:.15s}
+#boot .boot-spin i:nth-child(3){background:var(--rose-deep);animation-delay:.3s}
+@keyframes dots{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-8px);opacity:1}}
+
+/* install banner */
+.install-banner{display:none;align-items:center;gap:10px;margin:0 16px 12px;padding:12px 14px;border-radius:var(--radius);background:var(--grad-soft);border:1px solid var(--rose-soft)}
+.install-banner.show{display:flex}
+.install-banner .ib-txt{flex:1;font-size:.86rem;font-weight:600;color:var(--ink)}
+.install-banner .ib-txt b{font-weight:800}
+
+@media (max-width:380px){ .prod-grid{gap:9px} .quick-grid{gap:8px} }
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="paws" id="paws" aria-hidden="true"></div>
+<div class="app" id="app">
+
+  <!-- ===================== AUTH ===================== -->
+  <section class="screen active" id="screen-auth">
+    <div class="auth-hero">
+      <div class="auth-logo"><img src="logo-mark.png" alt="Animaux d'abord" /></div>
+      <h1>Animaux d'abord</h1>
+      <div class="sub">Cabinet Vétérinaire de Manouba 🇹🇳</div>
+      <div class="doc">👩🏻‍⚕️ Dr. Asma Gnaoui · Vétérinaire</div>
+    </div>
+    <div class="auth-wrap">
+      <div class="tabs-pill" id="auth-tabs">
+        <button class="on" data-auth="login">Connexion</button>
+        <button data-auth="register">Créer un compte</button>
+      </div>
+
+      <div class="card" id="form-login">
+        <div class="field"><label>Téléphone ou identifiant</label>
+          <input class="input" id="log-id" placeholder="Ex : 22 024 232" autocomplete="username" /></div>
+        <div class="field"><label>Mot de passe</label>
+          <input class="input" id="log-pass" type="password" placeholder="••••••" autocomplete="current-password" /></div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="App.login()">Se connecter 🐾</button>
+        <p class="hint center mt">Nouveau ? Créez un compte pour suivre la santé de votre animal.</p>
+      </div>
+
+      <div class="card" id="form-register" style="display:none">
+        <div class="field"><label>Nom complet</label>
+          <input class="input" id="reg-name" placeholder="Ex : Ahmed Ben Salah" /></div>
+        <div class="field"><label>Numéro de téléphone</label>
+          <input class="input" id="reg-phone" type="tel" inputmode="numeric" placeholder="Ex : 22 333 444" autocomplete="tel" /></div>
+        <div class="field"><label>Mot de passe</label>
+          <input class="input" id="reg-pass" type="password" placeholder="Choisissez un mot de passe" autocomplete="new-password" /></div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="App.register()">Créer mon compte 🐾</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== APP CLIENT ===================== -->
+  <section class="screen" id="app-client">
+    <div class="appbar">
+      <header class="topbar">
+        <div class="brand"><div class="mark"><img src="logo-mark.png" alt="" /></div>
+          <div><div class="name">Animaux <span>d'abord</span></div><div class="tag" id="client-hello">—</div></div>
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn bell-btn" id="client-bell" onclick="App.toggleNotifs()" title="Notifications">🔔<span class="bell-badge" id="bell-badge-client" style="display:none">0</span></button>
+          <button class="icon-btn" onclick="App.logout()" title="Se déconnecter">⏻</button>
+        </div>
+      </header>
+      <nav class="topnav" id="client-nav">
+        <button class="on" data-tab="tab-home"><span class="ic">🏠</span>Accueil</button>
+        <button data-tab="tab-pets"><span class="ic">🐾</span>Mes animaux</button>
+        <button data-tab="tab-shop"><span class="ic">🛍️</span>Boutique</button>
+        <button data-tab="tab-rdv"><span class="ic">📅</span>Rendez-vous</button>
+        <button data-tab="tab-msg"><span class="ic">💬</span>Messages</button>
+        <button data-tab="tab-about-c"><span class="ic">📍</span>À propos</button>
+      </nav>
+    </div>
+    <div class="install-banner" id="install-client">
+      <span class="ib-txt"><b>Installez l'app</b> sur votre téléphone pour un accès rapide.</span>
+      <button class="btn btn-primary btn-sm" onclick="App.promptInstall()">Installer</button>
+    </div>
+
+    <div class="screen-tab pad active" id="tab-home"><div id="home-c"></div></div>
+    <div class="screen-tab pad" id="tab-pets">
+      <div class="section-head"><div><div class="eyebrow">Carnet de santé</div><h2>Mes animaux</h2></div>
+        <button class="btn btn-primary btn-sm" onclick="App.openPetForm()">＋ Ajouter</button></div>
+      <div id="pets-c"></div>
+    </div>
+    <div class="screen-tab pad" id="tab-shop"><div id="shop-c"></div></div>
+    <div class="screen-tab pad" id="tab-rdv">
+      <div class="section-head"><div><div class="eyebrow">Sur rendez-vous</div><h2>Rendez-vous</h2></div></div>
+      <div id="rdv-c"></div>
+    </div>
+    <div class="screen-tab pad" id="tab-msg">
+      <div class="section-head"><div><div class="eyebrow">Vétérinaire à l'écoute</div><h2>Messages</h2></div></div>
+      <div id="msg-c"></div>
+    </div>
+    <div class="screen-tab pad" id="tab-about-c"><div id="about-c"></div></div>
+  </section>
+
+  <!-- ===================== APP ADMIN (Docteur) ===================== -->
+  <section class="screen" id="app-admin">
+    <div class="appbar">
+      <header class="topbar">
+        <div class="brand"><div class="mark"><img src="logo-mark.png" alt="" /></div>
+          <div><div class="name">Espace <span>Docteur</span></div><div class="tag" id="admin-hello">Dr. Asma Gnaoui</div></div>
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn bell-btn" id="admin-bell" onclick="App.toggleNotifs()" title="Notifications">🔔<span class="bell-badge" id="bell-badge-admin" style="display:none">0</span></button>
+          <button class="icon-btn" onclick="App.logout()" title="Se déconnecter">⏻</button>
+        </div>
+      </header>
+      <nav class="topnav" id="admin-nav">
+        <button class="on" data-tab="atab-home"><span class="ic">🏠</span>Accueil</button>
+        <button data-tab="atab-rdv"><span class="ic">📅</span>Agenda</button>
+        <button data-tab="atab-shop"><span class="ic">🛍️</span>Boutique</button>
+        <button data-tab="atab-orders"><span class="ic">📦</span>Commandes</button>
+        <button data-tab="atab-patients"><span class="ic">🐾</span>Patients</button>
+        <button data-tab="atab-msg"><span class="ic">💬</span>Messages</button>
+        <button data-tab="atab-settings"><span class="ic">⚙️</span>Réglages</button>
+        <button data-tab="atab-about"><span class="ic">📍</span>À propos</button>
+      </nav>
+    </div>
+    <div class="install-banner" id="install-admin">
+      <span class="ib-txt"><b>Installez l'app</b> sur la tablette du cabinet.</span>
+      <button class="btn btn-primary btn-sm" onclick="App.promptInstall()">Installer</button>
+    </div>
+
+    <div class="screen-tab pad active" id="atab-home"><div id="ahome-c"></div></div>
+    <div class="screen-tab pad" id="atab-rdv">
+      <div class="section-head"><div><div class="eyebrow">Rendez-vous</div><h2>Agenda</h2></div></div>
+      <div id="agenda-c"></div>
+    </div>
+    <div class="screen-tab pad" id="atab-shop">
+      <div class="section-head"><div><div class="eyebrow">Gestion</div><h2>Boutique</h2></div>
+        <button class="btn btn-primary btn-sm" onclick="App.openProdForm()">＋ Produit</button></div>
+      <div id="ashop-c"></div>
+    </div>
+    <div class="screen-tab pad" id="atab-orders">
+      <div class="section-head"><div><div class="eyebrow">Ventes</div><h2>Commandes</h2></div></div>
+      <div id="aorders-c"></div>
+    </div>
+    <div class="screen-tab pad" id="atab-patients">
+      <div class="section-head"><div><div class="eyebrow">Dossiers</div><h2>Patients</h2></div></div>
+      <div id="patients-c"></div>
+    </div>
+    <div class="screen-tab pad" id="atab-msg">
+      <div class="section-head"><div><div class="eyebrow">Questions des clients</div><h2>Messages</h2></div></div>
+      <div id="amsg-c"></div>
+    </div>
+    <div class="screen-tab pad" id="atab-settings">
+      <div class="section-head"><div><div class="eyebrow">Configuration</div><h2>Réglages</h2></div></div>
+      <div id="settings-c"></div>
+    </div>
+    <div class="screen-tab pad" id="atab-about"><div id="about-a"></div></div>
+  </section>
+
+  <!-- panier flottant (client boutique) -->
+  <button class="cart-fab" id="cart-fab" style="display:none" onclick="App.openCart()">
+    🛒 <span>Panier</span> <span class="cf-count" id="cf-count">0</span>
+  </button>
+
+  <!-- notifications -->
+  <div class="notif-backdrop" id="notif-backdrop" onclick="App.closeNotifs()"></div>
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-card">
+      <div class="notif-head">
+        <div class="ttl">🔔 Notifications</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="App.clearNotifs()">Tout effacer</button>
+          <button class="icon-btn" onclick="App.closeNotifs()">✕</button>
+        </div>
+      </div>
+      <div class="notif-list" id="notif-list"></div>
+    </div>
+  </div>
+
+  <!-- feuille modale générique (formulaires) -->
+  <div class="sheet-backdrop" id="sheet-backdrop">
+    <div class="sheet" id="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-grip"></div>
+      <div class="sheet-head"><div class="st" id="sheet-title">—</div>
+        <button class="icon-btn" onclick="App.closeSheet()">✕</button></div>
+      <div class="sheet-body" id="sheet-body"></div>
+      <div class="sheet-foot" id="sheet-foot"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div id="print-area" style="display:none"></div>
+
+  <div id="boot">
+    <div class="boot-badge"><img src="logo-mark.png" alt="Animaux d'abord" /></div>
+    <div class="boot-title">Animaux <span>d'abord</span></div>
+    <div class="boot-spin"><i></i><i></i><i></i></div>
+  </div>
+</div>
+<script>
+/* =====================================================================
+   COUCHE DONNÉES  —  localStorage (lecture instantanée) + Firestore (cloud)
+   ---------------------------------------------------------------------
+   • Toutes les LECTURES se font en local (synchrone) → interface fluide.
+   • Chaque ÉCRITURE est aussi répercutée dans Firestore quand la connexion
+     cloud est prête (CLOUD_ON = true) : synchronisation multi-appareils.
+   • Au démarrage : Cloud.pullAll() (cloud → local) puis Cloud.watchAll()
+     (écoute temps réel). Si Firebase est indisponible, tout reste local.
+   • Mapping : chaque collection ci-dessous = une collection Firestore
+     (un document par élément, id = item.id) ; "settings" = doc _config/settings.
+   ===================================================================== */
+const COLLECTIONS = ["users","animals","records","products","orders","rdv","questions","posts","advices","notifs"];
+const CONFIG_KEYS = ["settings"];
+const LOCAL_KEYS  = ["session"];   // propre à l'appareil (jamais synchronisé)
+
+/* Passe à true une fois Firebase prêt ET les données initiales récupérées.
+   Tant que c'est false, l'app fonctionne 100% en local (mode hors-ligne). */
+let CLOUD_ON = false;
+
+const DB = {
+  clone(v){ return v==null ? v : JSON.parse(JSON.stringify(v)); },
+  _k(key){ return "ad_"+key; },
+  get(key, def){
+    try{ const r=localStorage.getItem(this._k(key)); return (r==null)?def:JSON.parse(r); }
+    catch(e){ return def; }
+  },
+  // écriture locale seule (utilisée par la synchro cloud pour éviter les boucles)
+  _raw(key, val){
+    try{ localStorage.setItem(this._k(key), JSON.stringify(val)); }catch(e){ console.warn("storage plein", e); }
+  },
+  set(key, val){
+    // On mémorise les ids précédents pour savoir quoi supprimer côté cloud.
+    let prevIds=null;
+    const cloudOn = CLOUD_ON && window.Cloud && window.Cloud.enabled;
+    if(cloudOn && COLLECTIONS.indexOf(key)>=0){
+      const prev=this.get(key,[]);
+      prevIds = Array.isArray(prev) ? prev.map(x=>x&&x.id).filter(Boolean) : [];
+    }
+    this._raw(key, val);                        // local immédiat (interface instantanée)
+    if(!cloudOn) return;                         // pas de cloud → on s'arrête là
+    try{
+      if(COLLECTIONS.indexOf(key)>=0 && Array.isArray(val)) window.Cloud.replaceCollection(key, val, prevIds);
+      else if(CONFIG_KEYS.indexOf(key)>=0)                  window.Cloud.setConfig(key, val);
+      // clés locales (session, cart_*) : jamais synchronisées
+    }catch(e){ console.warn("Synchronisation cloud échouée", e); }
+  },
+  del(key, id){
+    const arr=this.get(key,[]);
+    if(Array.isArray(arr)) this.set(key, arr.filter(it=>!(it && String(it.id)===String(id))));
+  },
+  push(key, item){ const arr=this.get(key,[]); arr.push(item); this.set(key,arr); return item; },
+  update(key, id, patch){
+    const arr=this.get(key,[]); const i=arr.findIndex(x=>String(x.id)===String(id));
+    if(i>=0){ arr[i]=Object.assign({},arr[i],patch); this.set(key,arr); return arr[i]; } return null;
+  },
+  find(key, id){ return this.get(key,[]).find(x=>String(x.id)===String(id)) || null; },
+};
+
+/* ---------- données de référence ---------- */
+const SPECIES = [
+  {id:"chien",label:"Chien",emo:"🐕"},{id:"chat",label:"Chat",emo:"🐈"},
+  {id:"oiseau",label:"Oiseau",emo:"🦜"},{id:"lapin",label:"Lapin",emo:"🐇"},
+  {id:"hamster",label:"Rongeur",emo:"🐹"},{id:"tortue",label:"Tortue",emo:"🐢"},
+  {id:"poisson",label:"Poisson",emo:"🐠"},{id:"cheval",label:"Cheval",emo:"🐴"},
+  {id:"autre",label:"Autre",emo:"🐾"},
+];
+const REC_TYPES = [
+  {id:"vaccin",label:"Vaccin",emo:"💉",color:"b-rose"},
+  {id:"consultation",label:"Consultation",emo:"🩺",color:"b-info"},
+  {id:"ordonnance",label:"Ordonnance",emo:"📋",color:"b-mango"},
+  {id:"vermifuge",label:"Vermifuge",emo:"🪱",color:"b-ok"},
+  {id:"analyse",label:"Analyse",emo:"🔬",color:"b-grey"},
+  {id:"chirurgie",label:"Chirurgie",emo:"⚕️",color:"b-danger"},
+];
+const SHOP_CATS = ["Alimentation","Hygiène","Santé","Accessoires","Jouets"];
+const ORDER_STATUS = {
+  attente:{label:"En attente",badge:"b-warn"},
+  preparation:{label:"En préparation",badge:"b-info"},
+  prete:{label:"Prête à retirer",badge:"b-ok"},
+  livree:{label:"Livrée",badge:"b-grey"},
+  annulee:{label:"Annulée",badge:"b-danger"},
+};
+const RDV_STATUS = {
+  attente:{label:"En attente",badge:"b-warn"},
+  confirme:{label:"Confirmé",badge:"b-ok"},
+  refuse:{label:"Refusé",badge:"b-danger"},
+  termine:{label:"Terminé",badge:"b-grey"},
+  annule:{label:"Annulé",badge:"b-grey"},
+};
+
+const DEFAULT_ADMIN = { id:"u_admin", role:"admin", username:"admin", password:"admin", nom:"Dr. Asma Gnaoui", tel:"22024232", createdAt:0 };
+
+const DEFAULT_SETTINGS = {
+  clinicName:"Cabinet Vétérinaire de Manouba",
+  doctor:"Dr. Asma Gnaoui",
+  phone:"22024232",
+  address:"R444+46P, نهج ابن ابي ضياف 27, Manouba, Manouba",
+  mapQuery:"Cabinet Vétérinaire de Manouba, نهج ابن ابي ضياف, Manouba",
+  landmark:"Juste à côté du lycée Ibn Abi Dhiaf",
+  emergency24:true,
+  slotMin:30,
+  appUrl:"",
+  hours:{
+    0:{open:false,from:"09:00",to:"13:00",bfrom:"",bto:""},                 /* Dimanche fermé */
+    1:{open:true, from:"08:00",to:"18:00",bfrom:"12:30",bto:"14:00"},
+    2:{open:true, from:"08:00",to:"18:00",bfrom:"12:30",bto:"14:00"},
+    3:{open:true, from:"08:00",to:"18:00",bfrom:"12:30",bto:"14:00"},
+    4:{open:true, from:"08:00",to:"18:00",bfrom:"12:30",bto:"14:00"},
+    5:{open:true, from:"08:00",to:"18:00",bfrom:"12:30",bto:"14:00"},
+    6:{open:true, from:"08:00",to:"13:00",bfrom:"",bto:""},                 /* Samedi matin */
+  },
+};
+
+const DEFAULT_PRODUCTS = [
+  {id:"p1",nom:"Croquettes Chien Adulte 3kg",prix:38,cat:"Alimentation",emo:"🦴",desc:"Alimentation complète et équilibrée pour chien adulte.",stock:24,createdAt:Date.now()-9e8},
+  {id:"p2",nom:"Croquettes Chat Stérilisé 2kg",prix:32,cat:"Alimentation",emo:"🐟",desc:"Formule adaptée aux chats stérilisés d'intérieur.",stock:18,createdAt:Date.now()-8e8},
+  {id:"p3",nom:"Litière agglomérante 10L",prix:15,cat:"Hygiène",emo:"🧴",desc:"Absorbe et neutralise les odeurs, sans poussière.",stock:30,createdAt:Date.now()-7e8},
+  {id:"p4",nom:"Anti-puces & tiques (pipette)",prix:22,cat:"Santé",emo:"💊",desc:"Protection 1 mois contre puces et tiques.",stock:12,createdAt:Date.now()-6e8},
+  {id:"p5",nom:"Shampoing doux pour chien",prix:18,cat:"Hygiène",emo:"🫧",desc:"Pelage brillant, peau apaisée. Toutes races.",stock:9,createdAt:Date.now()-5e8},
+  {id:"p6",nom:"Laisse + Collier réglable",prix:25,cat:"Accessoires",emo:"🦮",desc:"Nylon résistant, confortable, plusieurs tailles.",stock:14,createdAt:Date.now()-4e8},
+  {id:"p7",nom:"Jouet corde à mâcher",prix:9,cat:"Jouets",emo:"🧸",desc:"Résistant, favorise l'hygiène dentaire.",stock:40,createdAt:Date.now()-3e8},
+  {id:"p8",nom:"Vitamines & complément pelage",prix:28,cat:"Santé",emo:"✨",desc:"Renforce le système immunitaire et le pelage.",stock:7,createdAt:Date.now()-2e8},
+];
+
+const DEFAULT_POSTS = [
+  {id:"post1",type:"blog",titre:"Bienvenue chez Animaux d'abord 🐾",emo:"🏥",
+   contenu:"Notre cabinet vous accueille à Manouba, juste à côté du lycée Ibn Abi Dhiaf. Le Dr. Asma Gnaoui et son équipe prennent soin de vos compagnons avec douceur et professionnalisme. Urgences 24h/24, 7j/7 au +216 22 024 232.",
+   date:Date.now()-6e8,createdAt:Date.now()-6e8},
+  {id:"post2",type:"astuce",titre:"Le calendrier de vaccination",emo:"💉",
+   contenu:"Un chiot ou chaton doit recevoir ses premiers vaccins dès 8 semaines, avec des rappels réguliers. Pensez à garder son carnet de santé à jour — l'app vous rappelle les échéances !",
+   date:Date.now()-4e8,createdAt:Date.now()-4e8},
+  {id:"post3",type:"astuce",titre:"Fortes chaleurs : protégez vos animaux",emo:"☀️",
+   contenu:"En été, ne laissez jamais votre animal dans une voiture. Assurez-lui de l'eau fraîche, de l'ombre, et évitez les promenades aux heures chaudes.",
+   date:Date.now()-2e8,createdAt:Date.now()-2e8},
+];
+
+/* =====================================================================
+   APPLICATION
+   ===================================================================== */
+const App = {
+  session:null, deferredPrompt:null, _ring:false,
+  cart:[], recTab:{}, // état onglets dossier médical par animal
+  shopCat:"Tous", shopQuery:"",
+
+  /* ---------- démarrage ---------- */
+  async init(){
+    this.spawnPaws();
+    this.showBoot(true);
+    this.session = DB.get("session", null);   // session : locale à l'appareil
+
+    // Hydratation depuis le cloud (si Firebase est disponible), sinon 100% local.
+    if(window.Cloud && window.Cloud.enabled){
+      try{
+        await window.Cloud.ready;              // attend l'initialisation de Firebase
+        await window.Cloud.pullAll();          // cloud → localStorage (données partagées)
+        CLOUD_ON = true;                        // active la synchro des écritures
+        this.ensureSeed();                      // sème les données de démo seulement si vide
+        window.Cloud.watchAll((key)=>this._onCloudChange(key)); // écoute temps réel
+      }catch(e){
+        console.warn("Firebase indisponible → mode local hors-ligne.", e);
+        CLOUD_ON = false;
+        this.ensureSeed();
+      }
+    } else {
+      this.ensureSeed();                        // pas de Firebase chargé → local seul
+    }
+
+    // petit délai pour l'animation de démarrage
+    setTimeout(()=>{ this.showBoot(false); this.route(); }, 650);
+    this.ticker = setInterval(()=>this.tick(), 30000);
+  },
+  // Appelé quand des données changent dans le cloud (ex. depuis un autre appareil).
+  _onCloudChange(key){
+    if(key==="notifs"){ const n=this.unread(); if(n>0) this.ringBell && this.ringBell(); }
+    this.renderAll();   // renderAll est protégé : ne fait rien si personne n'est connecté
+  },
+  ensureSeed(){
+    if(DB.get("settings",null)===null) DB.set("settings", DEFAULT_SETTINGS);
+    if(!DB.get("products",[]).length) DB.set("products", DEFAULT_PRODUCTS);
+    if(!DB.get("posts",[]).length) DB.set("posts", DEFAULT_POSTS);
+    let users=DB.get("users",[]);
+    if(!users.some(u=>u.role==="admin")){ users.unshift({...DEFAULT_ADMIN}); DB.set("users",users); }
+  },
+  showBoot(on){ const b=document.getElementById("boot"); if(b) b.classList.toggle("show",!!on); },
+  spawnPaws(){
+    const box=document.getElementById("paws"); if(!box) return;
+    const emos=["🐾","🐾","🐾","🦴","🐾"];
+    for(let i=0;i<9;i++){
+      const s=document.createElement("span");
+      s.textContent=emos[i%emos.length];
+      s.style.left=(Math.random()*100)+"%";
+      s.style.fontSize=(18+Math.random()*26)+"px";
+      s.style.animationDuration=(16+Math.random()*16)+"s";
+      s.style.animationDelay=(-Math.random()*20)+"s";
+      box.appendChild(s);
+    }
+  },
+
+  /* ---------- utilisateurs / session ---------- */
+  currentUser(){ if(!this.session) return null; return DB.find("users", this.session.userId); },
+  isAdmin(){ const u=this.currentUser(); return !!(u&&u.role==="admin"); },
+  route(){
+    const u=this.currentUser();
+    if(!u){ this.show("screen-auth"); this.switchAuth("login"); return; }
+    if(u.role==="admin") this.openAdmin(); else this.openClient();
+  },
+  normPhone(s){ return (s||"").replace(/\s+/g,"").trim(); },
+
+  switchAuth(mode){
+    this.authMode=mode;
+    document.querySelectorAll("#auth-tabs button").forEach(b=>b.classList.toggle("on",b.dataset.auth===mode));
+    document.getElementById("form-login").style.display = mode==="login"?"":"none";
+    document.getElementById("form-register").style.display = mode==="register"?"":"none";
+  },
+  login(){
+    const id=this.normPhone(document.getElementById("log-id").value);
+    const pass=document.getElementById("log-pass").value;
+    if(!id||!pass) return this.toast("Remplissez tous les champs.","err");
+    const u=DB.get("users",[]).find(x=>(x.username===id||x.tel===id) && x.password===pass);
+    if(!u) return this.toast("Identifiant ou mot de passe incorrect.","err");
+    this.session={userId:u.id}; DB.set("session",this.session);
+    this.loadCart();
+    this.toast("Bienvenue "+(u.nom?u.nom.split(" ")[0]:"")+" 🐾","ok");
+    this.route();
+  },
+  register(){
+    const nom=(document.getElementById("reg-name").value||"").trim();
+    const tel=this.normPhone(document.getElementById("reg-phone").value);
+    const pass=document.getElementById("reg-pass").value;
+    if(!nom||!tel||!pass) return this.toast("Remplissez tous les champs.","err");
+    const users=DB.get("users",[]);
+    if(users.some(x=>x.username===tel||x.tel===tel)) return this.toast("Ce numéro a déjà un compte.","err");
+    const u={id:"u"+Date.now(),role:"client",username:tel,tel,password:pass,nom,createdAt:Date.now()};
+    users.push(u); DB.set("users",users);
+    this.session={userId:u.id}; DB.set("session",this.session);
+    this.loadCart();
+    this.toast("Compte créé, bienvenue ! 🐾","ok");
+    this.route();
+  },
+  logout(){
+    this.session=null; DB.set("session",null); this.cart=[];
+    document.getElementById("cart-fab").style.display="none";
+    ["log-id","log-pass","reg-name","reg-phone","reg-pass"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+    this.show("screen-auth"); this.switchAuth("login");
+  },
+  openClient(){
+    this.show("app-client");
+    const u=this.currentUser();
+    document.getElementById("client-hello").textContent="Bonjour, "+(u.nom?u.nom.split(" ")[0]:"");
+    this.showTab("tab-home","client-nav");
+    this.refreshInstall(); this.renderAll();
+  },
+  openAdmin(){
+    this.show("app-admin");
+    const u=this.currentUser();
+    document.getElementById("admin-hello").textContent=u.nom||"Docteur";
+    this.showTab("atab-home","admin-nav");
+    this.refreshInstall(); this.renderAll();
+  },
+
+  /* ---------- écrans / onglets ---------- */
+  show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id)); window.scrollTo(0,0); },
+  showTab(tabId, navId){
+    const nav=document.getElementById(navId); if(!nav) return;
+    const screen=nav.closest(".screen");
+    screen.querySelectorAll(".screen-tab").forEach(t=>t.classList.toggle("active",t.id===tabId));
+    nav.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tabId));
+    try{ window.scrollTo(0,0); }catch(e){}
+    // panier visible seulement sur la boutique client
+    const fab=document.getElementById("cart-fab");
+    if(fab) fab.style.display = (tabId==="tab-shop" && this.cart.length) ? "flex":"none";
+    this.renderAll();
+  },
+
+  /* ---------- helpers généraux ---------- */
+  uid(p){ return (p||"x")+Date.now()+Math.floor(Math.random()*1000); },
+  escape(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); },
+  money(n){ return (Math.round((+n||0)*1000)/1000).toString().replace(/\.?0+$/,"")+" DT"; },
+  todayStr(){ const d=new Date(); return this.dstr(d); },
+  dstr(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); },
+  parseD(s){ const p=(s||"").split("-"); return new Date(+p[0],(+p[1]||1)-1,+p[2]||1); },
+  MONTHS:["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"],
+  MONTHS_ABBR:["JAN","FÉV","MAR","AVR","MAI","JUIN","JUIL","AOÛ","SEP","OCT","NOV","DÉC"],
+  DOW:["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"],
+  DOW_FULL:["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"],
+  fmtDate(s){ const d=this.parseD(s); return d.getDate()+" "+this.MONTHS[d.getMonth()]+" "+d.getFullYear(); },
+  fmtDateShort(s){ const d=this.parseD(s); return this.DOW[d.getDay()]+" "+d.getDate()+" "+this.MONTHS_ABBR[d.getMonth()].toLowerCase(); },
+  ago(ts){
+    const s=Math.floor((Date.now()-ts)/1000);
+    if(s<60) return "à l'instant";
+    const m=Math.floor(s/60); if(m<60) return "il y a "+m+" min";
+    const h=Math.floor(m/60); if(h<24) return "il y a "+h+" h";
+    const j=Math.floor(h/24); if(j<7) return "il y a "+j+" j";
+    return this.fmtDate(this.dstr(new Date(ts)));
+  },
+  speciesEmo(id){ const s=SPECIES.find(x=>x.id===id); return s?s.emo:"🐾"; },
+  speciesLabel(id){ const s=SPECIES.find(x=>x.id===id); return s?s.label:"Animal"; },
+  age(naissance){
+    if(!naissance) return "—";
+    const b=this.parseD(naissance), n=new Date();
+    let months=(n.getFullYear()-b.getFullYear())*12+(n.getMonth()-b.getMonth());
+    if(n.getDate()<b.getDate()) months--;
+    if(months<0) return "—";
+    if(months<12) return months+" mois";
+    const y=Math.floor(months/12), m=months%12;
+    return y+" an"+(y>1?"s":"")+(m?(" "+m+"m"):"");
+  },
+  phoneDigits(p){ const r=(p||"").replace(/\D/g,""); return r.startsWith("216")?r:("216"+r); },
+  phoneFmt(p){ const r=(p||"").replace(/\D/g,""); const l=r.startsWith("216")?r.slice(3):r; return l.length===8?l.replace(/(\d{2})(\d{3})(\d{3})/,"$1 $2 $3"):(p||""); },
+  settings(){ return Object.assign({},DEFAULT_SETTINGS,DB.get("settings",{})||{}); },
+  appUrl(){ const s=this.settings(); if(s.appUrl) return s.appUrl; try{ return location.href.split("#")[0]; }catch(e){ return ""; } },
+
+  /* compression photo -> dataURL (pour rester léger en localStorage) */
+  readPhoto(file, cb){
+    if(!file){ cb(null); return; }
+    const r=new FileReader();
+    r.onload=()=>{ const img=new Image(); img.onload=()=>{
+      const max=560; let{width:w,height:h}=img;
+      if(w>h && w>max){ h=h*max/w; w=max; } else if(h>max){ w=w*max/h; h=max; }
+      const c=document.createElement("canvas"); c.width=w; c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      try{ cb(c.toDataURL("image/jpeg",0.72)); }catch(e){ cb(null); }
+    }; img.onerror=()=>cb(null); img.src=r.result; };
+    r.onerror=()=>cb(null); r.readAsDataURL(file);
+  },
+
+  /* ---------- feuille modale générique ---------- */
+  openSheet(title, bodyHTML, footHTML){
+    document.getElementById("sheet-title").textContent=title;
+    document.getElementById("sheet-body").innerHTML=bodyHTML;
+    document.getElementById("sheet-foot").innerHTML=footHTML||"";
+    document.getElementById("sheet-backdrop").classList.add("show");
+    document.body.style.overflow="hidden";
+  },
+  closeSheet(){
+    document.getElementById("sheet-backdrop").classList.remove("show");
+    document.body.style.overflow="";
+  },
+
+  /* ---------- toast ---------- */
+  toast(msg, kind){
+    const el=document.getElementById("toast");
+    el.textContent=msg; el.className="toast show"+(kind?(" "+kind):"");
+    clearTimeout(this._tt); this._tt=setTimeout(()=>el.classList.remove("show"),2800);
+  },
+
+  /* ---------- NOTIFICATIONS ---------- */
+  notify(target, kind, title, body){
+    DB.push("notifs",{id:this.uid("n"),target,kind,title,body,ts:Date.now(),lu:false});
+    // secoue la cloche du destinataire s'il est connecté
+    const u=this.currentUser();
+    if(u && (target==="admin"?u.role==="admin":target===u.id)) this.ringBell();
+  },
+  myNotifs(){
+    const u=this.currentUser(); if(!u) return [];
+    const tg = u.role==="admin" ? "admin" : u.id;
+    return DB.get("notifs",[]).filter(n=>n.target===tg).sort((a,b)=>b.ts-a.ts);
+  },
+  unread(){ return this.myNotifs().filter(n=>!n.lu).length; },
+  renderBell(){
+    const u=this.currentUser(); if(!u) return;
+    const id = u.role==="admin" ? "bell-badge-admin" : "bell-badge-client";
+    const badge=document.getElementById(id); if(!badge) return;
+    const c=this.unread();
+    if(c>0){ badge.textContent=c>99?"99+":c; badge.style.display="grid"; } else badge.style.display="none";
+  },
+  ringBell(){
+    const u=this.currentUser(); if(!u) return;
+    const b=document.getElementById(u.role==="admin"?"admin-bell":"client-bell");
+    if(b){ b.classList.remove("ring"); void b.offsetWidth; b.classList.add("ring"); }
+    try{ navigator.vibrate && navigator.vibrate(60); }catch(e){}
+    this.renderBell();
+  },
+  toggleNotifs(){ const p=document.getElementById("notif-panel"); p.classList.contains("show")?this.closeNotifs():this.openNotifs(); },
+  openNotifs(){
+    this.renderNotifsPanel();
+    document.getElementById("notif-panel").classList.add("show");
+    document.getElementById("notif-backdrop").classList.add("show");
+    this.markAllRead();
+  },
+  closeNotifs(){
+    document.getElementById("notif-panel").classList.remove("show");
+    document.getElementById("notif-backdrop").classList.remove("show");
+  },
+  markAllRead(){
+    const u=this.currentUser(); if(!u) return;
+    const tg=u.role==="admin"?"admin":u.id;
+    const arr=DB.get("notifs",[]); let ch=false;
+    arr.forEach(n=>{ if(n.target===tg && !n.lu){ n.lu=true; ch=true; } });
+    if(ch) DB.set("notifs",arr);
+    this.renderBell();
+  },
+  clearNotifs(){
+    const u=this.currentUser(); if(!u) return;
+    const tg=u.role==="admin"?"admin":u.id;
+    DB.set("notifs", DB.get("notifs",[]).filter(n=>n.target!==tg));
+    this.renderNotifsPanel(); this.renderBell();
+  },
+  notifIcon(k){ return ({rdv:"📅",rdv_ok:"✅",rdv_no:"❌",order:"📦",order_up:"📦",question:"💬",answer:"💬",advice:"💡",record:"🩺",vax:"💉"}[k])||"🔔"; },
+  renderNotifsPanel(){
+    const w=document.getElementById("notif-list"); if(!w) return;
+    const list=this.myNotifs();
+    if(!list.length){ w.innerHTML=`<div class="empty"><span class="ic">🔔</span><div class="et">Aucune notification</div><div class="hint">Vous serez prévenu ici.</div></div>`; return; }
+    w.innerHTML=list.map(n=>`
+      <div class="notif-item ${n.lu?"":"unread"}" onclick="App.onNotifClick('${n.kind}')">
+        <div class="ni-ic">${this.notifIcon(n.kind)}</div>
+        <div class="ni-txt"><div class="ni-main"><b>${this.escape(n.title)}</b></div>
+          <div class="ni-sub">${this.escape(n.body||"")} · ${this.ago(n.ts)}</div></div>
+      </div>`).join("");
+  },
+  onNotifClick(kind){
+    this.closeNotifs();
+    const admin=this.isAdmin();
+    const go=(t,n)=>this.showTab(t,n);
+    if(kind==="rdv") admin?go("atab-rdv","admin-nav"):go("tab-rdv","client-nav");
+    else if(kind==="rdv_ok"||kind==="rdv_no") go("tab-rdv","client-nav");
+    else if(kind==="order") go("atab-orders","admin-nav");
+    else if(kind==="order_up") go("tab-shop","client-nav");
+    else if(kind==="question") go("atab-msg","admin-nav");
+    else if(kind==="answer"||kind==="advice") go("tab-msg","client-nav");
+    else if(kind==="record"||kind==="vax") go("tab-pets","client-nav");
+  },
+
+  /* =====================================================================
+     CLIENT — ACCUEIL
+     ===================================================================== */
+  renderHomeClient(){
+    const w=document.getElementById("home-c"); if(!w) return;
+    const s=this.settings(); const u=this.currentUser();
+    const pets=this.myAnimals();
+    const st=this.clinicStatus();
+    const posts=DB.get("posts",[]).slice().sort((a,b)=>b.createdAt-a.createdAt);
+    const astuces=posts.filter(p=>p.type==="astuce");
+    const blogs=posts.filter(p=>p.type==="blog");
+
+    let html=`<div class="hero-card">
+        <div class="h-eyebrow">Cabinet Vétérinaire de Manouba</div>
+        <h2>Prenez soin de ${pets.length?"vos compagnons":"votre compagnon"} 🐾</h2>
+        <p>Suivi santé, rendez-vous et conseils du Dr. Asma Gnaoui, en un seul endroit.</p>
+        <div class="h-actions">
+          <button class="btn btn-white" onclick="App.showTab('tab-rdv','client-nav')">📅 Prendre RDV</button>
+          <button class="btn btn-ghost" onclick="App.showTab('tab-pets','client-nav')">🐾 Mes animaux</button>
+        </div>
+      </div>`;
+
+    // urgence 24/7
+    if(s.emergency24){
+      html+=`<div class="emergency">
+        <div class="pulse">🚨</div>
+        <div class="e-txt"><div class="t">Urgence 24h/24 · 7j/7</div><div class="s">Une urgence ? Appelez le cabinet immédiatement.</div></div>
+        <a class="btn btn-danger btn-sm" href="tel:+${this.phoneDigits(s.phone)}">Appeler</a>
+      </div>`;
+    }
+
+    // raccourcis
+    html+=`<div class="quick-grid">
+      <button class="quick" onclick="App.showTab('tab-shop','client-nav')"><div class="qic" style="background:var(--rose-tint);color:var(--rose-deep)">🛍️</div><div class="qt">Boutique</div><div class="qs">Alimentation, soins…</div></button>
+      <button class="quick" onclick="App.showTab('tab-msg','client-nav')"><div class="qic" style="background:var(--mango-tint);color:var(--mango-deep)">💬</div><div class="qt">Poser une question</div><div class="qs">Au vétérinaire</div></button>
+    </div>`;
+
+    // statut ouvert/fermé
+    html+=`<div class="status-banner is-${st.open?"open":"closed"}"><div class="dot"></div>
+      <div><div class="st-main">${st.open?"Cabinet ouvert":"Cabinet fermé"}</div><div class="st-sub">${this.escape(st.text)}</div></div></div>`;
+
+    // astuces
+    if(astuces.length){
+      html+=`<div class="section-head mt"><div><div class="eyebrow">Le saviez-vous</div><h2 style="font-size:1.25rem">Astuces santé</h2></div></div>`;
+      html+=`<div class="stagger">`+astuces.slice(0,4).map(p=>`
+        <div class="astuce"><div class="ai">${p.emo||"💡"}</div>
+          <div><div class="at">${this.escape(p.titre)}</div><div class="as">${this.escape(p.contenu)}</div></div></div>`).join("")+`</div>`;
+    }
+    // blog / actualités
+    if(blogs.length){
+      html+=`<div class="section-head mt"><div><div class="eyebrow">Le cabinet</div><h2 style="font-size:1.25rem">Actualités</h2></div></div>`;
+      html+=`<div class="stagger">`+blogs.map(p=>`
+        <div class="post">
+          <div class="cover">${p.image?`<img src="${p.image}" alt="">`:(p.emo||"📰")}</div>
+          <div class="body"><div class="pt-top"><span class="badge b-rose">Actu</span><span class="dt">${this.fmtDate(this.dstr(new Date(p.createdAt)))}</span></div>
+            <h3>${this.escape(p.titre)}</h3><p>${this.escape(p.contenu)}</p></div>
+        </div>`).join("")+`</div>`;
+    }
+    w.innerHTML=html;
+  },
+
+  /* =====================================================================
+     CLIENT — MES ANIMAUX (carnet de santé)
+     ===================================================================== */
+  myAnimals(){ const u=this.currentUser(); if(!u) return []; return DB.get("animals",[]).filter(a=>a.ownerId===u.id).sort((a,b)=>a.createdAt-b.createdAt); },
+  animalRecords(id){ return DB.get("records",[]).filter(r=>r.animalId===id).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||b.createdAt-a.createdAt); },
+  nextVaccine(id){
+    const vax=DB.get("records",[]).filter(r=>r.animalId===id && r.type==="vaccin" && r.nextDate);
+    if(!vax.length) return null;
+    vax.sort((a,b)=>a.nextDate.localeCompare(b.nextDate));
+    return vax[0];
+  },
+
+  renderPets(){
+    const w=document.getElementById("pets-c"); if(!w) return;
+    const pets=this.myAnimals();
+    if(!pets.length){
+      w.innerHTML=`<div class="card empty"><span class="ic">🐾</span><div class="et">Aucun animal pour l'instant</div>
+        <div class="hint mb">Ajoutez votre compagnon pour suivre sa santé, ses vaccins et ses consultations.</div>
+        <button class="btn btn-primary" onclick="App.openPetForm()">＋ Ajouter mon animal</button></div>`;
+      return;
+    }
+    w.innerHTML=`<div class="stagger">`+pets.map(p=>this.petCardHTML(p)).join("")+`</div>`;
+  },
+  petCardHTML(p){
+    const recs=this.animalRecords(p.id);
+    const nv=this.nextVaccine(p.id);
+    let vaxHTML="";
+    if(nv){
+      const today=this.todayStr(); const overdue=nv.nextDate<today;
+      const days=Math.round((this.parseD(nv.nextDate)-this.parseD(today))/864e5);
+      vaxHTML=`<div class="vax-alert ${overdue?"overdue":""}"><span class="vic">💉</span>
+        <div>${overdue?"Vaccin en retard":"Prochain vaccin"} · ${this.escape(nv.titre||"Rappel")}<br>
+        <span style="font-weight:800">${overdue?("depuis "+Math.abs(days)+" j"):("dans "+days+" j")} — ${this.fmtDate(nv.nextDate)}</span></div></div>`;
+    }
+    const photo=p.photo?`<img src="${p.photo}" alt="">`:this.speciesEmo(p.espece);
+    return `<div class="pet-card">
+      <div class="pc-band"></div>
+      <div class="pc-photo">${photo}</div>
+      <div class="pc-head">
+        <div class="nm">${this.escape(p.nom)}</div>
+        <div class="meta"><span>${this.speciesEmo(p.espece)} ${this.speciesLabel(p.espece)}</span>${p.race?`<span>• ${this.escape(p.race)}</span>`:""}${p.sexe?`<span>• ${p.sexe==="M"?"♂ Mâle":"♀ Femelle"}</span>`:""}</div>
+      </div>
+      <div class="pc-stats">
+        <div class="pc-stat"><div class="v">${this.age(p.naissance)}</div><div class="k">Âge</div></div>
+        <div class="pc-stat"><div class="v">${p.poids?this.escape(p.poids)+" kg":"—"}</div><div class="k">Poids</div></div>
+        <div class="pc-stat"><div class="v">${recs.length}</div><div class="k">Suivi</div></div>
+      </div>
+      ${vaxHTML}
+      <div class="pc-actions">
+        <button class="btn btn-primary btn-sm grow" onclick="App.openCarnet('${p.id}')">📖 Carnet de santé</button>
+        <button class="btn btn-ghost btn-sm" onclick="App.openPetForm('${p.id}')">✎ Modifier</button>
+      </div>
+    </div>`;
+  },
+
+  /* carnet de santé (dossier médical) en modale */
+  openCarnet(id){
+    const p=DB.find("animals",id); if(!p) return;
+    this.recTab[id]=this.recTab[id]||"tous";
+    this.openSheet("Carnet · "+p.nom, this.carnetBodyHTML(p), "");
+  },
+  carnetBodyHTML(p){
+    const cur=this.recTab[p.id]||"tous";
+    const all=this.animalRecords(p.id);
+    const counts={tous:all.length}; REC_TYPES.forEach(t=>counts[t.id]=all.filter(r=>r.type===t.id).length);
+    const tabsBtns=[{id:"tous",label:"Tout",emo:"📖"}].concat(REC_TYPES).map(t=>`
+      <button class="${cur===t.id?"on":""}" onclick="App.setRecTab('${p.id}','${t.id}')">
+        <span style="font-size:16px">${t.emo}</span><span>${t.label}</span><span class="rc-n">${counts[t.id]||0}</span></button>`).join("");
+    const recs = cur==="tous" ? all : all.filter(r=>r.type===cur);
+    let body=`<div class="card" style="margin-bottom:12px;background:var(--grad-soft);border-color:var(--rose-soft)">
+      <div class="spread"><div><div class="hint" style="font-weight:800;color:var(--rose-deep)">${this.speciesEmo(p.espece)} ${this.escape(p.nom)}</div>
+      <div class="hint">${this.speciesLabel(p.espece)}${p.race?" · "+this.escape(p.race):""} · ${this.age(p.naissance)}</div></div>
+      ${p.sterilise?`<span class="badge b-ok">Stérilisé·e</span>`:""}</div></div>`;
+    body+=`<div class="rec-tabs" style="flex-wrap:wrap;gap:6px">${tabsBtns}</div>`;
+    if(!recs.length){
+      body+=`<div class="empty"><span class="ic">🩺</span><div class="et">Aucun élément</div>
+        <div class="hint">Le vétérinaire ajoutera ici les vaccins, consultations et ordonnances de ${this.escape(p.nom)}.</div></div>`;
+    } else {
+      body+=recs.map(r=>{
+        const t=REC_TYPES.find(x=>x.id===r.type)||{emo:"🩺",label:"Note",color:"b-grey"};
+        return `<div class="rec"><div class="r-ic ${t.color}">${t.emo}</div>
+          <div class="r-body"><div class="spread"><span class="r-title">${this.escape(r.titre||t.label)}</span><span class="badge ${t.color}">${t.label}</span></div>
+          <div class="r-dt">${r.date?this.fmtDate(r.date):""}</div>
+          ${r.details?`<div class="r-det">${this.escape(r.details)}</div>`:""}
+          ${r.nextDate?`<div class="r-next">🔔 Rappel : ${this.fmtDate(r.nextDate)}</div>`:""}</div></div>`;
+      }).join("");
+    }
+    if(p.notes) body+=`<div class="card mt"><div class="hint" style="font-weight:800;margin-bottom:4px">📝 Notes</div><div class="hint">${this.escape(p.notes)}</div></div>`;
+    return body;
+  },
+  setRecTab(id,tab){ this.recTab[id]=tab; document.getElementById("sheet-body").innerHTML=this.carnetBodyHTML(DB.find("animals",id)); },
+
+  /* formulaire ajout / édition animal */
+  openPetForm(id){
+    const p=id?DB.find("animals",id):null;
+    this._petPhoto = p?p.photo:null; this._petEdit=id||null;
+    const spOpts=SPECIES.map(s=>`<option value="${s.id}" ${p&&p.espece===s.id?"selected":""}>${s.emo} ${s.label}</option>`).join("");
+    const body=`
+      <div class="photo-pick"><label class="pv" id="pet-pv">${this._petPhoto?`<img src="${this._petPhoto}">`:"📷"}
+        <input type="file" accept="image/*" style="display:none" id="pet-photo" onchange="App.pickPetPhoto(this)"></label>
+        <span class="hint">Photo de l'animal (optionnel)</span></div>
+      <div class="field"><label>Nom *</label><input class="input" id="pf-nom" value="${p?this.escape(p.nom):""}" placeholder="Ex : Rex"></div>
+      <div class="two-col">
+        <div class="field"><label>Espèce</label><select id="pf-espece">${spOpts}</select></div>
+        <div class="field"><label>Sexe</label><select id="pf-sexe">
+          <option value="">—</option><option value="M" ${p&&p.sexe==="M"?"selected":""}>♂ Mâle</option><option value="F" ${p&&p.sexe==="F"?"selected":""}>♀ Femelle</option></select></div>
+      </div>
+      <div class="field"><label>Race</label><input class="input" id="pf-race" value="${p?this.escape(p.race||""):""}" placeholder="Ex : Labrador"></div>
+      <div class="two-col">
+        <div class="field"><label>Date de naissance</label><input class="input" type="date" id="pf-naissance" value="${p?(p.naissance||""):""}" max="${this.todayStr()}"></div>
+        <div class="field"><label>Poids (kg)</label><input class="input" type="number" step="0.1" id="pf-poids" value="${p?(p.poids||""):""}" placeholder="Ex : 12"></div>
+      </div>
+      <div class="field"><label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <span class="switch"><input type="checkbox" id="pf-sterilise" ${p&&p.sterilise?"checked":""}><span class="slider-sw"></span></span>
+        Stérilisé·e</label></div>
+      <div class="field"><label>Notes (allergies, caractère…)</label><textarea id="pf-notes" placeholder="Optionnel">${p?this.escape(p.notes||""):""}</textarea></div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.savePet()">${id?"Enregistrer":"Ajouter l'animal"} 🐾</button>
+      ${id?`<button class="btn btn-danger btn-block mt-s" onclick="App.deletePet('${id}')">Supprimer cet animal</button>`:""}`;
+    this.openSheet(id?"Modifier l'animal":"Nouvel animal", body, foot);
+  },
+  pickPetPhoto(inp){ this.readPhoto(inp.files[0], d=>{ this._petPhoto=d; const pv=document.getElementById("pet-pv"); if(pv) pv.innerHTML=d?`<img src="${d}">`:"📷"; }); },
+  savePet(){
+    const nom=(document.getElementById("pf-nom").value||"").trim();
+    if(!nom) return this.toast("Le nom est requis.","err");
+    const u=this.currentUser();
+    const data={
+      nom, espece:document.getElementById("pf-espece").value,
+      sexe:document.getElementById("pf-sexe").value, race:(document.getElementById("pf-race").value||"").trim(),
+      naissance:document.getElementById("pf-naissance").value, poids:document.getElementById("pf-poids").value,
+      sterilise:document.getElementById("pf-sterilise").checked, notes:(document.getElementById("pf-notes").value||"").trim(),
+      photo:this._petPhoto||null,
+    };
+    if(this._petEdit){ DB.update("animals",this._petEdit,data); this.toast("Animal mis à jour ✓","ok"); }
+    else { DB.push("animals",Object.assign({id:this.uid("a"),ownerId:u.id,createdAt:Date.now()},data)); this.toast("Animal ajouté ! 🐾","ok"); }
+    this.closeSheet(); this.renderAll();
+  },
+  deletePet(id){
+    if(!confirm("Supprimer cet animal et tout son carnet de santé ?")) return;
+    DB.del("animals",id);
+    DB.set("records", DB.get("records",[]).filter(r=>r.animalId!==id));
+    this.closeSheet(); this.toast("Animal supprimé.","ok"); this.renderAll();
+  },
+
+  /* ============================================================
+     NOYAU D'AFFICHAGE — rendu global + rafraîchissement
+     ============================================================ */
+  renderAll(){
+    const u=this.currentUser(); if(!u) return;
+    this.renderBell();
+    if(u.role==="admin"){
+      this.renderHomeAdmin(); this.renderAgenda(); this.renderShopAdmin();
+      this.renderOrders(); this.renderPatients(); this.renderMsgAdmin();
+      this.renderSettings(); this.renderAbout("a");
+    } else {
+      this.renderHomeClient(); this.renderPets(); this.renderShop();
+      this.renderRdvClient(); this.renderMsgClient(); this.renderAbout("c");
+      this.updateCartFab();
+    }
+  },
+  tick(){ // rafraîchissement léger toutes les 30 s (statut ouvert/fermé, cloche…)
+    if(!this.currentUser()) return;
+    this.renderBell();
+    const u=this.currentUser();
+    if(u.role==="admin"){ this.renderHomeAdmin(); this.renderAbout("a"); }
+    else { this.renderHomeClient(); this.renderAbout("c"); }
+  },
+
+  /* ---- Horaires : helpers temps ---- */
+  hm2min(t){ const p=(t||"0:0").split(":"); return (+p[0]||0)*60+(+p[1]||0); },
+  min2hm(m){ m=((m%1440)+1440)%1440; return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"); },
+  nowMin(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); },
+
+  /* ---- Statut du cabinet (ouvert / fermé / pause) ---- */
+  clinicStatus(){
+    const s=this.settings();
+    const now=new Date(); const day=now.getDay(); const cur=this.nowMin();
+    const h=(s.hours&&(s.hours[day]||s.hours[String(day)]))||null;
+    if(!h||!h.open) return {open:false, text:this.nextOpenText(day)};
+    const from=this.hm2min(h.from), to=this.hm2min(h.to);
+    const bf=h.bfrom?this.hm2min(h.bfrom):null, bt=h.bto?this.hm2min(h.bto):null;
+    if(cur<from) return {open:false, text:"Ouvre aujourd'hui à "+h.from};
+    if(cur>=to)  return {open:false, text:this.nextOpenText(day)};
+    if(bf!=null&&bt!=null&&cur>=bf&&cur<bt) return {open:false, text:"Pause déjeuner · retour à "+h.bto};
+    return {open:true, text:"Ouvert aujourd'hui · "+h.from+"–"+h.to};
+  },
+  nextOpenText(fromDay){
+    const s=this.settings();
+    for(let i=1;i<=7;i++){
+      const d=(fromDay+i)%7;
+      const h=(s.hours&&(s.hours[d]||s.hours[String(d)]))||null;
+      if(h&&h.open){
+        const jour = i===1 ? "demain" : this.DOW_FULL[d].toLowerCase();
+        return "Ouvre "+jour+" à "+h.from;
+      }
+    }
+    return "Sur rendez-vous";
+  },
+
+  /* ---- Panier : stockage par utilisateur (localStorage) ---- */
+  cartKey(){ const u=this.currentUser(); return "cart_"+(u?u.id:"anon"); },
+  loadCart(){ try{ this.cart = DB.get(this.cartKey(), []) || []; }catch(e){ this.cart=[]; } },
+  saveCart(){ DB.set(this.cartKey(), this.cart); },
+  cartCount(){ return this.cart.reduce((n,l)=>n+l.qty,0); },
+  cartTotal(){ return this.cart.reduce((t,l)=>t+l.prix*l.qty,0); },
+  updateCartFab(){
+    const fab=document.getElementById("cart-fab"); if(!fab) return;
+    const c=this.cartCount();
+    const onShop = document.getElementById("tab-shop") && document.getElementById("tab-shop").classList.contains("active");
+    fab.style.display = (onShop && c>0) ? "flex" : "none";
+    const cc=document.getElementById("cf-count"); if(cc) cc.textContent=c;
+  },
+
+  /* ============================================================
+     CLIENT — BOUTIQUE : recherche, catégories, panier, commandes
+     ============================================================ */
+  renderShop(){
+    const w=document.getElementById("shop-c"); if(!w) return;
+    const cats=["Tous"].concat(SHOP_CATS);
+    const chips=cats.map(c=>`<button class="chip ${this.shopCat===c?"on":""}" onclick="App.setShopCat('${c}')">${c==="Tous"?"✨ Tous":this.escape(c)}</button>`).join("");
+    w.innerHTML=`
+      <div class="hero-card" style="padding:18px 20px;margin-bottom:12px">
+        <div class="h-eyebrow">Boutique du cabinet</div>
+        <h2 style="font-size:1.35rem">Tout pour vos compagnons 🛍️</h2>
+        <p>Alimentation, hygiène et soins sélectionnés par le Dr. Asma.</p>
+      </div>
+      <div class="shop-search"><span class="si">🔍</span>
+        <input class="input" id="shop-q" placeholder="Rechercher un produit…" value="${this.escape(this.shopQuery)}" oninput="App.onShopSearch(this.value)"></div>
+      <div class="chip-row mb">${chips}</div>
+      <div id="shop-grid"></div>
+      <div id="shop-orders"></div>`;
+    this.renderShopGrid(); this.renderMyOrders();
+  },
+  setShopCat(c){ this.shopCat=c; this.renderShop(); },
+  onShopSearch(v){ this.shopQuery=v; this.renderShopGrid();
+    // garde le focus + curseur en fin de champ
+    const i=document.getElementById("shop-q"); if(i){ i.focus(); const n=i.value.length; try{i.setSelectionRange(n,n);}catch(e){} } },
+  filteredProducts(){
+    const q=(this.shopQuery||"").trim().toLowerCase();
+    return DB.get("products",[]).slice().sort((a,b)=>b.createdAt-a.createdAt)
+      .filter(p=> this.shopCat==="Tous" || p.cat===this.shopCat )
+      .filter(p=> !q || (p.nom+" "+(p.desc||"")+" "+(p.cat||"")).toLowerCase().includes(q));
+  },
+  renderShopGrid(){
+    const g=document.getElementById("shop-grid"); if(!g) return;
+    const items=this.filteredProducts();
+    if(!items.length){ g.innerHTML=`<div class="empty"><span class="ic">🔍</span><div class="et">Aucun produit</div><div class="hint">Essayez une autre recherche ou catégorie.</div></div>`; return; }
+    g.innerHTML=`<div class="prod-grid stagger">`+items.map(p=>{
+      const out = (p.stock!=null && +p.stock<=0);
+      return `<div class="prod">
+        <div class="p-img">${p.photo?`<img src="${p.photo}" alt="">`:(p.emo||"🛍️")}<span class="p-cat">${this.escape(p.cat||"")}</span></div>
+        <div class="p-body">
+          <div class="p-nm">${this.escape(p.nom)}</div>
+          <div class="p-desc">${this.escape(p.desc||"")}</div>
+          <div class="p-foot">
+            <div class="p-price">${this.money(p.prix)}</div>
+            ${out?`<span class="p-out">Rupture</span>`:`<button class="p-add" onclick="App.addToCart('${p.id}')" title="Ajouter au panier">＋</button>`}
+          </div>
+        </div>
+      </div>`;
+    }).join("")+`</div>`;
+  },
+  addToCart(id){
+    const p=DB.find("products",id); if(!p) return;
+    const line=this.cart.find(l=>l.id===id);
+    if(line) line.qty++; else this.cart.push({id:p.id,nom:p.nom,prix:+p.prix,emo:p.emo||"🛍️",qty:1});
+    this.saveCart();
+    this.updateCartFab();
+    // petite animation sur le bouton panier
+    const fab=document.getElementById("cart-fab");
+    if(fab){ fab.style.display="flex"; fab.classList.remove("bump"); void fab.offsetWidth; fab.classList.add("bump"); }
+    this.toast(p.nom+" ajouté au panier 🛒","ok");
+  },
+  changeQty(id,delta){
+    const line=this.cart.find(l=>l.id===id); if(!line) return;
+    line.qty+=delta;
+    if(line.qty<=0) this.cart=this.cart.filter(l=>l.id!==id);
+    this.saveCart(); this.updateCartFab(); this.openCart(); // ré-affiche la feuille panier
+  },
+  openCart(){
+    if(!this.cart.length){ this.toast("Votre panier est vide.","warn"); return; }
+    const body=`<div class="cart">`+this.cart.map(l=>`
+      <div class="list-row" style="cursor:default;margin-bottom:8px">
+        <div class="lr-av">${l.emo||"🛍️"}</div>
+        <div class="lr-body"><div class="lr-t">${this.escape(l.nom)}</div>
+          <div class="lr-s">${this.money(l.prix)} × ${l.qty} = <b>${this.money(l.prix*l.qty)}</b></div></div>
+        <div style="display:flex;align-items:center;gap:8px;flex:none">
+          <button class="btn btn-soft btn-sm" onclick="App.changeQty('${l.id}',-1)">−</button>
+          <b style="min-width:18px;text-align:center">${l.qty}</b>
+          <button class="btn btn-soft btn-sm" onclick="App.changeQty('${l.id}',1)">＋</button>
+        </div>
+      </div>`).join("")+`</div>
+      <div class="order" style="margin-top:6px"><div class="o-foot" style="border-top:0;padding-top:0;margin-top:0">
+        <span>Total</span><span class="o-total">${this.money(this.cartTotal())}</span></div></div>
+      <div class="field mt"><label>Note pour le cabinet (optionnel)</label>
+        <textarea id="order-note" placeholder="Ex : je passe récupérer demain matin"></textarea></div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.checkout()">Valider la commande · ${this.money(this.cartTotal())}</button>
+      <button class="btn btn-ghost btn-block mt-s" onclick="App.clearCart()">Vider le panier</button>`;
+    this.openSheet("Mon panier 🛒", body, foot);
+  },
+  clearCart(){ this.cart=[]; this.saveCart(); this.updateCartFab(); this.closeSheet(); this.toast("Panier vidé.","ok"); },
+  checkout(){
+    if(!this.cart.length) return;
+    const u=this.currentUser();
+    const note=(document.getElementById("order-note")||{}).value||"";
+    const order={ id:this.uid("o"), clientId:u.id, clientNom:u.nom||"Client",
+      items:this.cart.map(l=>({id:l.id,nom:l.nom,prix:l.prix,qty:l.qty,emo:l.emo})),
+      total:this.cartTotal(), status:"attente", note:note.trim(), createdAt:Date.now() };
+    DB.push("orders", order);
+    this.notify("admin","order","Nouvelle commande",`${u.nom||"Un client"} · ${this.money(order.total)}`);
+    this.cart=[]; this.saveCart(); this.updateCartFab();
+    this.closeSheet(); this.toast("Commande envoyée ! Le cabinet va la préparer. 📦","ok");
+    this.renderAll();
+  },
+  myOrders(){ const u=this.currentUser(); return DB.get("orders",[]).filter(o=>o.clientId===u.id).sort((a,b)=>b.createdAt-a.createdAt); },
+  renderMyOrders(){
+    const w=document.getElementById("shop-orders"); if(!w) return;
+    const list=this.myOrders();
+    if(!list.length){ w.innerHTML=""; return; }
+    w.innerHTML=`<div class="section-head mt"><div><div class="eyebrow">Suivi</div><h2 style="font-size:1.25rem">Mes commandes</h2></div></div>`+
+      list.map(o=>{ const st=ORDER_STATUS[o.status]||ORDER_STATUS.attente;
+        return `<div class="order">
+          <div class="o-top"><span class="o-id">Commande #${o.id.slice(-4).toUpperCase()}</span><span class="badge ${st.badge}">${st.label}</span></div>
+          <div class="o-items">${o.items.map(it=>`<div class="o-line"><span>${it.emo||"•"} ${this.escape(it.nom)} ×${it.qty}</span><span>${this.money(it.prix*it.qty)}</span></div>`).join("")}</div>
+          <div class="o-foot"><span class="lr-s">${this.fmtDateShort(this.dstr(new Date(o.createdAt)))}</span><span class="o-total">${this.money(o.total)}</span></div>
+        </div>`; }).join("");
+  },
+
+  /* ============================================================
+     CLIENT — RENDEZ-VOUS : calendrier + créneaux selon horaires
+     ============================================================ */
+  renderRdvClient(){
+    const w=document.getElementById("rdv-c"); if(!w) return;
+    if(!this._rdvMonth) this._rdvMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+    w.innerHTML=`
+      <div class="card mb">
+        ${this.calHead("rdv")}
+        ${this.calGrid(this._rdvMonth, this._rdvSel, null, true)}
+      </div>
+      <div id="rdv-slots"></div>
+      <div id="rdv-list"></div>`;
+    this.renderRdvSlots(); this.renderMyRdv();
+  },
+  calHead(ns){ // en-tête calendrier (mois + navigation). ns = préfixe ('rdv' ou 'ag')
+    const m=this._monthOf(ns);
+    const label=this.MONTHS[m.getMonth()]+" "+m.getFullYear();
+    return `<div class="cal-head">
+      <button class="cal-nav" onclick="App.calMove('${ns}',-1)">‹</button>
+      <div class="m">${label}</div>
+      <button class="cal-nav" onclick="App.calMove('${ns}',1)">›</button></div>`;
+  },
+  _monthOf(ns){ return ns==="ag" ? (this._agMonth||(this._agMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1))) : (this._rdvMonth||(this._rdvMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1))); },
+  calMove(ns,delta){
+    const m=this._monthOf(ns); const nm=new Date(m.getFullYear(),m.getMonth()+delta,1);
+    if(ns==="ag") this._agMonth=nm; else this._rdvMonth=nm;
+    if(ns==="ag") this.renderAgenda(); else this.renderRdvClient();
+  },
+  calGrid(monthDate, selStr, counts, clientMode){
+    const y=monthDate.getFullYear(), mo=monthDate.getMonth();
+    const first=new Date(y,mo,1); const start=first.getDay(); // 0=Dim
+    const days=new Date(y,mo+1,0).getDate();
+    const todayStr=this.todayStr(); const s=this.settings();
+    const dow=this.DOW.map(d=>`<div class="cal-dow">${d}</div>`).join("");
+    let cells="";
+    for(let i=0;i<start;i++) cells+=`<div class="cal-cell blank"></div>`;
+    for(let d=1;d<=days;d++){
+      const ds=y+"-"+String(mo+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+      const dt=new Date(y,mo,d); const wd=dt.getDay();
+      const h=(s.hours&&(s.hours[wd]||s.hours[String(wd)]))||null;
+      const openDay = h&&h.open;
+      const isPast = ds<todayStr;
+      const cls=["cal-cell"];
+      if(ds===todayStr) cls.push("today");
+      if(selStr===ds) cls.push("sel");
+      let onclick="", extra="";
+      if(clientMode){
+        if(isPast){ cls.push("past"); }
+        else if(!openDay){ cls.push("off"); }
+        else { onclick=`onclick="App.selectRdvDate('${ds}')"`; }
+        if(openDay && !isPast) extra=`<span class="cal-dot"></span>`;
+      } else {
+        onclick=`onclick="App.selectAgDate('${ds}')"`;
+        const c=counts&&counts[ds];
+        if(c) extra=`<span class="cal-cnt">${c}</span>`;
+        if(!openDay) cls.push("off");
+      }
+      cells+=`<div class="${cls.join(" ")}" ${onclick}>${d}${extra}</div>`;
+    }
+    return `<div class="cal-grid" style="margin-bottom:6px">${dow}</div><div class="cal-grid">${cells}</div>`;
+  },
+  selectRdvDate(ds){ this._rdvSel=ds; this.renderRdvClient(); },
+
+  /* créneaux disponibles pour une date */
+  bookedTimes(ds){ return DB.get("rdv",[]).filter(r=>r.date===ds && (r.status==="attente"||r.status==="confirme")).map(r=>r.time); },
+  slotsFor(ds){
+    const s=this.settings(); const wd=this.parseD(ds).getDay();
+    const h=(s.hours&&(s.hours[wd]||s.hours[String(wd)]))||null;
+    if(!h||!h.open) return [];
+    const step=+s.slotMin||30;
+    const from=this.hm2min(h.from), to=this.hm2min(h.to);
+    const bf=h.bfrom?this.hm2min(h.bfrom):null, bt=h.bto?this.hm2min(h.bto):null;
+    const taken=this.bookedTimes(ds);
+    const isToday = ds===this.todayStr(); const cur=this.nowMin();
+    const out=[];
+    for(let m=from;m+step<=to;m+=step){
+      if(bf!=null&&bt!=null && m>=bf && m<bt) continue; // pause déjeuner
+      const t=this.min2hm(m);
+      const past = isToday && m<=cur;
+      out.push({time:t, taken:taken.includes(t), past});
+    }
+    return out;
+  },
+  renderRdvSlots(){
+    const w=document.getElementById("rdv-slots"); if(!w) return;
+    if(!this._rdvSel){ w.innerHTML=`<div class="status-banner"><div class="dot" style="background:var(--rose)"></div><div><div class="st-main">Choisissez une date</div><div class="st-sub">Les créneaux libres s'afficheront ici.</div></div></div>`; return; }
+    const slots=this.slotsFor(this._rdvSel);
+    const free=slots.filter(s=>!s.taken&&!s.past);
+    let html=`<div class="card mb"><div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">${this.fmtDate(this._rdvSel)}</div><h2 style="font-size:1.15rem">Créneaux disponibles</h2></div></div>`;
+    if(!slots.length){ html+=`<div class="hint">Le cabinet est fermé ce jour-là.</div>`; }
+    else if(!free.length){ html+=`<div class="hint">Aucun créneau libre ce jour-là. Essayez une autre date.</div>`; }
+    else {
+      html+=`<div class="slot-grid">`+slots.map(s=>{
+        if(s.taken||s.past) return `<div class="slot" style="opacity:.32;cursor:not-allowed;text-decoration:line-through">${s.time}</div>`;
+        return `<button class="slot" onclick="App.openBook('${s.time}')">${s.time}</button>`;
+      }).join("")+`</div>`;
+    }
+    html+=`</div>`;
+    w.innerHTML=html;
+  },
+  openBook(time){
+    const pets=this.myAnimals();
+    const petOpts = pets.length
+      ? `<div class="field"><label>Animal concerné</label><select id="bk-animal"><option value="">— Sélectionner —</option>${pets.map(p=>`<option value="${p.id}">${this.speciesEmo(p.espece)} ${this.escape(p.nom)}</option>`).join("")}</select></div>`
+      : `<div class="hint mb">Astuce : ajoutez vos animaux dans l'onglet « Mes animaux » pour les associer à un rendez-vous.</div>`;
+    const body=`<div class="status-banner is-open" style="margin-bottom:14px"><div class="dot"></div><div><div class="st-main">${this.fmtDate(this._rdvSel)} à ${time}</div><div class="st-sub">Cabinet Vétérinaire de Manouba</div></div></div>
+      ${petOpts}
+      <div class="field"><label>Motif de la visite</label>
+        <select id="bk-motif">
+          <option>Consultation générale</option><option>Vaccination</option><option>Rappel de vaccin</option>
+          <option>Vermifuge / antiparasitaire</option><option>Contrôle / suivi</option><option>Stérilisation</option>
+          <option>Urgence</option><option>Autre</option>
+        </select></div>
+      <div class="field"><label>Précisions (optionnel)</label><textarea id="bk-note" placeholder="Décrivez le motif si besoin"></textarea></div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.confirmBook('${time}')">Confirmer le rendez-vous 📅</button>`;
+    this.openSheet("Réserver un créneau", body, foot);
+  },
+  confirmBook(time){
+    // vérifie que le créneau est toujours libre (anti double-réservation)
+    if(this.bookedTimes(this._rdvSel).includes(time)){ this.toast("Ce créneau vient d'être pris. Choisissez-en un autre.","err"); this.closeSheet(); this.renderRdvClient(); return; }
+    const u=this.currentUser();
+    const animalId=(document.getElementById("bk-animal")||{}).value||"";
+    const motif=(document.getElementById("bk-motif")||{}).value||"Consultation";
+    const note=(document.getElementById("bk-note")||{}).value||"";
+    const rdv={ id:this.uid("r"), clientId:u.id, clientNom:u.nom||"Client", animalId, motif, note:note.trim(),
+      date:this._rdvSel, time, status:"attente", createdAt:Date.now() };
+    DB.push("rdv", rdv);
+    const petLbl = animalId ? " · "+this.animalName(animalId) : "";
+    this.notify("admin","rdv","Nouveau rendez-vous",`${u.nom||"Un client"} · ${this.fmtDateShort(this._rdvSel)} ${time}${petLbl}`);
+    this.closeSheet(); this.toast("Demande envoyée ! Le cabinet va confirmer. 📅","ok");
+    this.renderAll();
+  },
+  animalName(id){ const a=DB.find("animals",id); return a?a.nom:"Animal"; },
+  myRdv(){ const u=this.currentUser(); return DB.get("rdv",[]).filter(r=>r.clientId===u.id).sort((a,b)=> (a.date+a.time) < (b.date+b.time) ? 1 : -1); },
+  renderMyRdv(){
+    const w=document.getElementById("rdv-list"); if(!w) return;
+    const list=this.myRdv();
+    if(!list.length){ w.innerHTML=`<div class="empty"><span class="ic">📅</span><div class="et">Aucun rendez-vous</div><div class="hint">Choisissez une date ci-dessus pour réserver.</div></div>`; return; }
+    w.innerHTML=`<div class="section-head mt"><div><div class="eyebrow">Suivi</div><h2 style="font-size:1.25rem">Mes rendez-vous</h2></div></div>`+
+      list.map(r=>{ const st=RDV_STATUS[r.status]||RDV_STATUS.attente;
+        const past = (r.date+"T"+r.time) < (this.todayStr()+"T"+this.min2hm(this.nowMin()));
+        const canCancel = (r.status==="attente"||r.status==="confirme") && !past;
+        return `<div class="order">
+          <div class="o-top"><span class="o-id">${this.fmtDate(r.date)} · ${r.time}</span><span class="badge ${st.badge}">${st.label}</span></div>
+          <div class="o-items"><div class="o-line"><span>🩺 ${this.escape(r.motif)}</span></div>
+            ${r.animalId?`<div class="o-line"><span>${this.speciesEmo((DB.find("animals",r.animalId)||{}).espece)} ${this.escape(this.animalName(r.animalId))}</span></div>`:""}
+            ${r.note?`<div class="lr-s" style="margin-top:4px">« ${this.escape(r.note)} »</div>`:""}</div>
+          ${canCancel?`<div class="o-foot"><span class="lr-s">Vous pouvez annuler si besoin</span><button class="btn btn-danger btn-sm" onclick="App.cancelRdv('${r.id}')">Annuler</button></div>`:""}
+        </div>`; }).join("");
+  },
+  cancelRdv(id){
+    if(!confirm("Annuler ce rendez-vous ?")) return;
+    DB.update("rdv",id,{status:"annule"});
+    const r=DB.find("rdv",id);
+    if(r) this.notify("admin","rdv_no","Rendez-vous annulé",`${r.clientNom} · ${this.fmtDateShort(r.date)} ${r.time}`);
+    this.toast("Rendez-vous annulé.","ok"); this.renderAll();
+  },
+
+  /* ============================================================
+     CLIENT — MESSAGES : questions au vétérinaire + conseils reçus
+     ============================================================ */
+  renderMsgClient(){
+    const w=document.getElementById("msg-c"); if(!w) return;
+    const u=this.currentUser();
+    const pets=this.myAnimals();
+    const petSel = pets.length
+      ? `<select id="q-animal"><option value="">Question générale</option>${pets.map(p=>`<option value="${p.id}">${this.speciesEmo(p.espece)} ${this.escape(p.nom)}</option>`).join("")}</select>`
+      : "";
+    const advices=DB.get("advices",[]).filter(a=>a.clientId===u.id).sort((a,b)=>b.createdAt-a.createdAt);
+    const questions=DB.get("questions",[]).filter(q=>q.clientId===u.id).sort((a,b)=>b.createdAt-a.createdAt);
+
+    let html=`<div class="card mb">
+      <div class="field" style="margin-bottom:10px"><label>💬 Une question pour le Dr. Asma ?</label>
+        <textarea id="q-text" placeholder="Ex : mon chat mange moins depuis 2 jours, est-ce inquiétant ?"></textarea></div>
+      ${petSel?`<div class="field" style="margin-bottom:10px"><label>Concerne</label>${petSel}</div>`:""}
+      <button class="btn btn-primary btn-block" onclick="App.sendQuestion()">Envoyer ma question ✉️</button>
+    </div>`;
+
+    if(advices.length){
+      html+=`<div class="section-head mt"><div><div class="eyebrow">Du cabinet</div><h2 style="font-size:1.25rem">Conseils du vétérinaire 💡</h2></div></div>`;
+      html+=`<div class="stagger">`+advices.map(a=>`
+        <div class="advice"><div class="adi">💡</div>
+          <div style="flex:1"><div class="adt">${this.escape(a.titre)}</div>
+            <div class="ads">${this.escape(a.texte)}</div>
+            <div class="add">${a.animalId?this.speciesEmo((DB.find("animals",a.animalId)||{}).espece)+" "+this.escape(this.animalName(a.animalId))+" · ":""}${this.fmtDate(this.dstr(new Date(a.createdAt)))}</div></div>
+        </div>`).join("")+`</div>`;
+    }
+
+    html+=`<div class="section-head mt"><div><div class="eyebrow">Historique</div><h2 style="font-size:1.25rem">Mes questions</h2></div></div>`;
+    if(!questions.length){
+      html+=`<div class="empty"><span class="ic">💬</span><div class="et">Aucune question</div><div class="hint">Posez votre première question ci-dessus.</div></div>`;
+    } else {
+      html+=`<div class="stagger">`+questions.map(q=>`
+        <div class="card" style="margin-bottom:12px">
+          <div class="bubble q"><span class="b-who">Vous${q.animalId?" · "+this.escape(this.animalName(q.animalId)):""}</span>${this.escape(q.texte)}</div>
+          ${q.reponse
+            ? `<div class="bubble a"><span class="b-who">Dr. Asma Gnaoui</span>${this.escape(q.reponse)}</div>`
+            : `<div class="lr-s" style="margin-top:8px">⏳ En attente de réponse du vétérinaire…</div>`}
+          <div class="add" style="margin-top:6px">${this.ago(q.createdAt)}</div>
+        </div>`).join("")+`</div>`;
+    }
+    w.innerHTML=html;
+  },
+  sendQuestion(){
+    const t=(document.getElementById("q-text").value||"").trim();
+    if(!t){ this.toast("Écrivez votre question d'abord.","err"); return; }
+    const u=this.currentUser();
+    const animalId=(document.getElementById("q-animal")||{}).value||"";
+    DB.push("questions",{ id:this.uid("q"), clientId:u.id, clientNom:u.nom||"Client", animalId, texte:t, reponse:"", answeredAt:0, createdAt:Date.now() });
+    const petLbl=animalId?" · "+this.animalName(animalId):"";
+    this.notify("admin","question","Nouvelle question",`${u.nom||"Un client"}${petLbl}`);
+    this.toast("Question envoyée ! Le vétérinaire vous répondra. ✉️","ok");
+    this.renderAll();
+  },
+
+  /* ============================================================
+     À PROPOS — coordonnées, horaires, carte Google Maps
+     ============================================================ */
+  renderAbout(role){
+    const w=document.getElementById("about-"+role); if(!w) return;
+    const s=this.settings();
+    const st=this.clinicStatus();
+    const tel=this.phoneFmt(s.phone);
+    const telDigits=this.phoneDigits(s.phone);
+    const mapQ=encodeURIComponent(s.mapQuery||s.address||s.clinicName);
+    const mapSrc=`https://www.google.com/maps?q=${mapQ}&z=16&output=embed`;
+    const mapLink=`https://www.google.com/maps/search/?api=1&query=${mapQ}`;
+    // ordre d'affichage : Lundi → Dimanche
+    const order=[1,2,3,4,5,6,0]; const today=new Date().getDay();
+    const hoursRows=order.map(d=>{
+      const h=(s.hours&&(s.hours[d]||s.hours[String(d)]))||null;
+      const txt = (h&&h.open) ? (h.from+"–"+(h.bfrom?h.bfrom+", "+h.bto+"–":"")+h.to) : `<span class="cl">Fermé</span>`;
+      return `<div class="hour-line ${d===today?"today-h":""}"><span>${this.DOW_FULL[d]}</span><span>${txt}</span></div>`;
+    }).join("");
+
+    w.innerHTML=`
+      <div class="card about-card mb">
+        <div class="about-brand">
+          <div class="mark"><img src="logo-mark.png" alt="Logo" onerror="this.parentNode.textContent='🐾'"></div>
+          <div><div class="nm">Animaux <span>d'abord</span></div><div class="tg">${this.escape(s.clinicName)} 🇹🇳</div></div>
+        </div>
+        <div class="about-row"><div class="ic">👩🏻‍⚕️</div><div><div class="lbl">Vétérinaire</div><div class="val">${this.escape(s.doctor)}</div></div></div>
+        <div class="about-row"><div class="ic">📞</div><div><div class="lbl">Téléphone ${s.emergency24?"· 24h/24 · 7j/7":""}</div><a class="val" href="tel:+${telDigits}">${this.escape(tel)}</a></div></div>
+        <div class="about-row"><div class="ic">📍</div><div><div class="lbl">Adresse</div><div class="val" style="font-weight:600">${this.escape(s.address)}</div></div></div>
+        <div class="about-row"><div class="ic">🏫</div><div><div class="lbl">Repère</div><div class="val" style="font-weight:600">${this.escape(s.landmark)}</div></div></div>
+        <div class="about-row" style="background:${st.open?"var(--ok-soft)":"var(--danger-soft)"}"><div class="ic" style="background:${st.open?"var(--ok)":"var(--danger)"};color:#fff">${st.open?"✓":"✕"}</div><div><div class="lbl">Statut</div><div class="val">${st.open?"Ouvert":"Fermé"} · <span style="font-weight:600">${this.escape(st.text)}</span></div></div></div>
+        <div class="about-actions">
+          <a class="btn btn-primary" style="flex:1;text-decoration:none" href="tel:+${telDigits}">📞 Appeler</a>
+          <a class="btn btn-mango" style="flex:1;text-decoration:none" href="https://wa.me/${telDigits}" target="_blank" rel="noopener">💬 WhatsApp</a>
+        </div>
+        <div style="padding:14px 18px 4px"><a class="btn btn-ghost btn-block" style="text-decoration:none" href="${mapLink}" target="_blank" rel="noopener">🧭 Itinéraire Google Maps</a></div>
+        <iframe class="about-map" src="${mapSrc}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Carte du cabinet"></iframe>
+      </div>
+
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:8px"><div><div class="eyebrow">Horaires</div><h2 style="font-size:1.2rem">Heures d'ouverture</h2></div></div>
+        <div class="hours-list" style="padding:0">${hoursRows}</div>
+        ${s.emergency24?`<div class="vax-alert" style="margin:12px 0 0"><span class="vic">🚨</span> Urgences vétérinaires 24h/24, 7j/7 au ${this.escape(tel)}</div>`:""}
+      </div>`;
+  },
+  phoneFmt(p){ // formate 22024232 -> +216 22 024 232
+    const d=(p||"").replace(/\D/g,"").replace(/^216/,"");
+    if(d.length>=8) return "+216 "+d.slice(0,2)+" "+d.slice(2,5)+" "+d.slice(5,8);
+    return "+216 "+d;
+  },
+
+  /* ============================================================
+     ADMIN — ACCUEIL : tableau de bord + gestion blog/astuces
+     ============================================================ */
+  allClients(){ return DB.get("users",[]).filter(u=>u.role==="client").sort((a,b)=>b.createdAt-a.createdAt); },
+  rdvToday(){ const t=this.todayStr(); return DB.get("rdv",[]).filter(r=>r.date===t && (r.status==="attente"||r.status==="confirme")); },
+  pendingOrders(){ return DB.get("orders",[]).filter(o=>o.status==="attente"||o.status==="preparation"); },
+  openQuestions(){ return DB.get("questions",[]).filter(q=>!q.reponse); },
+  pendingRdv(){ return DB.get("rdv",[]).filter(r=>r.status==="attente"); },
+
+  renderHomeAdmin(){
+    const w=document.getElementById("ahome-c"); if(!w) return;
+    const u=this.currentUser(); const st=this.clinicStatus();
+    const nClients=this.allClients().length;
+    const nToday=this.rdvToday().length;
+    const nOrders=this.pendingOrders().length;
+    const nQ=this.openQuestions().length;
+    const nPending=this.pendingRdv().length;
+    const posts=DB.get("posts",[]).slice().sort((a,b)=>b.createdAt-a.createdAt);
+
+    let html=`<div class="hero-card">
+        <div class="h-eyebrow">Espace vétérinaire</div>
+        <h2>Bonjour ${this.escape((u.nom||"Docteur").replace(/^Dr\.?\s*/i,"Dr. "))} 👋</h2>
+        <p>Voici l'activité de votre cabinet aujourd'hui.</p>
+        <div class="h-actions">
+          <button class="btn btn-white" onclick="App.showTab('atab-rdv','admin-nav')">📅 Agenda</button>
+          <button class="btn btn-ghost" onclick="App.showTab('atab-patients','admin-nav')">🐾 Patients</button>
+        </div>
+      </div>`;
+
+    html+=`<div class="status-banner is-${st.open?"open":"closed"}"><div class="dot"></div>
+      <div><div class="st-main">${st.open?"Cabinet ouvert":"Cabinet fermé"}</div><div class="st-sub">${this.escape(st.text)}</div></div></div>`;
+
+    html+=`<div class="stat-grid">
+      <div class="stat-card" onclick="App.showTab('atab-patients','admin-nav')" style="cursor:pointer"><div class="sc-ic">🐾</div><div class="sc-v">${nClients}</div><div class="sc-l">Clients inscrits</div></div>
+      <div class="stat-card" onclick="App.showTab('atab-rdv','admin-nav')" style="cursor:pointer"><div class="sc-ic">📅</div><div class="sc-v">${nToday}</div><div class="sc-l">RDV aujourd'hui</div></div>
+      <div class="stat-card" onclick="App.showTab('atab-orders','admin-nav')" style="cursor:pointer"><div class="sc-ic">📦</div><div class="sc-v">${nOrders}</div><div class="sc-l">Commandes à traiter</div></div>
+      <div class="stat-card" onclick="App.showTab('atab-msg','admin-nav')" style="cursor:pointer"><div class="sc-ic">💬</div><div class="sc-v">${nQ}</div><div class="sc-l">Questions en attente</div></div>
+    </div>`;
+
+    if(nPending){
+      html+=`<div class="vax-alert" style="margin:0 0 14px"><span class="vic">🔔</span> ${nPending} demande${nPending>1?"s":""} de rendez-vous à confirmer — <span onclick="App.showTab('atab-rdv','admin-nav')" style="text-decoration:underline;cursor:pointer">voir l'agenda</span></div>`;
+    }
+
+    // gestion du contenu (blog + astuces)
+    html+=`<div class="section-head mt"><div><div class="eyebrow">Page d'accueil des clients</div><h2 style="font-size:1.25rem">Blog & astuces</h2></div>
+      <button class="btn btn-primary btn-sm" onclick="App.openPostForm()">＋ Publier</button></div>`;
+    if(!posts.length){
+      html+=`<div class="empty"><span class="ic">📰</span><div class="et">Aucune publication</div><div class="hint">Ajoutez un article ou une astuce pour vos clients.</div></div>`;
+    } else {
+      html+=`<div class="stagger">`+posts.map(p=>`
+        <div class="list-row" style="cursor:default">
+          <div class="lr-av">${p.emo||(p.type==="astuce"?"💡":"📰")}</div>
+          <div class="lr-body"><div class="lr-t">${this.escape(p.titre)}</div>
+            <div class="lr-s"><span class="badge ${p.type==="astuce"?"b-mango":"b-rose"}">${p.type==="astuce"?"Astuce":"Actu"}</span> ${this.fmtDateShort(this.dstr(new Date(p.createdAt)))}</div></div>
+          <div style="display:flex;gap:6px;flex:none">
+            <button class="btn btn-soft btn-sm" onclick="App.openPostForm('${p.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="App.deletePost('${p.id}')">🗑️</button>
+          </div>
+        </div>`).join("")+`</div>`;
+    }
+    w.innerHTML=html;
+  },
+  openPostForm(id){
+    const p=id?DB.find("posts",id):null; this._postEdit=id||null;
+    const body=`
+      <div class="two-col">
+        <div class="field"><label>Type</label><select id="po-type">
+          <option value="astuce" ${p&&p.type==="astuce"?"selected":""}>💡 Astuce santé</option>
+          <option value="blog" ${!p||p.type==="blog"?"selected":""}>📰 Actualité / blog</option></select></div>
+        <div class="field"><label>Emoji</label><input class="input" id="po-emo" maxlength="4" value="${p?this.escape(p.emo||""):""}" placeholder="💡"></div>
+      </div>
+      <div class="field"><label>Titre</label><input class="input" id="po-titre" value="${p?this.escape(p.titre):""}" placeholder="Ex : Bien nourrir son chaton"></div>
+      <div class="field"><label>Contenu</label><textarea id="po-contenu" style="min-height:120px" placeholder="Votre message pour les clients…">${p?this.escape(p.contenu):""}</textarea></div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.savePost()">${id?"Enregistrer":"Publier"} 📢</button>
+      ${id?`<button class="btn btn-danger btn-block mt-s" onclick="App.deletePost('${id}')">Supprimer</button>`:""}`;
+    this.openSheet(id?"Modifier la publication":"Nouvelle publication", body, foot);
+  },
+  savePost(){
+    const titre=(document.getElementById("po-titre").value||"").trim();
+    const contenu=(document.getElementById("po-contenu").value||"").trim();
+    if(!titre||!contenu){ this.toast("Titre et contenu requis.","err"); return; }
+    const data={ type:document.getElementById("po-type").value, emo:(document.getElementById("po-emo").value||"").trim(), titre, contenu };
+    if(this._postEdit){ DB.update("posts",this._postEdit,data); this.toast("Publication mise à jour ✓","ok"); }
+    else { DB.push("posts",Object.assign({id:this.uid("post"),date:Date.now(),createdAt:Date.now()},data)); this.toast("Publiée sur l'accueil des clients ! 📢","ok"); }
+    this.closeSheet(); this.renderAll();
+  },
+  deletePost(id){
+    if(!confirm("Supprimer cette publication ?")) return;
+    DB.del("posts",id); this.closeSheet(); this.toast("Publication supprimée.","ok"); this.renderAll();
+  },
+
+  /* ============================================================
+     ADMIN — AGENDA : calendrier + gestion des rendez-vous
+     ============================================================ */
+  rdvCountsForMonth(monthDate){
+    const y=monthDate.getFullYear(), mo=monthDate.getMonth();
+    const counts={};
+    DB.get("rdv",[]).forEach(r=>{
+      if(r.status==="annule"||r.status==="refuse") return;
+      const d=this.parseD(r.date);
+      if(d.getFullYear()===y && d.getMonth()===mo) counts[r.date]=(counts[r.date]||0)+1;
+    });
+    return counts;
+  },
+  renderAgenda(){
+    const w=document.getElementById("agenda-c"); if(!w) return;
+    if(!this._agMonth) this._agMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+    const counts=this.rdvCountsForMonth(this._agMonth);
+    let html=`<div class="card mb">${this.calHead("ag")}${this.calGrid(this._agMonth, this._agSel, counts, false)}</div>`;
+
+    // demandes en attente (priorité)
+    const pending=this.pendingRdv().sort((a,b)=> (a.date+a.time) > (b.date+b.time) ? 1 : -1);
+    if(pending.length && !this._agSel){
+      html+=`<div class="section-head"><div><div class="eyebrow">À traiter</div><h2 style="font-size:1.25rem">Demandes en attente</h2></div><span class="badge b-warn">${pending.length}</span></div>`;
+      html+=pending.map(r=>this.rdvAdminCard(r)).join("");
+    }
+
+    // rendez-vous du jour sélectionné (ou du jour même)
+    const dateSel=this._agSel||this.todayStr();
+    const dayRdv=DB.get("rdv",[]).filter(r=>r.date===dateSel && r.status!=="annule" && r.status!=="refuse").sort((a,b)=>a.time<b.time?-1:1);
+    html+=`<div class="section-head mt"><div><div class="eyebrow">${this._agSel?this.fmtDate(dateSel):"Aujourd'hui"}</div><h2 style="font-size:1.25rem">Rendez-vous du jour</h2></div>${this._agSel?`<button class="btn btn-ghost btn-sm" onclick="App.clearAgSel()">✕ Tout voir</button>`:""}</div>`;
+    if(!dayRdv.length){
+      html+=`<div class="empty"><span class="ic">📅</span><div class="et">Aucun rendez-vous</div><div class="hint">${this._agSel?"Rien de prévu ce jour-là.":"Journée libre pour l'instant."}</div></div>`;
+    } else {
+      html+=dayRdv.map(r=>this.rdvAdminCard(r)).join("");
+    }
+    w.innerHTML=html;
+  },
+  selectAgDate(ds){ this._agSel=ds; this.renderAgenda(); },
+  clearAgSel(){ this._agSel=null; this.renderAgenda(); },
+  rdvAdminCard(r){
+    const st=RDV_STATUS[r.status]||RDV_STATUS.attente;
+    const cli=DB.find("users",r.clientId);
+    const animal=r.animalId?DB.find("animals",r.animalId):null;
+    const past=(r.date+"T"+r.time) < (this.todayStr()+"T"+this.min2hm(this.nowMin()));
+    let actions="";
+    if(r.status==="attente"){
+      actions=`<button class="btn btn-ok btn-sm" onclick="App.confirmRdv('${r.id}')">✓ Confirmer</button>
+        <button class="btn btn-danger btn-sm" onclick="App.refuseRdv('${r.id}')">Refuser</button>`;
+    } else if(r.status==="confirme"){
+      actions=`<button class="btn btn-soft btn-sm" onclick="App.completeRdv('${r.id}')">Marquer terminé</button>
+        <button class="btn btn-danger btn-sm" onclick="App.refuseRdv('${r.id}')">Annuler</button>`;
+    }
+    return `<div class="order">
+      <div class="o-top"><span class="o-id">🕒 ${r.time} · ${this.fmtDateShort(r.date)}</span><span class="badge ${st.badge}">${st.label}</span></div>
+      <div class="o-items">
+        <div class="o-line"><span>👤 ${this.escape(r.clientNom||(cli?cli.nom:"Client"))}</span>${cli&&cli.tel?`<a href="tel:+${this.phoneDigits(cli.tel)}" style="color:var(--rose-deep);text-decoration:none;font-weight:700">📞</a>`:""}</div>
+        <div class="o-line"><span>🩺 ${this.escape(r.motif)}</span></div>
+        ${animal?`<div class="o-line"><span>${this.speciesEmo(animal.espece)} ${this.escape(animal.nom)} <span class="lr-s">(${this.speciesLabel(animal.espece)})</span></span></div>`:""}
+        ${r.note?`<div class="lr-s" style="margin-top:4px">« ${this.escape(r.note)} »</div>`:""}
+      </div>
+      ${actions?`<div class="o-foot" style="justify-content:flex-end;gap:8px">${actions}</div>`:""}
+    </div>`;
+  },
+  confirmRdv(id){
+    DB.update("rdv",id,{status:"confirme"});
+    const r=DB.find("rdv",id);
+    if(r) this.notify(r.clientId,"rdv_ok","Rendez-vous confirmé ✅",`${this.fmtDate(r.date)} à ${r.time}`);
+    this.toast("Rendez-vous confirmé. Le client est prévenu ✓","ok"); this.renderAll();
+  },
+  refuseRdv(id){
+    const r=DB.find("rdv",id); if(!r) return;
+    const wasConfirmed = r.status==="confirme";
+    if(!confirm(wasConfirmed?"Annuler ce rendez-vous confirmé ?":"Refuser cette demande ?")) return;
+    DB.update("rdv",id,{status:wasConfirmed?"annule":"refuse"});
+    this.notify(r.clientId,"rdv_no", wasConfirmed?"Rendez-vous annulé":"Rendez-vous refusé",`${this.fmtDate(r.date)} à ${r.time} — contactez le cabinet pour reprogrammer.`);
+    this.toast(wasConfirmed?"Rendez-vous annulé.":"Demande refusée. Le client est prévenu.","ok"); this.renderAll();
+  },
+  completeRdv(id){
+    DB.update("rdv",id,{status:"termine"});
+    this.toast("Rendez-vous marqué comme terminé ✓","ok"); this.renderAll();
+  },
+
+  /* ============================================================
+     ADMIN — BOUTIQUE : gestion des produits
+     ============================================================ */
+  renderShopAdmin(){
+    const w=document.getElementById("ashop-c"); if(!w) return;
+    const prods=DB.get("products",[]).slice().sort((a,b)=>b.createdAt-a.createdAt);
+    let html=`<div class="stat-grid">
+      <div class="stat-card"><div class="sc-ic">🛍️</div><div class="sc-v">${prods.length}</div><div class="sc-l">Produits en ligne</div></div>
+      <div class="stat-card"><div class="sc-ic">⚠️</div><div class="sc-v">${prods.filter(p=>p.stock!=null&&+p.stock<=3).length}</div><div class="sc-l">Stocks faibles</div></div>
+    </div>`;
+    if(!prods.length){
+      html+=`<div class="empty"><span class="ic">🛍️</span><div class="et">Aucun produit</div><div class="hint">Ajoutez votre premier produit avec le bouton « ＋ Produit ».</div></div>`;
+    } else {
+      html+=`<div class="stagger">`+prods.map(p=>{
+        const low=(p.stock!=null&&+p.stock<=3);
+        return `<div class="list-row" style="cursor:default">
+          <div class="lr-av">${p.photo?`<img src="${p.photo}" alt="">`:(p.emo||"🛍️")}</div>
+          <div class="lr-body"><div class="lr-t">${this.escape(p.nom)}</div>
+            <div class="lr-s"><b style="color:var(--rose-deep)">${this.money(p.prix)}</b> · ${this.escape(p.cat||"")} · <span style="color:${low?"var(--danger)":"var(--muted)"}">stock ${p.stock!=null?p.stock:"—"}</span></div></div>
+          <div style="display:flex;gap:6px;flex:none">
+            <button class="btn btn-soft btn-sm" onclick="App.openProdForm('${p.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="App.deleteProd('${p.id}')">🗑️</button>
+          </div>
+        </div>`;
+      }).join("")+`</div>`;
+    }
+    w.innerHTML=html;
+  },
+  openProdForm(id){
+    const p=id?DB.find("products",id):null; this._prodEdit=id||null; this._prodPhoto=p?(p.photo||null):null;
+    const catOpts=SHOP_CATS.map(c=>`<option ${p&&p.cat===c?"selected":""}>${c}</option>`).join("");
+    const body=`
+      <div class="photo-pick"><label class="pv" id="prod-pv">${p&&p.photo?`<img src="${p.photo}">`:"📷"}
+        <input type="file" accept="image/*" style="display:none" onchange="App.pickProdPhoto(this)"></label>
+        <span class="hint">Photo du produit (optionnel)</span></div>
+      <div class="field"><label>Nom du produit</label><input class="input" id="pr-nom" value="${p?this.escape(p.nom):""}" placeholder="Ex : Croquettes chat 2kg"></div>
+      <div class="two-col">
+        <div class="field"><label>Prix (DT)</label><input class="input" type="number" step="0.5" id="pr-prix" value="${p?p.prix:""}" placeholder="Ex : 32"></div>
+        <div class="field"><label>Stock</label><input class="input" type="number" id="pr-stock" value="${p&&p.stock!=null?p.stock:""}" placeholder="Ex : 15"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Catégorie</label><select id="pr-cat">${catOpts}</select></div>
+        <div class="field"><label>Emoji</label><input class="input" id="pr-emo" maxlength="4" value="${p?this.escape(p.emo||""):""}" placeholder="🦴"></div>
+      </div>
+      <div class="field"><label>Description</label><textarea id="pr-desc" placeholder="Courte description du produit">${p?this.escape(p.desc||""):""}</textarea></div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveProd()">${id?"Enregistrer":"Ajouter le produit"} 🛍️</button>
+      ${id?`<button class="btn btn-danger btn-block mt-s" onclick="App.deleteProd('${id}')">Supprimer</button>`:""}`;
+    this.openSheet(id?"Modifier le produit":"Nouveau produit", body, foot);
+  },
+  pickProdPhoto(inp){ this.readPhoto(inp.files[0], d=>{ this._prodPhoto=d; const pv=document.getElementById("prod-pv"); if(pv) pv.innerHTML=d?`<img src="${d}">`:"📷"; }); },
+  saveProd(){
+    const nom=(document.getElementById("pr-nom").value||"").trim();
+    const prix=parseFloat(document.getElementById("pr-prix").value);
+    if(!nom){ this.toast("Le nom est requis.","err"); return; }
+    if(isNaN(prix)||prix<0){ this.toast("Indiquez un prix valide.","err"); return; }
+    const stockV=document.getElementById("pr-stock").value;
+    const data={ nom, prix, cat:document.getElementById("pr-cat").value, emo:(document.getElementById("pr-emo").value||"").trim(),
+      desc:(document.getElementById("pr-desc").value||"").trim(), stock: stockV===""?null:parseInt(stockV,10), photo:this._prodPhoto||null };
+    if(this._prodEdit){ DB.update("products",this._prodEdit,data); this.toast("Produit mis à jour ✓","ok"); }
+    else { DB.push("products",Object.assign({id:this.uid("p"),createdAt:Date.now()},data)); this.toast("Produit ajouté à la boutique ! 🛍️","ok"); }
+    this.closeSheet(); this.renderAll();
+  },
+  deleteProd(id){
+    if(!confirm("Supprimer ce produit de la boutique ?")) return;
+    DB.del("products",id); this.closeSheet(); this.toast("Produit supprimé.","ok"); this.renderAll();
+  },
+
+  /* ============================================================
+     ADMIN — COMMANDES : suivi & changement de statut
+     ============================================================ */
+  renderOrders(){
+    const w=document.getElementById("aorders-c"); if(!w) return;
+    const orders=DB.get("orders",[]).slice().sort((a,b)=>b.createdAt-a.createdAt);
+    const pending=orders.filter(o=>o.status==="attente"||o.status==="preparation");
+    let html=`<div class="stat-grid">
+      <div class="stat-card"><div class="sc-ic">📦</div><div class="sc-v">${pending.length}</div><div class="sc-l">À préparer</div></div>
+      <div class="stat-card"><div class="sc-ic">💰</div><div class="sc-v">${this.money(orders.filter(o=>o.status!=="annulee").reduce((t,o)=>t+o.total,0))}</div><div class="sc-l">Total des ventes</div></div>
+    </div>`;
+    if(!orders.length){
+      html+=`<div class="empty"><span class="ic">📦</span><div class="et">Aucune commande</div><div class="hint">Les commandes des clients apparaîtront ici.</div></div>`;
+      w.innerHTML=html; return;
+    }
+    const statusOpts=(cur)=>Object.keys(ORDER_STATUS).map(k=>`<option value="${k}" ${k===cur?"selected":""}>${ORDER_STATUS[k].label}</option>`).join("");
+    html+=`<div class="stagger">`+orders.map(o=>{ const st=ORDER_STATUS[o.status]||ORDER_STATUS.attente;
+      const cli=DB.find("users",o.clientId);
+      return `<div class="order">
+        <div class="o-top"><span class="o-id">#${o.id.slice(-4).toUpperCase()} · ${this.escape(o.clientNom||"Client")}</span><span class="badge ${st.badge}">${st.label}</span></div>
+        <div class="o-items">${o.items.map(it=>`<div class="o-line"><span>${it.emo||"•"} ${this.escape(it.nom)} ×${it.qty}</span><span>${this.money(it.prix*it.qty)}</span></div>`).join("")}
+          ${o.note?`<div class="lr-s" style="margin-top:4px">📝 « ${this.escape(o.note)} »</div>`:""}
+          ${cli&&cli.tel?`<div class="lr-s" style="margin-top:4px">📞 <a href="tel:+${this.phoneDigits(cli.tel)}" style="color:var(--rose-deep);text-decoration:none">${this.escape(this.phoneFmt(cli.tel))}</a></div>`:""}
+        </div>
+        <div class="o-foot"><span class="o-total">${this.money(o.total)}</span>
+          <select style="width:auto;padding:8px 10px;font-size:.82rem" onchange="App.setOrderStatus('${o.id}',this.value)">${statusOpts(o.status)}</select></div>
+      </div>`; }).join("")+`</div>`;
+    w.innerHTML=html;
+  },
+  setOrderStatus(id,status){
+    DB.update("orders",id,{status});
+    const o=DB.find("orders",id);
+    if(o){ const st=ORDER_STATUS[status];
+      this.notify(o.clientId,"order_up","Commande mise à jour",`#${o.id.slice(-4).toUpperCase()} · ${st.label}`); }
+    this.toast("Statut mis à jour. Le client est prévenu ✓","ok"); this.renderAll();
+  },
+
+  /* ============================================================
+     ADMIN — PATIENTS : dossiers clients, carnet de santé, conseils
+     ============================================================ */
+  renderPatients(){
+    const w=document.getElementById("patients-c"); if(!w) return;
+    const clients=this.allClients();
+    let html=`<div class="shop-search"><span class="si">🔍</span>
+      <input class="input" id="pat-q" placeholder="Rechercher un client…" value="${this.escape(this._patQ||"")}" oninput="App.onPatSearch(this.value)"></div>`;
+    const q=(this._patQ||"").trim().toLowerCase();
+    const list=clients.filter(c=> !q || (c.nom+" "+(c.tel||"")).toLowerCase().includes(q));
+    if(!list.length){
+      html+=`<div class="empty"><span class="ic">🐾</span><div class="et">${clients.length?"Aucun résultat":"Aucun client inscrit"}</div><div class="hint">${clients.length?"Essayez un autre nom.":"Les clients apparaîtront ici après inscription."}</div></div>`;
+      w.innerHTML=html; return;
+    }
+    html+=`<div class="stagger">`+list.map(c=>{
+      const animals=DB.get("animals",[]).filter(a=>a.ownerId===c.id);
+      return `<div class="list-row" onclick="App.openPatient('${c.id}')">
+        <div class="lr-av">${animals[0]&&animals[0].photo?`<img src="${animals[0].photo}">`:"👤"}</div>
+        <div class="lr-body"><div class="lr-t">${this.escape(c.nom||"Client")}</div>
+          <div class="lr-s">${this.escape(this.phoneFmt(c.tel))} · ${animals.length} animal${animals.length>1?"aux":""}</div></div>
+        <div class="lr-go">›</div>
+      </div>`;
+    }).join("")+`</div>`;
+    w.innerHTML=html;
+  },
+  onPatSearch(v){ this._patQ=v; this.renderPatients(); const i=document.getElementById("pat-q"); if(i){ i.focus(); const n=i.value.length; try{i.setSelectionRange(n,n);}catch(e){} } },
+
+  openPatient(clientId){
+    const c=DB.find("users",clientId); if(!c) return;
+    const animals=DB.get("animals",[]).filter(a=>a.ownerId===clientId);
+    const qs=DB.get("questions",[]).filter(q=>q.clientId===clientId&&!q.reponse).length;
+    let body=`<div class="about-row" style="border:0;padding:0 0 12px"><div class="ic">👤</div><div><div class="lbl">Client</div><div class="val">${this.escape(c.nom||"Client")}</div></div>
+      <a href="tel:+${this.phoneDigits(c.tel)}" class="btn btn-soft btn-sm" style="margin-left:auto;text-decoration:none">📞 Appeler</a></div>`;
+    body+=`<div class="section-head" style="margin:4px 0 10px"><div><div class="eyebrow">Carnets de santé</div><h2 style="font-size:1.1rem">Animaux (${animals.length})</h2></div></div>`;
+    if(!animals.length){
+      body+=`<div class="hint mb">Ce client n'a pas encore ajouté d'animal.</div>`;
+    } else {
+      body+=animals.map(a=>{
+        const recs=this.animalRecords(a.id).length;
+        return `<div class="list-row" onclick="App.openAdminCarnet('${a.id}')">
+          <div class="lr-av">${a.photo?`<img src="${a.photo}">`:this.speciesEmo(a.espece)}</div>
+          <div class="lr-body"><div class="lr-t">${this.escape(a.nom)}</div>
+            <div class="lr-s">${this.speciesLabel(a.espece)}${a.race?" · "+this.escape(a.race):""} · ${recs} entrée${recs>1?"s":""}</div></div>
+          <div class="lr-go">›</div></div>`;
+      }).join("");
+    }
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.openAdviceForm('${clientId}','')">💡 Envoyer un conseil</button>`;
+    this.openSheet(`Dossier · ${this.escape((c.nom||"Client").split(" ")[0])}`, body, foot);
+  },
+
+  openAdminCarnet(animalId){
+    const a=DB.find("animals",animalId); if(!a) return;
+    this._curAnimal=animalId;
+    const recs=this.animalRecords(animalId);
+    let body=`<button class="btn btn-ghost btn-sm mb" onclick="App.openPatient('${a.ownerId}')">‹ Retour au dossier</button>
+      <div class="pet-head" style="display:flex;gap:12px;align-items:center;margin-bottom:14px">
+        <div class="lr-av" style="width:56px;height:56px;font-size:26px">${a.photo?`<img src="${a.photo}">`:this.speciesEmo(a.espece)}</div>
+        <div><div style="font-family:var(--display);font-weight:800;font-size:1.2rem">${this.escape(a.nom)}</div>
+          <div class="lr-s">${this.speciesLabel(a.espece)}${a.sexe?" · "+(a.sexe==="M"?"♂":"♀"):""}${a.naissance?" · "+this.age(a.naissance):""}${a.poids?" · "+a.poids+" kg":""}</div></div>
+      </div>`;
+    if(a.notes) body+=`<div class="advice" style="margin-bottom:14px"><div class="adi">📝</div><div><div class="adt">Notes</div><div class="ads">${this.escape(a.notes)}</div></div></div>`;
+    body+=`<div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Historique médical</div><h2 style="font-size:1.1rem">Carnet de santé</h2></div></div>`;
+    if(!recs.length){
+      body+=`<div class="hint mb">Aucune entrée. Ajoutez le premier acte médical ci-dessous.</div>`;
+    } else {
+      body+=recs.map(r=>{ const t=REC_TYPES.find(x=>x.id===r.type)||REC_TYPES[1];
+        return `<div class="order" style="margin-bottom:10px">
+          <div class="o-top"><span class="o-id" style="font-size:1rem">${t.emo} ${this.escape(r.titre||t.label)}</span><span class="badge ${t.color}">${t.label}</span></div>
+          <div class="o-items"><div class="lr-s">📅 ${this.fmtDate(r.date)}${r.nextDate?` · 🔁 rappel le ${this.fmtDate(r.nextDate)}`:""}</div>
+            ${r.details?`<div style="margin-top:5px;font-size:.9rem;white-space:pre-wrap">${this.escape(r.details)}</div>`:""}</div>
+          <div class="o-foot" style="justify-content:flex-end;gap:6px">
+            <button class="btn btn-soft btn-sm" onclick="App.openRecordForm('${animalId}','${r.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="App.deleteRecord('${r.id}','${animalId}')">🗑️</button></div>
+        </div>`; }).join("");
+    }
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.openRecordForm('${animalId}','')">＋ Ajouter au carnet</button>
+      <button class="btn btn-soft btn-block mt-s" onclick="App.openAdviceForm('${a.ownerId}','${animalId}')">💡 Conseil pour ${this.escape(a.nom)}</button>`;
+    this.openSheet("Carnet · "+this.escape(a.nom), body, foot);
+  },
+
+  openRecordForm(animalId, recId){
+    const a=DB.find("animals",animalId); if(!a) return;
+    const r=recId?DB.find("records",recId):null; this._recEdit=recId||null; this._recAnimal=animalId;
+    const typeOpts=REC_TYPES.map(t=>`<option value="${t.id}" ${r&&r.type===t.id?"selected":""}>${t.emo} ${t.label}</option>`).join("");
+    const body=`
+      <div class="two-col">
+        <div class="field"><label>Type d'acte</label><select id="rc-type" onchange="App.toggleRecNext()">${typeOpts}</select></div>
+        <div class="field"><label>Date</label><input class="input" type="date" id="rc-date" value="${r?r.date:this.todayStr()}" max="${this.todayStr()}"></div>
+      </div>
+      <div class="field"><label>Intitulé</label><input class="input" id="rc-titre" value="${r?this.escape(r.titre||""):""}" placeholder="Ex : Vaccin CHPPiL / Rage"></div>
+      <div class="field"><label>Détails / ordonnance</label><textarea id="rc-details" style="min-height:90px" placeholder="Médicaments, posologie, observations…">${r?this.escape(r.details||""):""}</textarea></div>
+      <div class="field" id="rc-next-wrap" style="display:${(r&&r.type==="vaccin")||!r?"block":"none"}"><label>Date de rappel (optionnel)</label><input class="input" type="date" id="rc-next" value="${r?(r.nextDate||""):""}" min="${this.todayStr()}"></div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveRecord()">${recId?"Enregistrer":"Ajouter"} 🩺</button>`;
+    this.openSheet(recId?"Modifier l'entrée":"Nouvel acte médical", body, foot);
+    this.toggleRecNext();
+  },
+  toggleRecNext(){ const t=(document.getElementById("rc-type")||{}).value; const w=document.getElementById("rc-next-wrap");
+    if(w) w.style.display=(t==="vaccin"||t==="vermifuge")?"block":"none"; },
+  saveRecord(){
+    const titre=(document.getElementById("rc-titre").value||"").trim();
+    const type=document.getElementById("rc-type").value;
+    const date=document.getElementById("rc-date").value||this.todayStr();
+    if(!titre){ this.toast("Indiquez un intitulé.","err"); return; }
+    const nextV=(document.getElementById("rc-next")||{}).value||"";
+    const showNext=(type==="vaccin"||type==="vermifuge");
+    const data={ type, titre, date, details:(document.getElementById("rc-details").value||"").trim(), nextDate: showNext?nextV:"" };
+    const a=DB.find("animals",this._recAnimal);
+    if(this._recEdit){ DB.update("records",this._recEdit,data); this.toast("Carnet mis à jour ✓","ok"); }
+    else {
+      DB.push("records",Object.assign({id:this.uid("rec"),animalId:this._recAnimal,createdAt:Date.now()},data));
+      const t=REC_TYPES.find(x=>x.id===type)||{};
+      if(a){ const kind = type==="vaccin"?"vax":"record";
+        this.notify(a.ownerId,kind,`${t.emo||"🩺"} ${a.nom} · ${t.label||"Carnet"}`,`${titre}${nextV?" — rappel le "+this.fmtDate(nextV):""}`); }
+      this.toast("Ajouté au carnet ! Le client est prévenu 🩺","ok");
+    }
+    this.closeSheet(); if(a) this.openAdminCarnet(this._recAnimal); this.renderAll();
+  },
+  deleteRecord(id, animalId){
+    if(!confirm("Supprimer cette entrée du carnet ?")) return;
+    DB.del("records",id); this.toast("Entrée supprimée.","ok"); this.openAdminCarnet(animalId); this.renderAll();
+  },
+
+  openAdviceForm(clientId, animalId){
+    const c=DB.find("users",clientId);
+    const animals=DB.get("animals",[]).filter(a=>a.ownerId===clientId);
+    const petSel = animals.length
+      ? `<div class="field"><label>Concerne</label><select id="ad-animal"><option value="">Conseil général</option>${animals.map(a=>`<option value="${a.id}" ${a.id===animalId?"selected":""}>${this.speciesEmo(a.espece)} ${this.escape(a.nom)}</option>`).join("")}</select></div>`
+      : "";
+    this._adviceClient=clientId;
+    const body=`<div class="hint mb">Pour ${this.escape(c?c.nom:"le client")} — le conseil apparaîtra dans ses messages.</div>
+      ${petSel}
+      <div class="field"><label>Titre</label><input class="input" id="ad-titre" placeholder="Ex : Alimentation après stérilisation"></div>
+      <div class="field"><label>Conseil</label><textarea id="ad-texte" style="min-height:110px" placeholder="Votre recommandation…"></textarea></div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveAdvice()">Envoyer le conseil 💡</button>`;
+    this.openSheet("Nouveau conseil", body, foot);
+  },
+  saveAdvice(){
+    const titre=(document.getElementById("ad-titre").value||"").trim();
+    const texte=(document.getElementById("ad-texte").value||"").trim();
+    if(!titre||!texte){ this.toast("Titre et conseil requis.","err"); return; }
+    const animalId=(document.getElementById("ad-animal")||{}).value||"";
+    DB.push("advices",{ id:this.uid("adv"), clientId:this._adviceClient, animalId, titre, texte, createdAt:Date.now() });
+    this.notify(this._adviceClient,"advice","💡 Nouveau conseil du vétérinaire",titre);
+    this.closeSheet(); this.toast("Conseil envoyé au client ! 💡","ok"); this.renderAll();
+  },
+
+  /* ============================================================
+     ADMIN — MESSAGES : répondre aux questions des clients
+     ============================================================ */
+  renderMsgAdmin(){
+    const w=document.getElementById("amsg-c"); if(!w) return;
+    const all=DB.get("questions",[]).slice().sort((a,b)=>b.createdAt-a.createdAt);
+    const open=all.filter(q=>!q.reponse), done=all.filter(q=>q.reponse);
+    let html="";
+    if(!all.length){
+      html=`<div class="empty"><span class="ic">💬</span><div class="et">Aucune question</div><div class="hint">Les questions des clients arriveront ici.</div></div>`;
+      w.innerHTML=html; return;
+    }
+    if(open.length){
+      html+=`<div class="section-head"><div><div class="eyebrow">À répondre</div><h2 style="font-size:1.25rem">En attente</h2></div><span class="badge b-warn">${open.length}</span></div>`;
+      html+=open.map(q=>this.questionCard(q,true)).join("");
+    }
+    if(done.length){
+      html+=`<div class="section-head mt"><div><div class="eyebrow">Historique</div><h2 style="font-size:1.25rem">Répondues</h2></div></div>`;
+      html+=done.map(q=>this.questionCard(q,false)).join("");
+    }
+    w.innerHTML=html;
+  },
+  questionCard(q, openReply){
+    const cli=DB.find("users",q.clientId);
+    const animal=q.animalId?DB.find("animals",q.animalId):null;
+    return `<div class="card" style="margin-bottom:12px">
+      <div class="lr-s" style="margin-bottom:8px">👤 <b>${this.escape(q.clientNom||(cli?cli.nom:"Client"))}</b>${animal?` · ${this.speciesEmo(animal.espece)} ${this.escape(animal.nom)}`:""} · ${this.ago(q.createdAt)}</div>
+      <div class="bubble q">${this.escape(q.texte)}</div>
+      ${q.reponse?`<div class="bubble a"><span class="b-who">Vous</span>${this.escape(q.reponse)}</div>`:""}
+      <div class="o-foot" style="justify-content:flex-end;gap:6px">
+        ${cli&&cli.tel?`<a href="tel:+${this.phoneDigits(cli.tel)}" class="btn btn-ghost btn-sm" style="text-decoration:none">📞</a>`:""}
+        <button class="btn ${openReply?"btn-primary":"btn-soft"} btn-sm" onclick="App.openReply('${q.id}')">${openReply?"Répondre ✍️":"Modifier la réponse"}</button>
+      </div>
+    </div>`;
+  },
+  openReply(id){
+    const q=DB.find("questions",id); if(!q) return; this._replyId=id;
+    const animal=q.animalId?DB.find("animals",q.animalId):null;
+    const body=`<div class="lr-s" style="margin-bottom:6px">Question de <b>${this.escape(q.clientNom)}</b>${animal?` · ${this.escape(animal.nom)}`:""}</div>
+      <div class="bubble q" style="margin-bottom:12px">${this.escape(q.texte)}</div>
+      <div class="field"><label>Votre réponse</label><textarea id="rep-text" style="min-height:120px" placeholder="Répondez au client…">${this.escape(q.reponse||"")}</textarea></div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveReply()">Envoyer la réponse ✉️</button>`;
+    this.openSheet("Répondre au client", body, foot);
+  },
+  saveReply(){
+    const t=(document.getElementById("rep-text").value||"").trim();
+    if(!t){ this.toast("Écrivez une réponse.","err"); return; }
+    DB.update("questions",this._replyId,{reponse:t,answeredAt:Date.now()});
+    const q=DB.find("questions",this._replyId);
+    if(q) this.notify(q.clientId,"answer","💬 Réponse du vétérinaire","Le Dr. Asma a répondu à votre question.");
+    this.closeSheet(); this.toast("Réponse envoyée au client ✓","ok"); this.renderAll();
+  },
+
+  /* ============================================================
+     ADMIN — RÉGLAGES : coordonnées du cabinet + horaires
+     ============================================================ */
+  renderSettings(){
+    const w=document.getElementById("settings-c"); if(!w) return;
+    const s=this.settings();
+    const order=[1,2,3,4,5,6,0];
+    const dayRows=order.map(d=>{
+      const h=(s.hours&&(s.hours[d]||s.hours[String(d)]))||{open:false,from:"08:00",to:"18:00",bfrom:"",bto:""};
+      return `<div style="padding:12px 0;border-bottom:1px solid var(--line)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${h.open?"8px":"0"}">
+          <b style="font-family:var(--display)">${this.DOW_FULL[d]}</b>
+          <span class="switch"><input type="checkbox" id="h-open-${d}" ${h.open?"checked":""} onchange="App.toggleDayInputs(${d})"><span class="slider-sw"></span></span>
+        </div>
+        <div id="h-times-${d}" style="display:${h.open?"block":"none"}">
+          <div class="two-col"><div class="field" style="margin:0"><label style="font-size:.7rem">Ouverture</label><input class="input" type="time" id="h-from-${d}" value="${h.from||"08:00"}"></div>
+            <div class="field" style="margin:0"><label style="font-size:.7rem">Fermeture</label><input class="input" type="time" id="h-to-${d}" value="${h.to||"18:00"}"></div></div>
+          <div class="two-col" style="margin-top:8px"><div class="field" style="margin:0"><label style="font-size:.7rem">Pause début (option.)</label><input class="input" type="time" id="h-bfrom-${d}" value="${h.bfrom||""}"></div>
+            <div class="field" style="margin:0"><label style="font-size:.7rem">Pause fin (option.)</label><input class="input" type="time" id="h-bto-${d}" value="${h.bto||""}"></div></div>
+        </div>
+      </div>`;
+    }).join("");
+
+    w.innerHTML=`
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Coordonnées</div><h2 style="font-size:1.2rem">Le cabinet</h2></div></div>
+        <div class="field"><label>Nom du cabinet</label><input class="input" id="se-name" value="${this.escape(s.clinicName)}"></div>
+        <div class="field"><label>Vétérinaire</label><input class="input" id="se-doctor" value="${this.escape(s.doctor)}"></div>
+        <div class="field"><label>Téléphone</label><input class="input" id="se-phone" value="${this.escape(s.phone)}" placeholder="22 024 232"></div>
+        <div class="field"><label>Adresse</label><textarea id="se-address">${this.escape(s.address)}</textarea></div>
+        <div class="field"><label>Repère / point de repère</label><input class="input" id="se-landmark" value="${this.escape(s.landmark)}"></div>
+        <div class="field"><label>Recherche Google Maps (adresse ou nom exact)</label><input class="input" id="se-map" value="${this.escape(s.mapQuery)}"></div>
+        <div class="field" style="display:flex;align-items:center;justify-content:space-between">
+          <label style="margin:0">Urgences 24h/24 · 7j/7</label>
+          <span class="switch"><input type="checkbox" id="se-emergency" ${s.emergency24?"checked":""}><span class="slider-sw"></span></span></div>
+        <div class="field"><label>Durée d'un créneau de RDV (minutes)</label>
+          <select id="se-slot">${[15,20,30,45,60].map(m=>`<option value="${m}" ${(+s.slotMin===m)?"selected":""}>${m} min</option>`).join("")}</select></div>
+      </div>
+
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:4px"><div><div class="eyebrow">Disponibilités</div><h2 style="font-size:1.2rem">Horaires d'ouverture</h2></div></div>
+        ${dayRows}
+      </div>
+
+      <div class="card mb">
+        <div class="field" style="margin:0"><label>Lien public de l'app (pour partage / QR)</label><input class="input" id="se-url" value="${this.escape(s.appUrl||"")}" placeholder="https://votre-nom.github.io/animaux-dabord/"></div>
+      </div>
+
+      <button class="btn btn-primary btn-block btn-lg mb" onclick="App.saveSettings()">💾 Enregistrer les réglages</button>
+      <button class="btn btn-danger btn-block" onclick="App.resetData()">🗑️ Réinitialiser les données de démonstration</button>
+      <div class="hint center mt" style="padding-bottom:20px">Les données sont stockées sur cet appareil (localStorage). Connexion Firebase à venir pour la synchronisation multi-appareils.</div>`;
+  },
+  toggleDayInputs(d){ const on=document.getElementById("h-open-"+d).checked; const t=document.getElementById("h-times-"+d); if(t) t.style.display=on?"block":"none"; },
+  saveSettings(){
+    const g=id=>{ const e=document.getElementById(id); return e?e.value:""; };
+    const hours={};
+    [0,1,2,3,4,5,6].forEach(d=>{
+      const open=document.getElementById("h-open-"+d).checked;
+      hours[d]={ open, from:g("h-from-"+d)||"08:00", to:g("h-to-"+d)||"18:00", bfrom:g("h-bfrom-"+d)||"", bto:g("h-bto-"+d)||"" };
+    });
+    const s={ clinicName:g("se-name").trim(), doctor:g("se-doctor").trim(), phone:g("se-phone").trim(),
+      address:g("se-address").trim(), landmark:g("se-landmark").trim(), mapQuery:g("se-map").trim(),
+      emergency24:document.getElementById("se-emergency").checked, slotMin:parseInt(g("se-slot"),10)||30,
+      appUrl:g("se-url").trim(), hours };
+    DB.set("settings", Object.assign({},this.settings(),s));
+    this.toast("Réglages enregistrés ✓","ok"); this.renderAll();
+  },
+  resetData(){
+    if(!confirm("Réinitialiser TOUTES les données (produits, RDV, commandes, patients…) et recharger la démo ? Cette action est irréversible.")) return;
+    // On supprime toutes les clés de l'app (préfixe "ad_") : collections, réglages, session et paniers.
+    Object.keys(localStorage).slice().forEach(k=>{ if(k.indexOf("ad_")===0) localStorage.removeItem(k); });
+    this.session=null; this.cart=[];
+    this.toast("Données réinitialisées.","ok");
+    // init() → ensureSeed() régénère les données de démonstration au rechargement.
+    setTimeout(()=>location.reload(),600);
+  },
+  /* ---------- installation (PWA) ---------- */
+  isInstalled(){
+    try{ return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true; }
+    catch(e){ return false; }
+  },
+  refreshInstall(){
+    const c=document.getElementById("install-client");
+    const a=document.getElementById("install-admin");
+    if(c) c.classList.remove("show");
+    if(a) a.classList.remove("show");
+    if(this.isInstalled() || !this.deferredPrompt) return; // déjà installée ou pas d'invite dispo
+    const u=this.currentUser();
+    if(!u) return;
+    if(u.role==="admin"){ if(a) a.classList.add("show"); }
+    else { if(c) c.classList.add("show"); }
+  },
+  async promptInstall(){
+    if(!this.deferredPrompt){
+      this.toast("Menu du navigateur ▸ « Ajouter à l'écran d'accueil »","info");
+      return;
+    }
+    const dp=this.deferredPrompt;
+    this.deferredPrompt=null;
+    try{
+      dp.prompt();
+      const res=await dp.userChoice;
+      if(res && res.outcome==="accepted") this.toast("Application installée ! 🎉","ok");
+    }catch(e){ /* silencieux */ }
+    this.refreshInstall();
+  },
+};
+
+/* =====================================================================
+   AMORÇAGE : liaisons d'événements + démarrage + service worker
+   ===================================================================== */
+document.addEventListener("DOMContentLoaded", function(){
+  // Onglets d'authentification (Connexion / Créer un compte)
+  document.querySelectorAll("#auth-tabs button[data-auth]").forEach(function(b){
+    b.addEventListener("click", function(){ App.switchAuth(b.dataset.auth); });
+  });
+  // Barre de navigation client
+  document.querySelectorAll("#client-nav button[data-tab]").forEach(function(b){
+    b.addEventListener("click", function(){ App.showTab(b.dataset.tab, "client-nav"); });
+  });
+  // Barre de navigation admin
+  document.querySelectorAll("#admin-nav button[data-tab]").forEach(function(b){
+    b.addEventListener("click", function(){ App.showTab(b.dataset.tab, "admin-nav"); });
+  });
+  // Soumission au clavier (touche Entrée) sur les formulaires de connexion
+  ["log-id","log-pass"].forEach(function(id){
+    const e=document.getElementById(id);
+    if(e) e.addEventListener("keydown", function(ev){ if(ev.key==="Enter") App.login(); });
+  });
+  ["reg-name","reg-phone","reg-pass"].forEach(function(id){
+    const e=document.getElementById(id);
+    if(e) e.addEventListener("keydown", function(ev){ if(ev.key==="Enter") App.register(); });
+  });
+
+  // Invite d'installation PWA (Android / Chrome / Edge)
+  window.addEventListener("beforeinstallprompt", function(ev){
+    ev.preventDefault();
+    App.deferredPrompt=ev;
+    App.refreshInstall();
+  });
+  window.addEventListener("appinstalled", function(){
+    App.deferredPrompt=null;
+    App.refreshInstall();
+  });
+
+  // Démarrage de l'application
+  App.init();
+
+  // Enregistrement du service worker (mode hors-ligne + installation)
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(err){
+        console.warn("Service worker non enregistré :", err);
+      });
+    });
+  }
+});
+</script>
+
+<!-- =====================================================================
+     FIREBASE / FIRESTORE  —  synchronisation cloud multi-appareils
+     ---------------------------------------------------------------------
+     Ce module ESM crée window.Cloud, utilisé par la couche DB ci-dessus.
+     Il est autonome : si Firebase ne se charge pas, l'app reste locale.
+     ===================================================================== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, onSnapshot }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // --- Configuration du projet Firebase (cabinet Animaux d'abord) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyA4jIOwjl2DnFjeov7Rpt9_XnsxtrfISaM",
+    authDomain: "dabordanimaux-d4751.firebaseapp.com",
+    projectId: "dabordanimaux-d4751",
+    storageBucket: "dabordanimaux-d4751.firebasestorage.app",
+    messagingSenderId: "137744650646",
+    appId: "1:137744650646:web:046a2a89191345cf7b8db7",
+    measurementId: "G-9DLDYKFGM2"
+  };
+
+  // Collections synchronisées et clés de configuration (mêmes noms que la couche DB).
+  const COLLECTIONS = ["users","animals","records","products","orders","rdv","questions","posts","advices","notifs"];
+  const CONFIG_KEYS = ["settings"];
+  const CFG_DOC = "_config"; // collection Firestore contenant les documents de config
+
+  // Petit pont vers le localStorage (le module ne partage pas la portée du script principal).
+  const LS = {
+    write(key, val){ try{ localStorage.setItem("ad_"+key, JSON.stringify(val)); }catch(e){} },
+    read(key, def){ try{ const r=localStorage.getItem("ad_"+key); return r==null?def:JSON.parse(r); }catch(e){ return def; } }
+  };
+
+  let db=null, resolveReady;
+  const readyPromise = new Promise(res=>{ resolveReady=res; });
+
+  // Objet global consommé par la couche DB du script principal.
+  const Cloud = {
+    enabled: false,          // devient true si l'initialisation réussit
+    ready: readyPromise,     // résolue quand Firestore est prêt
+
+    // Écrit / met à jour un document (fusion) dans une collection.
+    pushDoc(coll, item){
+      if(!db || !item || !item.id) return;
+      setDoc(doc(db, coll, String(item.id)), item, { merge:true })
+        .catch(e=>console.warn("pushDoc", coll, e));
+    },
+    // Supprime un document.
+    removeDoc(coll, id){
+      if(!db || id==null) return;
+      deleteDoc(doc(db, coll, String(id))).catch(e=>console.warn("removeDoc", coll, e));
+    },
+    // Remplace l'état d'une collection : écrit tous les éléments et supprime
+    // ceux qui ont disparu (prevIds − ids actuels).
+    replaceCollection(coll, arr, prevIds){
+      const ids=new Set();
+      (arr||[]).forEach(it=>{ if(it && it.id){ ids.add(String(it.id)); this.pushDoc(coll, it); } });
+      (prevIds||[]).forEach(id=>{ if(!ids.has(String(id))) this.removeDoc(coll, id); });
+    },
+    // Écrit un document de configuration (ex. settings).
+    setConfig(name, obj){
+      if(!db) return;
+      setDoc(doc(db, CFG_DOC, name), { value: obj }, { merge:true })
+        .catch(e=>console.warn("setConfig", name, e));
+    },
+
+    // Récupère TOUT le cloud vers le localStorage (au démarrage).
+    async pullAll(){
+      if(!db) return;
+      // Collections
+      await Promise.all(COLLECTIONS.map(async (coll)=>{
+        try{
+          const snap = await getDocs(collection(db, coll));
+          const arr=[]; snap.forEach(d=> arr.push(d.data()));
+          // On n'écrase le local que si le cloud contient des données,
+          // pour ne pas effacer une éventuelle amorce locale de tout premier lancement.
+          if(arr.length) LS.write(coll, arr);
+        }catch(e){ console.warn("pullAll "+coll, e); }
+      }));
+      // Documents de configuration
+      await Promise.all(CONFIG_KEYS.map(async (name)=>{
+        try{
+          const snap = await getDocs(collection(db, CFG_DOC));
+          snap.forEach(d=>{ if(d.id===name && d.data() && d.data().value!=null) LS.write(name, d.data().value); });
+        }catch(e){ console.warn("pullAll config "+name, e); }
+      }));
+    },
+
+    // Écoute les changements en temps réel ; appelle onChange(key) quand une
+    // collection ou la config change réellement (comparaison JSON anti-boucle).
+    watchAll(onChange){
+      if(!db) return;
+      COLLECTIONS.forEach(coll=>{
+        onSnapshot(collection(db, coll), (snap)=>{
+          const arr=[]; snap.forEach(d=> arr.push(d.data()));
+          const before = JSON.stringify(LS.read(coll, []));
+          const after  = JSON.stringify(arr);
+          if(before!==after){ LS.write(coll, arr); try{ onChange && onChange(coll); }catch(e){} }
+        }, (e)=>console.warn("watch "+coll, e));
+      });
+      onSnapshot(collection(db, CFG_DOC), (snap)=>{
+        snap.forEach(d=>{
+          if(CONFIG_KEYS.indexOf(d.id)>=0 && d.data() && d.data().value!=null){
+            const before=JSON.stringify(LS.read(d.id, null));
+            const after =JSON.stringify(d.data().value);
+            if(before!==after){ LS.write(d.id, d.data().value); try{ onChange && onChange(d.id); }catch(e){} }
+          }
+        });
+      }, (e)=>console.warn("watch config", e));
+    }
+  };
+  window.Cloud = Cloud;
+
+  // Initialisation (asynchrone). En cas d'échec, l'app bascule en local.
+  try{
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    Cloud.enabled = true;
+    // Analytics (optionnel, non bloquant) : ignoré s'il n'est pas supporté.
+    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js")
+      .then(m=> m.isSupported().then(ok=>{ if(ok) m.getAnalytics(app); }).catch(()=>{}))
+      .catch(()=>{});
+    resolveReady(true);
+  }catch(e){
+    console.warn("Initialisation Firebase impossible → mode local.", e);
+    Cloud.enabled = false;
+    resolveReady(false);
+  }
+</script>
+</body>
+</html>
