@@ -299,6 +299,16 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .photo-pick{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:8px}
 .photo-pick .pv{width:100px;height:100px;border-radius:26px;background:var(--rose-tint);border:2px dashed var(--rose-soft);display:grid;place-items:center;font-size:40px;overflow:hidden;cursor:pointer;color:var(--rose);position:relative}
 .photo-pick .pv img{width:100%;height:100%;object-fit:cover}
+/* Sélecteur multi-photos (formulaire animal) */
+.pet-photos{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.pp-thumb{position:relative;width:64px;height:64px;border-radius:12px;overflow:hidden;flex:none;border:1px solid var(--line)}
+.pp-thumb img{width:100%;height:100%;object-fit:cover}
+.pp-x{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;cursor:pointer;display:grid;place-items:center;line-height:1;padding:0}
+.pp-add{width:64px;height:64px;border-radius:12px;border:2px dashed var(--rose-soft);background:var(--rose-tint);color:var(--rose-deep);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex:none}
+/* Galerie de photos (carnet) */
+.pet-gallery{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
+.pet-gallery .pg-thumb{width:76px;height:76px;border-radius:12px;overflow:hidden;flex:none;border:1px solid var(--line)}
+.pet-gallery .pg-thumb img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
 
 /* ---------- calendrier / rdv ---------- */
 .cal{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
@@ -999,6 +1009,8 @@ const App = {
   },
   speciesEmo(id){ const s=SPECIES.find(x=>x.id===id); return s?s.emo:"🐾"; },
   speciesLabel(id){ const s=SPECIES.find(x=>x.id===id); return s?s.label:"Animal"; },
+  // Retourne la liste des photos d'un animal (compatible ancien champ "photo").
+  animalPhotos(a){ return (a && a.photos && a.photos.length) ? a.photos : (a && a.photo ? [a.photo] : []); },
   age(naissance){
     if(!naissance) return "—";
     const b=this.parseD(naissance), n=new Date();
@@ -1274,6 +1286,8 @@ const App = {
       <div class="spread"><div><div class="hint" style="font-weight:800;color:var(--rose-deep)">${this.speciesEmo(p.espece)} ${this.escape(p.nom)}</div>
       <div class="hint">${this.speciesLabel(p.espece)}${p.race?" · "+this.escape(p.race):""} · ${this.age(p.naissance)}</div></div>
       ${p.sterilise?`<span class="badge b-ok">Stérilisé·e</span>`:""}</div></div>`;
+    const galC=this.animalPhotos(p);
+    if(galC.length>=2) body+=`<div class="pet-gallery">${galC.map(s=>`<div class="pg-thumb"><img src="${s}" alt=""></div>`).join("")}</div>`;
     const wlog=p.poidsLog||[];
     if(wlog.length){
       body+=`<div class="card" style="margin-bottom:12px"><div class="hint" style="font-weight:800;margin-bottom:6px;color:var(--rose-deep)">📈 Courbe de poids</div>${this.weightChartSVG(wlog)}</div>`;
@@ -1300,12 +1314,12 @@ const App = {
   /* formulaire ajout / édition animal */
   openPetForm(id){
     const p=id?DB.find("animals",id):null;
-    this._petPhoto = p?p.photo:null; this._petEdit=id||null;
+    this._petPhotos = p?this.animalPhotos(p).slice():[]; this._petEdit=id||null;
     const spOpts=SPECIES.map(s=>`<option value="${s.id}" ${p&&p.espece===s.id?"selected":""}>${s.emo} ${s.label}</option>`).join("");
     const body=`
-      <div class="photo-pick"><label class="pv" id="pet-pv">${this._petPhoto?`<img src="${this._petPhoto}">`:"📷"}
-        <input type="file" accept="image/*" style="display:none" id="pet-photo" onchange="App.pickPetPhoto(this)"></label>
-        <span class="hint">Photo de l'animal (optionnel)</span></div>
+      <div class="field"><label>Photos de l'animal (optionnel)</label>
+        <div class="pet-photos" id="pet-photos"></div>
+        <input type="file" accept="image/*" multiple style="display:none" id="pet-photo" onchange="App.pickPetPhoto(this)"></div>
       <div class="field"><label>Nom *</label><input class="input" id="pf-nom" value="${p?this.escape(p.nom):""}" placeholder="Ex : Rex"></div>
       <div class="two-col">
         <div class="field"><label>Espèce</label><select id="pf-espece">${spOpts}</select></div>
@@ -1324,8 +1338,18 @@ const App = {
     const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.savePet()">${id?"Enregistrer":"Ajouter l'animal"} 🐾</button>
       ${id?`<button class="btn btn-danger btn-block mt-s" onclick="App.deletePet('${id}')">Supprimer cet animal</button>`:""}`;
     this.openSheet(id?"Modifier l'animal":"Nouvel animal", body, foot);
+    this._renderPetPhotos();
   },
-  pickPetPhoto(inp){ this.readPhoto(inp.files[0], d=>{ this._petPhoto=d; const pv=document.getElementById("pet-pv"); if(pv) pv.innerHTML=d?`<img src="${d}">`:"📷"; }); },
+  pickPetPhoto(inp){
+    Array.from(inp.files||[]).forEach(f=>this.readPhoto(f, d=>{ if(d){ this._petPhotos.push(d); this._renderPetPhotos(); } }));
+    inp.value=""; // permet de re-sélectionner le même fichier
+  },
+  removePetPhoto(i){ this._petPhotos.splice(i,1); this._renderPetPhotos(); },
+  _renderPetPhotos(){
+    const w=document.getElementById("pet-photos"); if(!w) return;
+    const thumbs=(this._petPhotos||[]).map((src,i)=>`<div class="pp-thumb"><img src="${src}" alt=""><button type="button" class="pp-x" onclick="App.removePetPhoto(${i})" title="Retirer">✕</button></div>`).join("");
+    w.innerHTML = thumbs + `<button type="button" class="pp-add" onclick="document.getElementById('pet-photo').click()"><span style="font-size:20px">📷</span><span style="font-size:.6rem;font-weight:800">Ajouter</span></button>`;
+  },
   savePet(){
     const nom=(document.getElementById("pf-nom").value||"").trim();
     if(!nom) return this.toast("Le nom est requis.","err");
@@ -1335,7 +1359,7 @@ const App = {
       sexe:document.getElementById("pf-sexe").value, race:(document.getElementById("pf-race").value||"").trim(),
       naissance:document.getElementById("pf-naissance").value, poids:document.getElementById("pf-poids").value,
       sterilise:document.getElementById("pf-sterilise").checked, notes:(document.getElementById("pf-notes").value||"").trim(),
-      photo:this._petPhoto||null,
+      photos:(this._petPhotos||[]).slice(), photo:(this._petPhotos&&this._petPhotos[0])||null,
     };
     if(this._petEdit){ DB.update("animals",this._petEdit,data); this.toast("Animal mis à jour ✓","ok"); }
     else { DB.push("animals",Object.assign({id:this.uid("a"),ownerId:u.id,createdAt:Date.now()},data)); this.toast("Animal ajouté ! 🐾","ok"); }
@@ -2586,6 +2610,8 @@ const App = {
         <div><div style="font-family:var(--display);font-weight:800;font-size:1.2rem">${this.escape(a.nom)}</div>
           <div class="lr-s">${this.speciesLabel(a.espece)}${a.sexe?" · "+(a.sexe==="M"?"♂":"♀"):""}${a.naissance?" · "+this.age(a.naissance):""}${a.poids?" · "+a.poids+" kg":""}</div></div>
       </div>`;
+    const galA=this.animalPhotos(a);
+    if(galA.length>=2) body+=`<div class="pet-gallery">${galA.map(s=>`<div class="pg-thumb"><img src="${s}" alt=""></div>`).join("")}</div>`;
     if(a.notes) body+=`<div class="advice" style="margin-bottom:14px"><div class="adi">📝</div><div><div class="adt">Notes</div><div class="ads">${this.escape(a.notes)}</div></div></div>`;
     // Poids & croissance
     const wlog=a.poidsLog||[];
@@ -2911,7 +2937,7 @@ document.addEventListener("DOMContentLoaded", function(){
   document.addEventListener("click", function(e){
     const t=e.target;
     if(!t || t.tagName!=="IMG") return;
-    if(t.closest(".photo-pick")) return;      // aperçu de formulaire → ouvre le sélecteur, pas le zoom
+    if(t.closest(".photo-pick") || t.closest(".pet-photos")) return;      // aperçu de formulaire → ouvre le sélecteur, pas le zoom
     if(t.closest("#img-viewer")) return;      // déjà dans la visionneuse
     const src=t.getAttribute("src")||"";
     if(!/^data:|^https?:/.test(src)) return;   // vraies photos uniquement
