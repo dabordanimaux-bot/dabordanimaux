@@ -2114,7 +2114,10 @@ const App = {
           ${cli&&cli.tel?`<div class="lr-s" style="margin-top:4px">📞 <a href="tel:+${this.phoneDigits(cli.tel)}" style="color:var(--rose-deep);text-decoration:none">${this.escape(this.phoneFmt(cli.tel))}</a></div>`:""}
         </div>
         <div class="o-foot"><span class="o-total">${this.money(o.total)}</span>
-          <select style="width:auto;padding:8px 10px;font-size:.82rem" onchange="App.setOrderStatus('${o.id}',this.value)">${statusOpts(o.status)}</select></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select style="width:auto;padding:8px 10px;font-size:.82rem" onchange="App.setOrderStatus('${o.id}',this.value)">${statusOpts(o.status)}</select>
+            ${(o.status==="livree"||o.status==="annulee")?`<button class="btn btn-danger btn-sm" onclick="App.deleteOrder('${o.id}')" title="Supprimer la commande">🗑️</button>`:""}
+          </div></div>
       </div>`; }).join("")+`</div>`;
     w.innerHTML=html;
   },
@@ -2126,6 +2129,15 @@ const App = {
     if(o){ const st=ORDER_STATUS[status];
       this.notify(o.clientId,"order_up","Commande mise à jour",`#${o.id.slice(-4).toUpperCase()} · ${st.label}`); }
     this.toast("Statut mis à jour. Le client est prévenu ✓","ok"); this.renderAll();
+  },
+  deleteOrder(id){
+    const o=DB.find("orders",id); if(!o) return;
+    const msg = o.status==="livree"
+      ? "Supprimer cette commande livrée ?\n\nElle sera aussi retirée du total de la caisse. Cette action est irréversible."
+      : "Supprimer cette commande ?\n\nCette action est irréversible.";
+    if(!confirm(msg)) return;
+    DB.del("orders", id);
+    this.toast("Commande supprimée.","ok"); this.renderAll();
   },
   // ---------- Caisse (recettes) ----------
   // Filtre de période pour la caisse.
