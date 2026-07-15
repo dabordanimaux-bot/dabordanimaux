@@ -1314,7 +1314,7 @@ const App = {
         <div class="field"><label>Poids (kg)</label><input class="input" type="number" step="0.1" id="pf-poids" value="${p?(p.poids||""):""}" placeholder="Ex : 12"></div>
       </div>
       <div class="field"><label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-        <span class="switch"><input type="checkbox" id="pf-sterilise" ${p&&p.sterilise?"checked":""}><span class="slider-sw"></span></span>
+        <label class="switch"><input type="checkbox" id="pf-sterilise" ${p&&p.sterilise?"checked":""}><span class="slider-sw"></span></label>
         Stérilisé·e</label></div>
       <div class="field"><label>Notes (allergies, caractère…)</label><textarea id="pf-notes" placeholder="Optionnel">${p?this.escape(p.notes||""):""}</textarea></div>`;
     const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.savePet()">${id?"Enregistrer":"Ajouter l'animal"} 🐾</button>
@@ -2500,7 +2500,7 @@ const App = {
       return `<div style="padding:12px 0;border-bottom:1px solid var(--line)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${h.open?"8px":"0"}">
           <b style="font-family:var(--display)">${this.DOW_FULL[d]}</b>
-          <span class="switch"><input type="checkbox" id="h-open-${d}" ${h.open?"checked":""} onchange="App.toggleDayInputs(${d})"><span class="slider-sw"></span></span>
+          <label class="switch"><input type="checkbox" id="h-open-${d}" ${h.open?"checked":""} onchange="App.toggleDayInputs(${d})"><span class="slider-sw"></span></label>
         </div>
         <div id="h-times-${d}" style="display:${h.open?"block":"none"}">
           <div class="two-col"><div class="field" style="margin:0"><label style="font-size:.7rem">Ouverture</label><input class="input" type="time" id="h-from-${d}" value="${h.from||"08:00"}"></div>
@@ -2522,7 +2522,7 @@ const App = {
         <div class="field"><label>Recherche Google Maps (adresse ou nom exact)</label><input class="input" id="se-map" value="${this.escape(s.mapQuery)}"></div>
         <div class="field" style="display:flex;align-items:center;justify-content:space-between">
           <label style="margin:0">Urgences 24h/24 · 7j/7</label>
-          <span class="switch"><input type="checkbox" id="se-emergency" ${s.emergency24?"checked":""}><span class="slider-sw"></span></span></div>
+          <label class="switch"><input type="checkbox" id="se-emergency" ${s.emergency24?"checked":""}><span class="slider-sw"></span></label></div>
         <div class="field"><label>Durée d'un créneau de RDV (minutes)</label>
           <select id="se-slot">${[15,20,30,45,60].map(m=>`<option value="${m}" ${(+s.slotMin===m)?"selected":""}>${m} min</option>`).join("")}</select></div>
       </div>
