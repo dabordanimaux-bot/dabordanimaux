@@ -934,12 +934,12 @@ const AR_DICT = {
   "💬 Une question pour le Dr. Asma ?":"💬 سؤال للدكتورة أسماء؟","Une question pour le Dr. Asma ?":"سؤال للدكتورة أسماء؟",
 };
 const AR_TOKENS_LIST = [
-  ["janvier","يناير"],["février","فبراير"],["mars","مارس"],["avril","أبريل"],["mai","مايو"],["juin","يونيو"],
-  ["juillet","يوليو"],["août","أغسطس"],["septembre","سبتمبر"],["octobre","أكتوبر"],["novembre","نوفمبر"],["décembre","ديسمبر"],
-  ["JAN","ينا"],["FÉV","فبر"],["MAR","مار"],["AVR","أبر"],["MAI","مايو"],["JUIN","يون"],["JUIL","يول"],["AOÛ","أغس"],["SEP","سبت"],["OCT","أكت"],["NOV","نوف"],["DÉC","ديس"],
+  ["janvier","جانفي"],["février","فيفري"],["mars","مارس"],["avril","أفريل"],["mai","ماي"],["juin","جوان"],
+  ["juillet","جويلية"],["août","أوت"],["septembre","سبتمبر"],["octobre","أكتوبر"],["novembre","نوفمبر"],["décembre","ديسمبر"],
+  ["JAN","جانفي"],["FÉV","فيفري"],["MAR","مارس"],["AVR","أفريل"],["MAI","ماي"],["JUIN","جوان"],["JUIL","جويلية"],["AOÛ","أوت"],["SEP","سبتمبر"],["OCT","أكتوبر"],["NOV","نوفمبر"],["DÉC","ديسمبر"],
   ["Dimanche","الأحد"],["Lundi","الإثنين"],["Mardi","الثلاثاء"],["Mercredi","الأربعاء"],["Jeudi","الخميس"],["Vendredi","الجمعة"],["Samedi","السبت"],
   ["Dim","أحد"],["Lun","إثن"],["Mar","ثلا"],["Mer","أرب"],["Jeu","خمي"],["Ven","جمع"],["Sam","سبت"],
-  ["jan","ينا"],["fév","فبر"],["mar","مار"],["avr","أبر"],["juil","يول"],["aoû","أغس"],["sep","سبت"],["oct","أكت"],["nov","نوف"],["déc","ديس"],
+  ["jan","جانفي"],["fév","فيفري"],["mar","مارس"],["avr","أفريل"],["juil","جويلية"],["aoû","أوت"],["sep","سبتمبر"],["oct","أكتوبر"],["nov","نوفمبر"],["déc","ديسمبر"],
   ["Consultations","استشارات"],["Consultation","استشارة"],["Boutique","المتجر"],
   ["Bonjour","مرحبًا"],
   ["DT","د.ت"],
@@ -1674,7 +1674,16 @@ const App = {
   },
   addToCart(id){
     const p=DB.find("products",id); if(!p) return;
+    const max = (p.stock!=null) ? +p.stock : Infinity;   // stock null = illimité
     const line=this.cart.find(l=>l.id===id);
+    const current = line?line.qty:0;
+    if(current>=max){   // le client ne peut pas dépasser le stock disponible
+      const msg = this.lang==="ar"
+        ? (max<=0 ? (p.nom+" غير متوفّر حاليًا.") : ("الكمية القصوى بلغت: "+max+" في المخزون."))
+        : (max<=0 ? (p.nom+" est en rupture de stock.") : ("Quantité maximale atteinte : "+max+" en stock."));
+      this.toast(msg,"warn");
+      return;
+    }
     if(line) line.qty++; else this.cart.push({id:p.id,nom:p.nom,prix:+p.prix,emo:p.emo||"🛍️",qty:1});
     this.saveCart();
     this.updateCartFab();
@@ -1685,23 +1694,36 @@ const App = {
   },
   changeQty(id,delta){
     const line=this.cart.find(l=>l.id===id); if(!line) return;
+    if(delta>0){   // augmentation : ne pas dépasser le stock disponible
+      const p=DB.find("products",id);
+      const max = (p && p.stock!=null) ? +p.stock : Infinity;
+      if(line.qty>=max){
+        this.toast(this.lang==="ar" ? ("الكمية القصوى بلغت: "+max+" في المخزون.") : ("Quantité maximale atteinte : "+max+" en stock."),"warn");
+        return;
+      }
+    }
     line.qty+=delta;
     if(line.qty<=0) this.cart=this.cart.filter(l=>l.id!==id);
     this.saveCart(); this.updateCartFab(); this.openCart(); // ré-affiche la feuille panier
   },
   openCart(){
     if(!this.cart.length){ this.toast("Votre panier est vide.","warn"); return; }
-    const body=`<div class="cart">`+this.cart.map(l=>`
+    const body=`<div class="cart">`+this.cart.map(l=>{
+      const p=DB.find("products",l.id);
+      const max=(p&&p.stock!=null)?+p.stock:Infinity;   // stock disponible (Infinity = illimité)
+      const atMax=l.qty>=max;
+      const stockHint = max!==Infinity ? ` · <span style="color:var(--muted)">${max} ${this.lang==="ar"?"في المخزون":"en stock"}</span>` : "";
+      return `
       <div class="list-row" style="cursor:default;margin-bottom:8px">
         <div class="lr-av">${l.emo||"🛍️"}</div>
         <div class="lr-body"><div class="lr-t">${this.escape(l.nom)}</div>
-          <div class="lr-s">${this.money(l.prix)} × ${l.qty} = <b>${this.money(l.prix*l.qty)}</b></div></div>
+          <div class="lr-s">${this.money(l.prix)} × ${l.qty} = <b>${this.money(l.prix*l.qty)}</b>${stockHint}</div></div>
         <div style="display:flex;align-items:center;gap:8px;flex:none">
           <button class="btn btn-soft btn-sm" onclick="App.changeQty('${l.id}',-1)">−</button>
           <b style="min-width:18px;text-align:center">${l.qty}</b>
-          <button class="btn btn-soft btn-sm" onclick="App.changeQty('${l.id}',1)">＋</button>
+          <button class="btn btn-soft btn-sm" onclick="App.changeQty('${l.id}',1)" ${atMax?'disabled style="opacity:.4;cursor:not-allowed"':''}>＋</button>
         </div>
-      </div>`).join("")+`</div>
+      </div>`;}).join("")+`</div>
       <div class="order" style="margin-top:6px"><div class="o-foot" style="border-top:0;padding-top:0;margin-top:0">
         <span>Total</span><span class="o-total">${this.money(this.cartTotal())}</span></div></div>
       <div class="field mt"><label>Note pour le cabinet (optionnel)</label>
@@ -1713,6 +1735,17 @@ const App = {
   clearCart(){ this.cart=[]; this.saveCart(); this.updateCartFab(); this.closeSheet(); this.toast("Panier vidé.","ok"); },
   checkout(){
     if(!this.cart.length) return;
+    // Sécurité : le stock a pu changer depuis l'ajout au panier — on revérifie.
+    let adjusted=false;
+    this.cart.forEach(l=>{ const p=DB.find("products",l.id);
+      if(p && p.stock!=null){ const max=+p.stock||0; if(l.qty>max){ l.qty=max; adjusted=true; } } });
+    this.cart=this.cart.filter(l=>l.qty>0);
+    if(adjusted){
+      this.saveCart(); this.updateCartFab();
+      if(this.cart.length){ this.openCart(); this.toast(this.lang==="ar"?"تغيّر المخزون، تمّ تعديل الكميات. تحقّق من سلتك.":"Le stock a changé : quantités ajustées. Vérifiez votre panier.","warn"); }
+      else { this.closeSheet(); this.toast(this.lang==="ar"?"المنتجات لم تعد متوفّرة.":"Ces produits ne sont plus disponibles.","warn"); }
+      return;
+    }
     const u=this.currentUser();
     const note=(document.getElementById("order-note")||{}).value||"";
     const order={ id:this.uid("o"), clientId:u.id, clientNom:u.nom||"Client",
