@@ -106,7 +106,7 @@ header.topbar{display:flex;align-items:center;justify-content:space-between;gap:
 
 /* ---------- écran d'authentification ---------- */
 .auth-hero{background:var(--grad);color:#fff;padding:40px 24px 60px;text-align:center;position:relative;overflow:hidden;border-bottom-left-radius:34px;border-bottom-right-radius:34px;box-shadow:var(--shadow)}
-.auth-hero::before,.auth-hero::after{content:"🐾";position:absolute;font-size:120px;opacity:.12;line-height:1}
+.auth-hero::before,.auth-hero::after{content:"🐾";position:absolute;font-size:120px;opacity:.12;line-height:1;pointer-events:none}
 .auth-hero::before{top:-20px;left:-24px;transform:rotate(-18deg)}
 .auth-hero::after{bottom:-34px;right:-20px;transform:rotate(22deg)}
 .auth-logo{width:104px;height:104px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;overflow:hidden;background:#fff;border:4px solid rgba(255,255,255,.6);box-shadow:0 16px 40px rgba(0,0,0,.2);animation:pop .6s cubic-bezier(.2,.9,.3,1.4)}
@@ -182,7 +182,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 
 /* ---------- accueil : bannière & urgence ---------- */
 .hero-card{position:relative;overflow:hidden;background:var(--grad);color:#fff;border-radius:var(--radius-lg);padding:22px 20px;box-shadow:var(--shadow);margin-bottom:14px}
-.hero-card::after{content:"🐾";position:absolute;right:-14px;bottom:-24px;font-size:110px;opacity:.14;transform:rotate(16deg)}
+.hero-card::after{content:"🐾";position:absolute;right:-14px;bottom:-24px;font-size:110px;opacity:.14;transform:rotate(16deg);pointer-events:none}
 .hero-card .h-eyebrow{font-weight:800;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;opacity:.9}
 .hero-card h2{font-family:var(--display);font-weight:800;font-size:1.6rem;margin:6px 0 4px;line-height:1.12}
 .hero-card p{opacity:.95;font-weight:600;font-size:.94rem;max-width:88%}
@@ -225,7 +225,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 /* ---------- carnet de santé (signature) ---------- */
 .pet-card{position:relative;background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px}
 .pet-card .pc-band{height:88px;background:var(--grad);position:relative}
-.pet-card .pc-band::after{content:"🐾";position:absolute;right:12px;top:10px;font-size:44px;opacity:.22}
+.pet-card .pc-band::after{content:"🐾";position:absolute;right:12px;top:10px;font-size:44px;opacity:.22;pointer-events:none}
 .pet-card .pc-photo{width:84px;height:84px;border-radius:22px;border:4px solid #fff;position:absolute;left:18px;top:44px;object-fit:cover;background:var(--rose-soft);display:grid;place-items:center;font-size:38px;box-shadow:0 8px 20px rgba(0,0,0,.14);overflow:hidden}
 .pet-card .pc-photo img{width:100%;height:100%;object-fit:cover}
 .pet-card .pc-head{padding:14px 18px 8px 116px;min-height:52px}
@@ -592,6 +592,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
         <button data-tab="atab-rdv"><span class="ic">📅</span>Agenda</button>
         <button data-tab="atab-shop"><span class="ic">🛍️</span>Boutique</button>
         <button data-tab="atab-orders"><span class="ic">📦</span>Commandes</button>
+        <button data-tab="atab-caisse"><span class="ic">💰</span>Caisse</button>
         <button data-tab="atab-patients"><span class="ic">🐾</span>Patients</button>
         <button data-tab="atab-msg"><span class="ic">💬</span>Messages</button>
         <button data-tab="atab-settings"><span class="ic">⚙️</span>Réglages</button>
@@ -616,6 +617,10 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
     <div class="screen-tab pad" id="atab-orders">
       <div class="section-head"><div><div class="eyebrow">Ventes</div><h2>Commandes</h2></div></div>
       <div id="aorders-c"></div>
+    </div>
+    <div class="screen-tab pad" id="atab-caisse">
+      <div class="section-head"><div><div class="eyebrow">Recettes</div><h2>Caisse</h2></div></div>
+      <div id="caisse-c"></div>
     </div>
     <div class="screen-tab pad" id="atab-patients">
       <div class="section-head"><div><div class="eyebrow">Dossiers</div><h2>Patients</h2></div></div>
@@ -1320,7 +1325,7 @@ const App = {
     this.renderBell();
     if(u.role==="admin"){
       this.renderHomeAdmin(); this.renderAgenda(); this.renderShopAdmin();
-      this.renderOrders(); this.renderPatients(); this.renderMsgAdmin();
+      this.renderOrders(); this.renderCaisse(); this.renderPatients(); this.renderMsgAdmin();
       this.renderSettings(); this.renderAbout("a");
     } else {
       this.renderHomeClient(); this.renderPets(); this.renderShop();
@@ -1826,8 +1831,11 @@ const App = {
     w.innerHTML=html;
   },
   openPostForm(id){
-    const p=id?DB.find("posts",id):null; this._postEdit=id||null;
+    const p=id?DB.find("posts",id):null; this._postEdit=id||null; this._postImg=p?(p.image||null):null;
     const body=`
+      <div class="photo-pick"><label class="pv" id="post-pv">${this._postImg?`<img src="${this._postImg}">`:"🖼️"}
+        <input type="file" accept="image/*" style="display:none" onchange="App.pickPostPhoto(this)"></label>
+        <div class="hint">Image de couverture (facultatif)</div></div>
       <div class="two-col">
         <div class="field"><label>Type</label><select id="po-type">
           <option value="astuce" ${p&&p.type==="astuce"?"selected":""}>💡 Astuce santé</option>
@@ -1840,11 +1848,12 @@ const App = {
       ${id?`<button class="btn btn-danger btn-block mt-s" onclick="App.deletePost('${id}')">Supprimer</button>`:""}`;
     this.openSheet(id?"Modifier la publication":"Nouvelle publication", body, foot);
   },
+  pickPostPhoto(inp){ this.readPhoto(inp.files[0], d=>{ this._postImg=d; const pv=document.getElementById("post-pv"); if(pv) pv.innerHTML=d?`<img src="${d}">`:"🖼️"; }); },
   savePost(){
     const titre=(document.getElementById("po-titre").value||"").trim();
     const contenu=(document.getElementById("po-contenu").value||"").trim();
     if(!titre||!contenu){ this.toast("Titre et contenu requis.","err"); return; }
-    const data={ type:document.getElementById("po-type").value, emo:(document.getElementById("po-emo").value||"").trim(), titre, contenu };
+    const data={ type:document.getElementById("po-type").value, emo:(document.getElementById("po-emo").value||"").trim(), titre, contenu, image:this._postImg||null };
     if(this._postEdit){ DB.update("posts",this._postEdit,data); this.toast("Publication mise à jour ✓","ok"); }
     else { DB.push("posts",Object.assign({id:this.uid("post"),date:Date.now(),createdAt:Date.now()},data)); this.toast("Publiée sur l'accueil des clients ! 📢","ok"); }
     this.closeSheet(); this.renderAll();
@@ -1905,6 +1914,8 @@ const App = {
     } else if(r.status==="confirme"){
       actions=`<button class="btn btn-soft btn-sm" onclick="App.completeRdv('${r.id}')">Marquer terminé</button>
         <button class="btn btn-danger btn-sm" onclick="App.refuseRdv('${r.id}')">Annuler</button>`;
+    } else if(r.status==="termine"){
+      actions=`<button class="btn btn-soft btn-sm" onclick="App.completeRdv('${r.id}')">💰 Modifier le prix</button>`;
     }
     return `<div class="order">
       <div class="o-top"><span class="o-id">🕒 ${r.time} · ${this.fmtDateShort(r.date)}</span><span class="badge ${st.badge}">${st.label}</span></div>
@@ -1913,6 +1924,7 @@ const App = {
         <div class="o-line"><span>🩺 ${this.escape(r.motif)}</span></div>
         ${animal?`<div class="o-line"><span>${this.speciesEmo(animal.espece)} ${this.escape(animal.nom)} <span class="lr-s">(${this.speciesLabel(animal.espece)})</span></span></div>`:""}
         ${r.note?`<div class="lr-s" style="margin-top:4px">« ${this.escape(r.note)} »</div>`:""}
+        ${r.status==="termine"?`<div class="o-line" style="margin-top:4px"><span>💰 Consultation</span><b style="color:var(--rose-deep)">${(+r.prix>0)?this.money(r.prix):"Gratuit"}</b></div>`:""}
       </div>
       ${actions?`<div class="o-foot" style="justify-content:flex-end;gap:8px">${actions}</div>`:""}
     </div>`;
@@ -1932,8 +1944,29 @@ const App = {
     this.toast(wasConfirmed?"Rendez-vous annulé.":"Demande refusée. Le client est prévenu.","ok"); this.renderAll();
   },
   completeRdv(id){
-    DB.update("rdv",id,{status:"termine"});
-    this.toast("Rendez-vous marqué comme terminé ✓","ok"); this.renderAll();
+    const r=DB.find("rdv",id); if(!r) return;
+    const animal=r.animalId?DB.find("animals",r.animalId):null;
+    // prix par défaut = celui déjà saisi, sinon le dernier prix de consultation utilisé
+    const last=DB.get("rdv",[]).filter(x=>x.status==="termine"&&+x.prix>0).sort((a,b)=>(b.paidAt||0)-(a.paidAt||0))[0];
+    const def=(r.prix!=null&&r.prix!=="")?r.prix:(last?last.prix:"");
+    const body=`
+      <div class="center" style="margin-bottom:10px">
+        <div style="font-size:44px">🩺</div>
+        <div class="hint" style="margin-top:4px">${this.escape(r.clientNom||"Client")}${animal?` · ${this.speciesEmo(animal.espece)} ${this.escape(animal.nom)}`:""}<br>${this.escape(r.motif||"Consultation")}</div>
+      </div>
+      <div class="field"><label>Prix de la consultation (DT)</label>
+        <input class="input" id="rdv-prix" type="number" inputmode="decimal" min="0" step="0.5" value="${def}" placeholder="Ex : 30"></div>
+      <div class="hint">Ce montant sera ajouté au total de la caisse. Laissez 0 si gratuit.</div>`;
+    const foot=`<button class="btn btn-ok btn-block btn-lg" onclick="App.finishRdv('${id}')">✓ Valider &amp; encaisser</button>`;
+    this.openSheet("Terminer le rendez-vous", body, foot);
+  },
+  finishRdv(id){
+    const raw=(document.getElementById("rdv-prix").value||"").replace(",",".");
+    const v=parseFloat(raw); const prix=isNaN(v)?0:Math.max(0,v);
+    DB.update("rdv",id,{status:"termine", prix, paidAt:Date.now()});
+    this.closeSheet();
+    this.toast(prix>0?("Encaissé : "+this.money(prix)+" ✓"):"Rendez-vous terminé ✓","ok");
+    this.renderAll();
   },
 
   /* ============================================================
@@ -2033,11 +2066,61 @@ const App = {
     w.innerHTML=html;
   },
   setOrderStatus(id,status){
-    DB.update("orders",id,{status});
+    const patch={status};
+    if(status==="livree") patch.deliveredAt=Date.now();   // date d'encaissement pour la caisse
+    DB.update("orders",id,patch);
     const o=DB.find("orders",id);
     if(o){ const st=ORDER_STATUS[status];
       this.notify(o.clientId,"order_up","Commande mise à jour",`#${o.id.slice(-4).toUpperCase()} · ${st.label}`); }
     this.toast("Statut mis à jour. Le client est prévenu ✓","ok"); this.renderAll();
+  },
+  // ---------- Caisse (recettes) ----------
+  _inToday(ts){ return this.dstr(new Date(ts))===this.todayStr(); },
+  _inMonth(ts){ const d=new Date(ts), n=new Date(); return d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear(); },
+  renderCaisse(){
+    const w=document.getElementById("caisse-c"); if(!w) return;
+    // Consultations terminées avec un prix + commandes livrées = recettes réalisées.
+    const cons=DB.get("rdv",[]).filter(r=>r.status==="termine" && +r.prix>0).map(r=>({
+      ts:r.paidAt||this.parseD(r.date).getTime(), montant:+r.prix, type:"cons",
+      titre:r.clientNom||"Client", sub:r.motif||"Consultation"
+    }));
+    const ords=DB.get("orders",[]).filter(o=>o.status==="livree").map(o=>({
+      ts:o.deliveredAt||o.createdAt, montant:+o.total||0, type:"order",
+      titre:o.clientNom||"Client", sub:"Commande #"+String(o.id).slice(-4).toUpperCase()
+    }));
+    const all=cons.concat(ords).sort((a,b)=>b.ts-a.ts);
+    const sum=arr=>arr.reduce((s,x)=>s+x.montant,0);
+    const totToday=sum(all.filter(x=>this._inToday(x.ts)));
+    const totMonth=sum(all.filter(x=>this._inMonth(x.ts)));
+    const totAll=sum(all);
+    const consSum=sum(cons), ordSum=sum(ords);
+
+    let html=`
+      <div class="stat-grid">
+        <div class="stat-card"><div class="sc-ic">📅</div><div class="sc-v">${this.money(totToday)}</div><div class="sc-l">Aujourd'hui</div></div>
+        <div class="stat-card"><div class="sc-ic">🗓️</div><div class="sc-v">${this.money(totMonth)}</div><div class="sc-l">Ce mois-ci</div></div>
+      </div>
+      <div class="card mb center" style="background:var(--grad);color:#fff">
+        <div class="h-eyebrow" style="opacity:.9;font-weight:800;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase">Total encaissé</div>
+        <div style="font-family:var(--display);font-weight:800;font-size:2.2rem;margin-top:2px">${this.money(totAll)}</div>
+        <div style="opacity:.92;font-weight:600;font-size:.86rem;margin-top:4px">🩺 Consultations ${this.money(consSum)} · 🛍️ Boutique ${this.money(ordSum)}</div>
+      </div>`;
+
+    if(!all.length){
+      html+=`<div class="empty"><span class="ic">💰</span><div class="et">Aucune recette pour l'instant</div><div class="hint">Terminez un rendez-vous (avec un prix) ou livrez une commande pour alimenter la caisse.</div></div>`;
+    } else {
+      html+=`<div class="section-head" style="margin:4px 0 8px"><div><div class="eyebrow">Détail</div><h2 style="font-size:1.2rem">Dernières recettes</h2></div></div>`;
+      html+=`<div class="stagger">`+all.map(x=>`
+        <div class="list-row" style="cursor:default">
+          <div class="lr-av">${x.type==="cons"?"🩺":"🛍️"}</div>
+          <div class="lr-body">
+            <div class="lr-t">${this.escape(x.titre)}</div>
+            <div class="lr-s"><span class="badge ${x.type==="cons"?"b-rose":"b-mango"}">${x.type==="cons"?"Consultation":"Boutique"}</span> ${this.escape(x.sub)} · ${this.fmtDateShort(this.dstr(new Date(x.ts)))}</div>
+          </div>
+          <div style="font-family:var(--display);font-weight:800;color:var(--rose-deep);flex:none">${this.money(x.montant)}</div>
+        </div>`).join("")+`</div>`;
+    }
+    w.innerHTML=html;
   },
 
   /* ============================================================
