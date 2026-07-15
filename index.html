@@ -451,6 +451,12 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 
 /* ---------- divers ---------- */
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:13px 20px;border-radius:999px;font-weight:700;font-size:.92rem;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:.28s;z-index:80;max-width:90%;text-align:center}
+.img-viewer{position:fixed;inset:0;z-index:200;background:rgba(24,12,18,.93);display:none;align-items:center;justify-content:center;padding:22px;cursor:zoom-out}
+.img-viewer.show{display:flex}
+.img-viewer img{max-width:100%;max-height:100%;border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.55);animation:pop .3s cubic-bezier(.2,.9,.3,1.4)}
+.iv-close{position:absolute;top:16px;right:16px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:19px;font-weight:700;cursor:pointer;display:grid;place-items:center;backdrop-filter:blur(4px)}
+.iv-close:hover{background:rgba(255,255,255,.3)}
+.pet-card .pc-photo img,.lr-av img,.prod .p-img img,.post .cover img{cursor:zoom-in}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.ok{background:var(--ok)}.toast.err{background:var(--danger)}
 .empty{text-align:center;color:var(--muted);padding:44px 20px;font-weight:600}
@@ -669,6 +675,12 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- Visionneuse plein écran : agrandit n'importe quelle photo au clic -->
+  <div class="img-viewer" id="img-viewer" onclick="App.closeZoom()">
+    <button class="iv-close" onclick="App.closeZoom()" aria-label="Fermer">✕</button>
+    <img id="iv-img" src="" alt="Photo agrandie">
+  </div>
   <div id="print-area" style="display:none"></div>
 
   <div id="boot">
@@ -1027,6 +1039,21 @@ const App = {
   closeSheet(){
     document.getElementById("sheet-backdrop").classList.remove("show");
     document.body.style.overflow="";
+  },
+  // Visionneuse plein écran d'une photo (animaux, produits, publications…).
+  zoomImage(src){
+    if(!src) return;
+    const v=document.getElementById("img-viewer"), im=document.getElementById("iv-img");
+    if(!v||!im) return;
+    im.src=src; v.classList.add("show"); document.body.style.overflow="hidden";
+  },
+  closeZoom(){
+    const v=document.getElementById("img-viewer"), im=document.getElementById("iv-img");
+    if(v) v.classList.remove("show");
+    if(im) im.src="";
+    // on ne rétablit le défilement que si aucune feuille n'est ouverte
+    const sh=document.getElementById("sheet-backdrop");
+    if(!sh || !sh.classList.contains("show")) document.body.style.overflow="";
   },
 
   /* ---------- toast ---------- */
@@ -2633,6 +2660,22 @@ document.addEventListener("DOMContentLoaded", function(){
     App.deferredPrompt=null;
     App.refreshInstall();
   });
+
+  // Clic sur une photo → agrandissement plein écran (partout dans l'app).
+  // Phase de capture : on intercepte avant l'éventuel clic de la carte/ligne.
+  document.addEventListener("click", function(e){
+    const t=e.target;
+    if(!t || t.tagName!=="IMG") return;
+    if(t.closest(".photo-pick")) return;      // aperçu de formulaire → ouvre le sélecteur, pas le zoom
+    if(t.closest("#img-viewer")) return;      // déjà dans la visionneuse
+    const src=t.getAttribute("src")||"";
+    if(!/^data:|^https?:/.test(src)) return;   // vraies photos uniquement
+    if(/logo-mark\.png/i.test(src)) return;    // on n'agrandit pas le logo
+    e.stopPropagation(); e.preventDefault();
+    App.zoomImage(src);
+  }, true);
+  // Touche Échap : ferme la visionneuse
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape") App.closeZoom(); });
 
   // Démarrage de l'application
   App.init();
