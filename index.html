@@ -1700,7 +1700,11 @@ const App = {
           ${q.reponse
             ? `<div class="bubble a"><span class="b-who">Dr. Asma Gnaoui</span>${this.escape(q.reponse)}</div>`
             : `<div class="lr-s" style="margin-top:8px">⏳ En attente de réponse du vétérinaire…</div>`}
-          <div class="add" style="margin-top:6px">${this.ago(q.createdAt)}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+            <div class="add" style="margin:0;flex:1">${this.ago(q.createdAt)}</div>
+            ${!q.reponse?`<button class="btn btn-soft btn-sm" onclick="App.editQuestion('${q.id}')">✏️ Modifier</button>`:""}
+            <button class="btn btn-danger btn-sm" onclick="App.deleteQuestion('${q.id}')">🗑️</button>
+          </div>
         </div>`).join("")+`</div>`;
     }
     w.innerHTML=html;
@@ -1715,6 +1719,35 @@ const App = {
     this.notify("admin","question","Nouvelle question",`${u.nom||"Un client"}${petLbl}`);
     this.toast("Question envoyée ! Le vétérinaire vous répondra. ✉️","ok");
     this.renderAll();
+  },
+  editQuestion(id){
+    const q=DB.find("questions",id); const u=this.currentUser();
+    if(!q || (u && u.role!=="admin" && q.clientId!==u.id)) return;   // sécurité : uniquement ses propres questions
+    if(q.reponse){ this.toast("Une question déjà répondue ne peut plus être modifiée.","err"); return; }
+    this._qEdit=id;
+    const pets=this.myAnimals();
+    const petSel = pets.length
+      ? `<div class="field"><label>Concerne</label><select id="qe-animal"><option value="">Question générale</option>${pets.map(p=>`<option value="${p.id}" ${q.animalId===p.id?"selected":""}>${this.speciesEmo(p.espece)} ${this.escape(p.nom)}</option>`).join("")}</select></div>`
+      : "";
+    const body=`<div class="field"><label>Votre question</label><textarea id="qe-text" style="min-height:120px">${this.escape(q.texte)}</textarea></div>${petSel}`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveQuestionEdit()">Enregistrer</button>
+      <button class="btn btn-danger btn-block mt-s" onclick="App.deleteQuestion('${id}')">🗑️ Supprimer la question</button>`;
+    this.openSheet("Modifier ma question", body, foot);
+  },
+  saveQuestionEdit(){
+    const id=this._qEdit; if(!id) return;
+    const t=(document.getElementById("qe-text").value||"").trim();
+    if(!t){ this.toast("La question ne peut pas être vide.","err"); return; }
+    const animalId=(document.getElementById("qe-animal")||{}).value||"";
+    DB.update("questions",id,{texte:t, animalId});
+    this.closeSheet(); this.toast("Question modifiée ✓","ok"); this.renderAll();
+  },
+  deleteQuestion(id){
+    const q=DB.find("questions",id); const u=this.currentUser();
+    if(!q || (u && u.role!=="admin" && q.clientId!==u.id)) return;
+    if(!confirm("Supprimer cette question ?")) return;
+    DB.del("questions",id);
+    this.closeSheet(); this.toast("Question supprimée.","ok"); this.renderAll();
   },
 
   /* ============================================================
@@ -2201,8 +2234,12 @@ const App = {
     const c=DB.find("users",clientId); if(!c) return;
     const animals=DB.get("animals",[]).filter(a=>a.ownerId===clientId);
     const qs=DB.get("questions",[]).filter(q=>q.clientId===clientId&&!q.reponse).length;
-    let body=`<div class="about-row" style="border:0;padding:0 0 12px"><div class="ic">👤</div><div><div class="lbl">Client</div><div class="val">${this.escape(c.nom||"Client")}</div></div>
-      <a href="tel:+${this.phoneDigits(c.tel)}" class="btn btn-soft btn-sm" style="margin-left:auto;text-decoration:none">📞 Appeler</a></div>`;
+    let body=`<div class="about-row" style="border:0;padding:0 0 12px"><div class="ic">👤</div><div><div class="lbl">Client</div><div class="val">${this.escape(c.nom||"Client")}</div><div class="lr-s">${this.escape(this.phoneFmt(c.tel))}</div></div>
+      <a href="tel:+${this.phoneDigits(c.tel)}" class="btn btn-soft btn-sm" style="margin-left:auto;text-decoration:none">📞 Appeler</a></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn btn-soft btn-sm" style="flex:1" onclick="App.editClient('${clientId}')">✏️ Modifier le compte</button>
+        <button class="btn btn-danger btn-sm" style="flex:1" onclick="App.deleteClient('${clientId}')">🗑️ Supprimer</button>
+      </div>`;
     body+=`<div class="section-head" style="margin:4px 0 10px"><div><div class="eyebrow">Carnets de santé</div><h2 style="font-size:1.1rem">Animaux (${animals.length})</h2></div></div>`;
     if(!animals.length){
       body+=`<div class="hint mb">Ce client n'a pas encore ajouté d'animal.</div>`;
@@ -2218,6 +2255,49 @@ const App = {
     }
     const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.openAdviceForm('${clientId}','')">💡 Envoyer un conseil</button>`;
     this.openSheet(`Dossier · ${this.escape((c.nom||"Client").split(" ")[0])}`, body, foot);
+  },
+  editClient(clientId){
+    const c=DB.find("users",clientId); if(!c) return;
+    this._clientEdit=clientId;
+    const body=`
+      <div class="field"><label>Nom complet</label><input class="input" id="ce-nom" value="${this.escape(c.nom||"")}"></div>
+      <div class="field"><label>Numéro de téléphone</label><input class="input" id="ce-tel" type="tel" inputmode="numeric" value="${this.escape(c.tel||"")}"></div>
+      <div class="field"><label>Réinitialiser le mot de passe (facultatif)</label><input class="input" id="ce-pass" placeholder="Laisser vide pour ne pas changer"></div>
+      <div class="hint">Le client se connecte avec son numéro de téléphone.</div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveClient()">Enregistrer</button>`;
+    this.openSheet("Modifier le compte client", body, foot);
+  },
+  saveClient(){
+    const id=this._clientEdit; if(!id) return;
+    const nom=(document.getElementById("ce-nom").value||"").trim();
+    const tel=this.normPhone(document.getElementById("ce-tel").value);
+    const pass=(document.getElementById("ce-pass").value||"").trim();
+    if(!nom||!tel){ this.toast("Nom et téléphone requis.","err"); return; }
+    const key=this.phoneKey(tel);
+    if(DB.get("users",[]).some(x=> x.id!==id && key && this.phoneKey(x.tel)===key)){
+      this.toast("Ce numéro est déjà utilisé par un autre compte.","err"); return;
+    }
+    const patch={nom, tel, username:tel};
+    if(pass) patch.password=pass;
+    DB.update("users",id,patch);
+    this.closeSheet(); this.toast("Compte mis à jour ✓","ok"); this.renderAll();
+  },
+  deleteClient(clientId){
+    const c=DB.find("users",clientId); if(!c) return;
+    if(c.role==="admin"){ this.toast("Impossible de supprimer un compte administrateur.","err"); return; }
+    const animals=DB.get("animals",[]).filter(a=>a.ownerId===clientId);
+    const animalIds=animals.map(a=>a.id);
+    if(!confirm(`Supprimer définitivement le compte de ${c.nom||"ce client"} ?\n\nSeront aussi effacés : ${animals.length} animal(aux), leurs carnets de santé, ses rendez-vous, commandes et questions.\n\nCette action est irréversible.`)) return;
+    // Suppression en cascade (une écriture par collection).
+    DB.set("records", DB.get("records",[]).filter(r=>animalIds.indexOf(r.animalId)<0));
+    DB.set("animals", DB.get("animals",[]).filter(a=>a.ownerId!==clientId));
+    DB.set("rdv", DB.get("rdv",[]).filter(r=>r.clientId!==clientId));
+    DB.set("orders", DB.get("orders",[]).filter(o=>o.clientId!==clientId));
+    DB.set("questions", DB.get("questions",[]).filter(q=>q.clientId!==clientId));
+    DB.set("advices", DB.get("advices",[]).filter(a=>a.clientId!==clientId));
+    DB.set("notifs", DB.get("notifs",[]).filter(n=>n.target!==clientId));
+    DB.set("users", DB.get("users",[]).filter(u=>u.id!==clientId));
+    this.closeSheet(); this.toast("Compte supprimé.","ok"); this.renderAll();
   },
 
   openAdminCarnet(animalId){
