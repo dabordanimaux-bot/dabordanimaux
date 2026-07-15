@@ -94,6 +94,20 @@ header.topbar{display:flex;align-items:center;justify-content:space-between;gap:
 .brand .tag{font-size:.7rem;color:var(--muted);font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .top-actions{display:flex;align-items:center;gap:8px;flex:none}
 .icon-btn{border:1px solid var(--line);background:#fff;color:var(--rose-deep);width:40px;height:40px;border-radius:13px;cursor:pointer;font-size:17px;display:grid;place-items:center;transition:.18s;box-shadow:var(--shadow-sm)}
+.lang-btn{width:auto;padding:0 12px;font-size:.8rem;font-weight:800;white-space:nowrap}
+.lang-btn-auth{position:absolute;top:16px;right:16px;z-index:3;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;height:36px;border-radius:12px;backdrop-filter:blur(4px);box-shadow:none}
+/* ===== RTL (arabe) : mise en page de droite à gauche ===== */
+html.rtl body{direction:rtl}
+html.rtl .lang-btn-auth{right:auto;left:16px}
+html.rtl .hero-card,html.rtl .auth-hero{text-align:right}
+html.rtl .list-row,html.rtl .o-line,html.rtl .spread,html.rtl .advice,html.rtl .emergency,html.rtl .notif-item{direction:rtl}
+html.rtl .iv-prev{left:auto;right:14px}
+html.rtl .iv-next{right:auto;left:14px}
+html.rtl .switch{direction:ltr}
+html.rtl input,html.rtl textarea,html.rtl select{text-align:right}
+html.rtl input[type=date],html.rtl input[type=number]{direction:ltr;text-align:right}
+html.rtl .pp-x{right:auto;left:2px}
+html.rtl .bell-badge{right:auto;left:-4px}
 .icon-btn:hover{border-color:var(--rose);transform:translateY(-1px)}
 .icon-btn:active{transform:scale(.94)}
 
@@ -519,6 +533,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
   <!-- ===================== AUTH ===================== -->
   <section class="screen active" id="screen-auth">
     <div class="auth-hero">
+      <button class="lang-btn lang-btn-auth" id="lang-btn-auth" onclick="App.toggleLang()" title="اللغة / Langue">العربية</button>
       <div class="auth-logo"><img src="logo-mark.png" alt="Animaux d'abord" /></div>
       <h1>Animaux d'abord</h1>
       <div class="sub">Cabinet Vétérinaire de Manouba 🇹🇳</div>
@@ -559,6 +574,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
           <div><div class="name">Animaux <span>d'abord</span></div><div class="tag" id="client-hello">—</div></div>
         </div>
         <div class="top-actions">
+          <button class="icon-btn lang-btn" id="lang-btn-client" onclick="App.toggleLang()" title="اللغة / Langue">العربية</button>
           <button class="icon-btn bell-btn" id="client-bell" onclick="App.toggleNotifs()" title="Notifications">🔔<span class="bell-badge" id="bell-badge-client" style="display:none">0</span></button>
           <button class="icon-btn" onclick="App.logout()" title="Se déconnecter"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
         </div>
@@ -603,6 +619,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
           <div><div class="name">Espace <span>Docteur</span></div><div class="tag" id="admin-hello">Dr. Asma Gnaoui</div></div>
         </div>
         <div class="top-actions">
+          <button class="icon-btn lang-btn" id="lang-btn-admin" onclick="App.toggleLang()" title="اللغة / Langue">العربية</button>
           <button class="icon-btn bell-btn" id="admin-bell" onclick="App.toggleNotifs()" title="Notifications">🔔<span class="bell-badge" id="bell-badge-admin" style="display:none">0</span></button>
           <button class="icon-btn" onclick="App.logout()" title="Se déconnecter"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
         </div>
@@ -846,8 +863,92 @@ const DEFAULT_POSTS = [
 /* =====================================================================
    APPLICATION
    ===================================================================== */
+/* ============================================================
+   TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
+   ============================================================ */
+const AR_DICT = {
+  "Accueil":"الرئيسية","Mes animaux":"حيواناتي","Boutique":"المتجر","Rendez-vous":"المواعيد","Messages":"الرسائل","À propos":"من نحن",
+  "Agenda":"الأجندة","Commandes":"الطلبات","Caisse":"الصندوق","Patients":"المرضى","Réglages":"الإعدادات",
+  "Espace Docteur":"مساحة الطبيب","Espace vétérinaire":"المساحة البيطرية",
+  "Mes commandes":"طلباتي","Mes questions":"أسئلتي","Mes rendez-vous":"مواعيدي",
+  "Carnet de santé":"دفتر الصحة","Carnets de santé":"دفاتر الصحة","Historique médical":"السجل الطبي",
+  "Poids & croissance":"الوزن والنمو","Rappels à venir":"التذكيرات القادمة","Suivi médical":"المتابعة الطبية",
+  "Statistiques":"الإحصائيات","Performance du cabinet":"أداء العيادة","Recettes":"المداخيل",
+  "Demandes en attente":"الطلبات المعلّقة","Rendez-vous du jour":"مواعيد اليوم","Créneaux disponibles":"المواعيد المتاحة",
+  "Répondues":"تمّت الإجابة","Questions des clients":"أسئلة الزبائن","Conseils du vétérinaire 💡":"نصائح الطبيب البيطري 💡",
+  "Blog & astuces":"المدونة والنصائح","Astuces santé":"نصائح صحية","Actualités":"الأخبار",
+  "Le cabinet":"العيادة","Heures d'ouverture":"ساعات العمل","Horaires d'ouverture":"مواقيت العمل",
+  "Lien de l'application":"رابط التطبيق","Application & QR code":"التطبيق ورمز QR",
+  "Réserver un créneau":"حجز موعد","Nouvel animal":"حيوان جديد","Modifier l'animal":"تعديل الحيوان",
+  "Nouveau produit":"منتج جديد","Modifier le produit":"تعديل المنتج",
+  "Suivi":"المتابعة","Dossiers":"الملفات","Ventes":"المبيعات","Gestion":"الإدارة","Historique":"السجل",
+  "Partage":"المشاركة","Coordonnées":"معلومات الاتصال","Horaires":"المواقيت","Configuration":"الإعدادات",
+  "Disponibilités":"الأوقات المتاحة","Le saviez-vous":"هل تعلم","Du cabinet":"من العيادة","Sur rendez-vous":"بموعد مسبق",
+  "Vétérinaire à l'écoute":"طبيب بيطري في خدمتكم","Page d'accueil des clients":"الصفحة الرئيسية للزبائن",
+  "À répondre":"للإجابة","À traiter":"للمعالجة",
+  "Aucun animal pour l'instant":"لا يوجد حيوان حاليًا","Aucun produit":"لا يوجد منتج","Aucun rendez-vous":"لا يوجد موعد",
+  "Aucun élément":"لا يوجد عنصر","Aucune commande":"لا يوجد طلب","Aucune notification":"لا يوجد إشعار",
+  "Aucune publication":"لا يوجد منشور","Aucune question":"لا يوجد سؤال","Aucune recette sur cette période":"لا مداخيل في هذه الفترة",
+  "Aucun client inscrit":"لا يوجد زبون مسجّل","Aucun résultat":"لا نتائج",
+  "Ajouter":"إضافة","Enregistrer":"حفظ","Supprimer":"حذف","Annuler":"إلغاء","Modifier":"تعديل","Confirmer":"تأكيد",
+  "Refuser":"رفض","Fermer":"إغلاق","Publier":"نشر","Connexion":"تسجيل الدخول","Créer un compte":"إنشاء حساب",
+  "Se connecter":"دخول","S'inscrire":"تسجيل","Se déconnecter":"تسجيل الخروج","Notifications":"الإشعارات",
+  "Marquer terminé":"وضع علامة منتهي","Voir l'agenda":"عرض الأجندة","Copier le lien":"نسخ الرابط",
+  "Réinitialiser les données de démonstration":"إعادة تعيين البيانات التجريبية","Enregistrer les réglages":"حفظ الإعدادات",
+  "Ajouter au carnet":"إضافة إلى الدفتر","Envoyer un conseil":"إرسال نصيحة","Retour au dossier":"العودة إلى الملف",
+  "En attente":"في الانتظار","En préparation":"قيد التحضير","Prête à retirer":"جاهزة للاستلام","Livrée":"تم التسليم","Annulée":"ملغاة",
+  "Confirmé":"مؤكد","Refusé":"مرفوض","Terminé":"منتهي","Annulé":"ملغى",
+  "Vaccin":"تلقيح","Consultation":"استشارة","Ordonnance":"وصفة طبية","Vermifuge":"مضاد الديدان","Analyse":"تحليل","Chirurgie":"جراحة",
+  "Chien":"كلب","Chat":"قط","Oiseau":"طائر","Lapin":"أرنب","Rongeur":"قارض","Tortue":"سلحفاة","Poisson":"سمكة","Cheval":"حصان","Autre":"آخر",
+  "Alimentation":"تغذية","Hygiène":"نظافة","Santé":"صحة","Accessoires":"إكسسوارات","Jouets":"ألعاب","Tous":"الكل",
+  "Nom":"الاسم","Nom *":"الاسم *","Espèce":"النوع","Sexe":"الجنس","Race":"السلالة","Poids (kg)":"الوزن (كغ)",
+  "Notes (allergies, caractère…)":"ملاحظات (حساسية، طباع…)","Date de naissance":"تاريخ الميلاد","Stérilisé·e":"معقّم·ة",
+  "Âge":"العمر","Poids":"الوزن","Prix (DT)":"السعر (د.ت)","Stock":"المخزون","Catégorie":"الفئة","Emoji":"إيموجي","Description":"الوصف",
+  "Photos de l'animal (optionnel)":"صور الحيوان (اختياري)","Photo du produit (optionnel)":"صورة المنتج (اختياري)",
+  "♂ Mâle":"ذكر ♂","♀ Femelle":"أنثى ♀","Notes":"ملاحظات","Titre":"العنوان","Date":"التاريخ",
+  "Date de la pesée":"تاريخ الوزن","Motif":"السبب","Précisions (optionnel)":"تفاصيل (اختياري)",
+  "Mot de passe":"كلمة المرور","Nom du cabinet":"اسم العيادة","Adresse":"العنوان","Téléphone":"الهاتف",
+  "Lien public de l'app":"الرابط العمومي للتطبيق","Type":"النوع","Contenu":"المحتوى",
+  "Aujourd'hui":"اليوم","Demain":"غدًا","Hier":"أمس","Cette semaine":"هذا الأسبوع","Ce mois":"هذا الشهر","Total général":"المجموع الكلي",
+  "Semaine":"أسبوع","Mois":"شهر","Voici l'activité de votre cabinet aujourd'hui.":"إليك نشاط عيادتك اليوم.",
+  "Gratuit":"مجاني","Cabinet ouvert":"العيادة مفتوحة","Cabinet fermé":"العيادة مغلقة",
+  "Consultations ce mois":"استشارات هذا الشهر","Consultations (total)":"استشارات (المجموع)","Recettes des 6 derniers mois":"مداخيل آخر 6 أشهر",
+  "Produits les plus vendus":"المنتجات الأكثر مبيعًا","Modifier le prix":"تعديل السعر","Total des ventes":"مجموع المبيعات","À préparer":"للتحضير",
+  "Clients inscrits":"الزبائن المسجّلون","RDV aujourd'hui":"مواعيد اليوم","Commandes à traiter":"طلبات للمعالجة","Questions en attente":"أسئلة معلّقة",
+  "Exporter les recettes (CSV / Excel)":"تصدير المداخيل (CSV / Excel)",
+  "Rechercher un client…":"البحث عن زبون…","Rechercher un produit…":"البحث عن منتج…","Répondez au client…":"أجب الزبون…",
+  "Votre message pour les clients…":"رسالتك للزبائن…","Votre recommandation…":"توصيتك…","Optionnel":"اختياري",
+  "Choisissez un mot de passe":"اختر كلمة مرور","Courte description du produit":"وصف موجز للمنتج","Décrivez le motif si besoin":"صف السبب إذا لزم",
+  "Laisser vide pour ne pas changer":"اتركه فارغًا لعدم التغيير","Médicaments, posologie, observations…":"أدوية، جرعات، ملاحظات…",
+  "Votre numéro, ex : 95 063 068":"رقمك، مثال: 95 063 068",
+  "Tout":"الكل","Astuce":"نصيحة","Actu":"خبر","Astuce santé":"نصيحة صحية","Actualité":"خبر","Blog":"مدونة",
+  "Fermé aujourd'hui":"مغلق اليوم","Ouvert maintenant":"مفتوح الآن","Confirmer":"تأكيد","Terminer":"إنهاء",
+  "Aucun rappel de vaccin ou de soin prévu dans les 60 prochains jours.":"لا يوجد تذكير تلقيح أو رعاية خلال الـ60 يومًا القادمة.",
+  "Terminez un rendez-vous (avec un prix) ou livrez une commande pour alimenter la caisse.":"أنهِ موعدًا (بسعر) أو سلّم طلبًا لتغذية الصندوق.",
+  "Les commandes des clients apparaîtront ici.":"ستظهر طلبات الزبائن هنا.","Vous serez prévenu ici.":"سيتم إشعارك هنا.",
+  "Choisissez une date ci-dessus pour réserver.":"اختر تاريخًا أعلاه للحجز.","Posez votre première question ci-dessus.":"اطرح سؤالك الأول أعلاه.",
+  "Tout pour vos compagnons 🛍️":"كل ما يحتاجه رفاقكم 🛍️",
+  "Alimentation, hygiène et soins sélectionnés par le Dr. Asma.":"تغذية ونظافة ورعاية مختارة من الدكتورة أسماء.",
+  "Suivi santé, rendez-vous et conseils du Dr. Asma Gnaoui, en un seul endroit.":"متابعة صحية، مواعيد ونصائح الدكتورة أسماء الغناوي، في مكان واحد.",
+  "Prenez soin de vos compagnons 🐾":"اعتنِ برفاقك 🐾","Prenez soin de votre compagnon 🐾":"اعتنِ برفيقك 🐾",
+  "💬 Une question pour le Dr. Asma ?":"💬 سؤال للدكتورة أسماء؟","Une question pour le Dr. Asma ?":"سؤال للدكتورة أسماء؟",
+};
+const AR_TOKENS_LIST = [
+  ["janvier","يناير"],["février","فبراير"],["mars","مارس"],["avril","أبريل"],["mai","مايو"],["juin","يونيو"],
+  ["juillet","يوليو"],["août","أغسطس"],["septembre","سبتمبر"],["octobre","أكتوبر"],["novembre","نوفمبر"],["décembre","ديسمبر"],
+  ["JAN","ينا"],["FÉV","فبر"],["MAR","مار"],["AVR","أبر"],["MAI","مايو"],["JUIN","يون"],["JUIL","يول"],["AOÛ","أغس"],["SEP","سبت"],["OCT","أكت"],["NOV","نوف"],["DÉC","ديس"],
+  ["Dimanche","الأحد"],["Lundi","الإثنين"],["Mardi","الثلاثاء"],["Mercredi","الأربعاء"],["Jeudi","الخميس"],["Vendredi","الجمعة"],["Samedi","السبت"],
+  ["Dim","أحد"],["Lun","إثن"],["Mar","ثلا"],["Mer","أرب"],["Jeu","خمي"],["Ven","جمع"],["Sam","سبت"],
+  ["jan","ينا"],["fév","فبر"],["mar","مار"],["avr","أبر"],["juil","يول"],["aoû","أغس"],["sep","سبت"],["oct","أكت"],["nov","نوف"],["déc","ديس"],
+  ["Consultations","استشارات"],["Consultation","استشارة"],["Boutique","المتجر"],
+  ["Bonjour","مرحبًا"],
+  ["DT","د.ت"],
+];
+let AR_DICT_REV=null, AR_TOKENS_REV=null;
+
 const App = {
   session:null, deferredPrompt:null, _ring:false,
+  lang:"fr", _i18nObs:null, _translPending:false,
   cart:[], recTab:{}, // état onglets dossier médical par animal
   shopCat:"Tous", shopQuery:"",
 
@@ -1086,6 +1187,66 @@ const App = {
     if(im) im.src="";
     const sh=document.getElementById("sheet-backdrop");
     if(!sh || !sh.classList.contains("show")) document.body.style.overflow="";
+  },
+
+  /* ---------- Langue (français / arabe) ---------- */
+  initLang(){
+    try{ this.lang = localStorage.getItem("ad_lang")||"fr"; }catch(e){ this.lang="fr"; }
+    if(!AR_DICT_REV){ AR_DICT_REV={}; Object.keys(AR_DICT).forEach(k=>{ AR_DICT_REV[AR_DICT[k]]=k; }); }
+    if(!AR_TOKENS_REV){ AR_TOKENS_REV=AR_TOKENS_LIST.map(p=>[p[1],p[0]]); }
+    // observe le DOM pour traduire automatiquement chaque nouveau rendu
+    if(!this._i18nObs && "MutationObserver" in window){
+      this._i18nObs=new MutationObserver(()=>{ this._scheduleTranslate(); });
+      this._i18nObs.observe(document.body,{childList:true,subtree:true,characterData:true});
+    }
+    this.applyLang();
+  },
+  toggleLang(){
+    this.lang = this.lang==="ar" ? "fr" : "ar";
+    try{ localStorage.setItem("ad_lang", this.lang); }catch(e){}
+    this.applyLang();
+  },
+  applyLang(){
+    const ar=this.lang==="ar", de=document.documentElement;
+    de.dir=ar?"rtl":"ltr"; de.lang=ar?"ar":"fr"; de.classList.toggle("rtl",ar);
+    ["lang-btn-client","lang-btn-admin","lang-btn-auth"].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=ar?"Français":"العربية"; });
+    this.translateDOM();
+  },
+  _scheduleTranslate(){
+    if(this._translPending) return;
+    this._translPending=true;
+    requestAnimationFrame(()=>{ this._translPending=false; this.translateDOM(); });
+  },
+  translateDOM(){
+    if(this._i18nObs) this._i18nObs.disconnect();
+    try{
+      const ar=this.lang==="ar";
+      const phraseMap = ar?AR_DICT:AR_DICT_REV;
+      const tokPairs = ar?AR_TOKENS_LIST:AR_TOKENS_REV;
+      const tokMap={}; tokPairs.forEach(p=>{ tokMap[p[0]]=p[1]; });
+      const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+      const sorted=tokPairs.map(p=>p[0]).sort((a,b)=>b.length-a.length).map(esc);
+      let tokRe=null; try{ tokRe=new RegExp("(^|[^\\p{L}\\p{N}])("+sorted.join("|")+")(?![\\p{L}\\p{N}])","gu"); }catch(e){ tokRe=null; }
+      let preRe=null; try{ preRe=new RegExp("^([^\\p{L}\\p{N}]+\\s*)(.+)$","u"); }catch(e){ preRe=null; }
+      const walk=document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode:(nd)=>{ const pn=nd.parentNode; if(!pn) return NodeFilter.FILTER_REJECT;
+          const tag=pn.nodeName; if(tag==="SCRIPT"||tag==="STYLE"||tag==="TEXTAREA") return NodeFilter.FILTER_REJECT;
+          return nd.nodeValue && nd.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; }
+      });
+      const nodes=[]; let nd; while(nd=walk.nextNode()) nodes.push(nd);
+      nodes.forEach(node=>{
+        const v=node.nodeValue, key=v.trim();
+        // 1) phrase exacte
+        if(phraseMap[key]!=null){ node.nodeValue=v.replace(key,phraseMap[key]); return; }
+        // 2) préfixe emoji/symbole + phrase connue (ex : "📅 Agenda", "＋ Publier")
+        if(preRe){ const m=key.match(preRe); if(m && phraseMap[m[2].trim()]!=null){ node.nodeValue=v.replace(key, m[1]+phraseMap[m[2].trim()]); return; } }
+        // 3) jetons (mois, jours, DT, Bonjour) — avec limites de mots pour ne rien corrompre
+        if(tokRe){ const out=v.replace(tokRe,(mm,pre,tok)=>pre+(tokMap[tok]||tok)); if(out!==v) node.nodeValue=out; }
+      });
+      document.querySelectorAll("[placeholder]").forEach(el=>{ const k=(el.getAttribute("placeholder")||"").trim(); if(phraseMap[k]!=null) el.setAttribute("placeholder",phraseMap[k]); });
+      document.querySelectorAll("[title]").forEach(el=>{ const k=(el.getAttribute("title")||"").trim(); if(phraseMap[k]!=null) el.setAttribute("title",phraseMap[k]); });
+    }catch(e){ /* jamais bloquer l'app pour la traduction */ }
+    if(this._i18nObs) this._i18nObs.observe(document.body,{childList:true,subtree:true,characterData:true});
   },
 
   /* ---------- toast ---------- */
@@ -3021,6 +3182,9 @@ document.addEventListener("DOMContentLoaded", function(){
     v.addEventListener("touchend",e=>{ const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
       if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)) App.zoomStep(dx<0?1:-1); },{passive:true});
   })();
+
+  // Langue (français / arabe) : observateur + application avant le rendu
+  App.initLang();
 
   // Démarrage de l'application
   App.init();
