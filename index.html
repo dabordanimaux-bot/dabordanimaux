@@ -540,7 +540,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
         </div>
         <div class="top-actions">
           <button class="icon-btn bell-btn" id="client-bell" onclick="App.toggleNotifs()" title="Notifications">🔔<span class="bell-badge" id="bell-badge-client" style="display:none">0</span></button>
-          <button class="icon-btn" onclick="App.logout()" title="Se déconnecter">⏻</button>
+          <button class="icon-btn" onclick="App.logout()" title="Se déconnecter"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
         </div>
       </header>
       <nav class="topnav" id="client-nav">
@@ -584,7 +584,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
         </div>
         <div class="top-actions">
           <button class="icon-btn bell-btn" id="admin-bell" onclick="App.toggleNotifs()" title="Notifications">🔔<span class="bell-badge" id="bell-badge-admin" style="display:none">0</span></button>
-          <button class="icon-btn" onclick="App.logout()" title="Se déconnecter">⏻</button>
+          <button class="icon-btn" onclick="App.logout()" title="Se déconnecter"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
         </div>
       </header>
       <nav class="topnav" id="admin-nav">
@@ -967,7 +967,7 @@ const App = {
   /* ---------- helpers généraux ---------- */
   uid(p){ return (p||"x")+Date.now()+Math.floor(Math.random()*1000); },
   escape(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); },
-  money(n){ return (Math.round((+n||0)*1000)/1000).toString().replace(/\.?0+$/,"")+" DT"; },
+  money(n){ const v=Math.round((+n||0)*1000)/1000; return v + " DT"; },
   todayStr(){ const d=new Date(); return this.dstr(d); },
   dstr(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); },
   parseD(s){ const p=(s||"").split("-"); return new Date(+p[0],(+p[1]||1)-1,+p[2]||1); },
@@ -1849,9 +1849,12 @@ const App = {
   openPostForm(id){
     const p=id?DB.find("posts",id):null; this._postEdit=id||null; this._postImg=p?(p.image||null):null;
     const body=`
-      <div class="photo-pick"><label class="pv" id="post-pv">${this._postImg?`<img src="${this._postImg}">`:"🖼️"}
-        <input type="file" accept="image/*" style="display:none" onchange="App.pickPostPhoto(this)"></label>
-        <div class="hint">Image de couverture (facultatif)</div></div>
+      <div class="photo-pick">
+        <div class="pv" id="post-pv" onclick="document.getElementById('post-file').click()">${this._postImg?`<img src="${this._postImg}">`:"🖼️"}</div>
+        <input type="file" id="post-file" accept="image/*" style="display:none" onchange="App.pickPostPhoto(this)">
+        <div class="hint">Image de couverture (facultatif)</div>
+        <button type="button" class="btn btn-soft btn-sm" id="post-rm" style="display:${this._postImg?"inline-flex":"none"}" onclick="App.removePostPhoto()">🗑️ Retirer l'image</button>
+      </div>
       <div class="two-col">
         <div class="field"><label>Type</label><select id="po-type">
           <option value="astuce" ${p&&p.type==="astuce"?"selected":""}>💡 Astuce santé</option>
@@ -1864,7 +1867,8 @@ const App = {
       ${id?`<button class="btn btn-danger btn-block mt-s" onclick="App.deletePost('${id}')">Supprimer</button>`:""}`;
     this.openSheet(id?"Modifier la publication":"Nouvelle publication", body, foot);
   },
-  pickPostPhoto(inp){ this.readPhoto(inp.files[0], d=>{ this._postImg=d; const pv=document.getElementById("post-pv"); if(pv) pv.innerHTML=d?`<img src="${d}">`:"🖼️"; }); },
+  pickPostPhoto(inp){ this.readPhoto(inp.files[0], d=>{ this._postImg=d; const pv=document.getElementById("post-pv"); if(pv) pv.innerHTML=d?`<img src="${d}">`:"🖼️"; const rm=document.getElementById("post-rm"); if(rm) rm.style.display=d?"inline-flex":"none"; }); },
+  removePostPhoto(){ this._postImg=null; const pv=document.getElementById("post-pv"); if(pv) pv.innerHTML="🖼️"; const rm=document.getElementById("post-rm"); if(rm) rm.style.display="none"; const f=document.getElementById("post-file"); if(f) f.value=""; },
   savePost(){
     const titre=(document.getElementById("po-titre").value||"").trim();
     const contenu=(document.getElementById("po-contenu").value||"").trim();
@@ -2091,10 +2095,28 @@ const App = {
     this.toast("Statut mis à jour. Le client est prévenu ✓","ok"); this.renderAll();
   },
   // ---------- Caisse (recettes) ----------
-  _inToday(ts){ return this.dstr(new Date(ts))===this.todayStr(); },
-  _inMonth(ts){ const d=new Date(ts), n=new Date(); return d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear(); },
+  // Filtre de période pour la caisse.
+  _inPeriod(ts, period){
+    const d=new Date(ts), n=new Date();
+    if(period==="jour") return this.dstr(d)===this.todayStr();
+    if(period==="semaine"){
+      const start=new Date(n); const dow=(start.getDay()+6)%7; // lundi = 0
+      start.setHours(0,0,0,0); start.setDate(start.getDate()-dow);
+      const end=new Date(start); end.setDate(start.getDate()+7);
+      return ts>=start.getTime() && ts<end.getTime();
+    }
+    if(period==="mois"){
+      const m=this._caisseMonth||new Date();
+      return d.getMonth()===m.getMonth() && d.getFullYear()===m.getFullYear();
+    }
+    return true; // "tout"
+  },
+  setCaissePeriod(p){ this._caissePeriod=p; if(p==="mois"&&!this._caisseMonth) this._caisseMonth=new Date(); this.renderCaisse(); },
+  caisseMonthMove(delta){ const m=this._caisseMonth||new Date(); this._caisseMonth=new Date(m.getFullYear(), m.getMonth()+delta, 1); this.renderCaisse(); },
   renderCaisse(){
     const w=document.getElementById("caisse-c"); if(!w) return;
+    const period=this._caissePeriod||"jour";
+    const m=this._caisseMonth||new Date();
     // Consultations terminées avec un prix + commandes livrées = recettes réalisées.
     const cons=DB.get("rdv",[]).filter(r=>r.status==="termine" && +r.prix>0).map(r=>({
       ts:r.paidAt||this.parseD(r.date).getTime(), montant:+r.prix, type:"cons",
@@ -2104,29 +2126,38 @@ const App = {
       ts:o.deliveredAt||o.createdAt, montant:+o.total||0, type:"order",
       titre:o.clientNom||"Client", sub:"Commande #"+String(o.id).slice(-4).toUpperCase()
     }));
-    const all=cons.concat(ords).sort((a,b)=>b.ts-a.ts);
     const sum=arr=>arr.reduce((s,x)=>s+x.montant,0);
-    const totToday=sum(all.filter(x=>this._inToday(x.ts)));
-    const totMonth=sum(all.filter(x=>this._inMonth(x.ts)));
-    const totAll=sum(all);
-    const consSum=sum(cons), ordSum=sum(ords);
+    // filtrage par période sélectionnée
+    const inP=x=>this._inPeriod(x.ts, period);
+    const consP=cons.filter(inP), ordsP=ords.filter(inP);
+    const allP=consP.concat(ordsP).sort((a,b)=>b.ts-a.ts);
+    const periodTotal=sum(allP), consPS=sum(consP), ordPS=sum(ordsP);
+    const label = period==="jour" ? "Aujourd'hui" : period==="semaine" ? "Cette semaine"
+      : period==="mois" ? (this.MONTHS[m.getMonth()]+" "+m.getFullYear()) : "Total général";
 
     let html=`
-      <div class="stat-grid">
-        <div class="stat-card"><div class="sc-ic">📅</div><div class="sc-v">${this.money(totToday)}</div><div class="sc-l">Aujourd'hui</div></div>
-        <div class="stat-card"><div class="sc-ic">🗓️</div><div class="sc-v">${this.money(totMonth)}</div><div class="sc-l">Ce mois-ci</div></div>
+      <div class="chip-row mb">
+        <button class="chip ${period==="jour"?"on":""}" onclick="App.setCaissePeriod('jour')">📅 Aujourd'hui</button>
+        <button class="chip ${period==="semaine"?"on":""}" onclick="App.setCaissePeriod('semaine')">🗓️ Semaine</button>
+        <button class="chip ${period==="mois"?"on":""}" onclick="App.setCaissePeriod('mois')">📆 Mois</button>
+        <button class="chip ${period==="tout"?"on":""}" onclick="App.setCaissePeriod('tout')">∑ Tout</button>
       </div>
+      ${period==="mois"?`<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:12px">
+        <button class="btn btn-soft btn-sm" onclick="App.caisseMonthMove(-1)">‹</button>
+        <b style="font-family:var(--display);min-width:150px;text-align:center;color:var(--ink)">${this.MONTHS[m.getMonth()]} ${m.getFullYear()}</b>
+        <button class="btn btn-soft btn-sm" onclick="App.caisseMonthMove(1)">›</button>
+      </div>`:""}
       <div class="card mb center" style="background:var(--grad);color:#fff">
-        <div class="h-eyebrow" style="opacity:.9;font-weight:800;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase">Total encaissé</div>
-        <div style="font-family:var(--display);font-weight:800;font-size:2.2rem;margin-top:2px">${this.money(totAll)}</div>
-        <div style="opacity:.92;font-weight:600;font-size:.86rem;margin-top:4px">🩺 Consultations ${this.money(consSum)} · 🛍️ Boutique ${this.money(ordSum)}</div>
+        <div style="opacity:.9;font-weight:800;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase">${this.escape(label)}</div>
+        <div style="font-family:var(--display);font-weight:800;font-size:2.2rem;margin-top:2px">${this.money(periodTotal)}</div>
+        <div style="opacity:.92;font-weight:600;font-size:.86rem;margin-top:4px">🩺 Consultations ${this.money(consPS)} · 🛍️ Boutique ${this.money(ordPS)}</div>
       </div>`;
 
-    if(!all.length){
-      html+=`<div class="empty"><span class="ic">💰</span><div class="et">Aucune recette pour l'instant</div><div class="hint">Terminez un rendez-vous (avec un prix) ou livrez une commande pour alimenter la caisse.</div></div>`;
+    if(!allP.length){
+      html+=`<div class="empty"><span class="ic">💰</span><div class="et">Aucune recette sur cette période</div><div class="hint">Terminez un rendez-vous (avec un prix) ou livrez une commande pour alimenter la caisse.</div></div>`;
     } else {
-      html+=`<div class="section-head" style="margin:4px 0 8px"><div><div class="eyebrow">Détail</div><h2 style="font-size:1.2rem">Dernières recettes</h2></div></div>`;
-      html+=`<div class="stagger">`+all.map(x=>`
+      html+=`<div class="section-head" style="margin:4px 0 8px"><div><div class="eyebrow">Détail · ${allP.length} recette${allP.length>1?"s":""}</div><h2 style="font-size:1.2rem">Recettes</h2></div></div>`;
+      html+=`<div class="stagger">`+allP.map(x=>`
         <div class="list-row" style="cursor:default">
           <div class="lr-av">${x.type==="cons"?"🩺":"🛍️"}</div>
           <div class="lr-body">
