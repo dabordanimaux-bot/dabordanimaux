@@ -512,7 +512,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 
       <div class="card" id="form-login">
         <div class="field"><label>Téléphone ou identifiant</label>
-          <input class="input" id="log-id" placeholder="Ex : 22 024 232" autocomplete="username" /></div>
+          <input class="input" id="log-id" placeholder="Votre numéro, ex : 95 063 068" autocomplete="username" /></div>
         <div class="field"><label>Mot de passe</label>
           <input class="input" id="log-pass" type="password" placeholder="••••••" autocomplete="current-password" /></div>
         <button class="btn btn-primary btn-block btn-lg" onclick="App.login()">Se connecter 🐾</button>
@@ -880,6 +880,9 @@ const App = {
     if(u.role==="admin") this.openAdmin(); else this.openClient();
   },
   normPhone(s){ return (s||"").replace(/\s+/g,"").trim(); },
+  // Réduit un numéro à sa forme canonique (chiffres seuls, sans indicatif +216)
+  // pour que "95063068", "+21695063068", "216 95 063 068" soient identiques.
+  phoneKey(s){ const d=(s||"").replace(/\D/g,""); return d.replace(/^216/,""); },
 
   switchAuth(mode){
     this.authMode=mode;
@@ -891,7 +894,14 @@ const App = {
     const id=this.normPhone(document.getElementById("log-id").value);
     const pass=document.getElementById("log-pass").value;
     if(!id||!pass) return this.toast("Remplissez tous les champs.","err");
-    const u=DB.get("users",[]).find(x=>(x.username===id||x.tel===id) && x.password===pass);
+    const key=this.phoneKey(id);   // numéro canonique (tolère +216 et espaces)
+    const u=DB.get("users",[]).find(x=>{
+      if(x.password!==pass) return false;
+      if(x.username===id) return true;                        // identifiant exact (ex : "admin")
+      if(key && this.phoneKey(x.tel)===key) return true;      // même numéro de téléphone
+      if(key && this.phoneKey(x.username)===key) return true;
+      return false;
+    });
     if(!u) return this.toast("Identifiant ou mot de passe incorrect.","err");
     this.session={userId:u.id}; DB.set("session",this.session);
     this.loadCart();
@@ -904,7 +914,9 @@ const App = {
     const pass=document.getElementById("reg-pass").value;
     if(!nom||!tel||!pass) return this.toast("Remplissez tous les champs.","err");
     const users=DB.get("users",[]);
-    if(users.some(x=>x.username===tel||x.tel===tel)) return this.toast("Ce numéro a déjà un compte.","err");
+    const key=this.phoneKey(tel);
+    if(users.some(x=> x.username===tel || (key && this.phoneKey(x.tel)===key)))
+      return this.toast("Ce numéro a déjà un compte.","err");
     const u={id:"u"+Date.now(),role:"client",username:tel,tel,password:pass,nom,createdAt:Date.now()};
     users.push(u); DB.set("users",users);
     this.session={userId:u.id}; DB.set("session",this.session);
@@ -2272,12 +2284,26 @@ const App = {
       </div>
 
       <div class="card mb">
-        <div class="field" style="margin:0"><label>Lien public de l'app (pour partage / QR)</label><input class="input" id="se-url" value="${this.escape(s.appUrl||"")}" placeholder="https://votre-nom.github.io/animaux-dabord/"></div>
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Partage</div><h2 style="font-size:1.2rem">Application &amp; QR code</h2></div></div>
+        <div class="field" style="margin-bottom:4px"><label>Lien public de l'app</label><input class="input" id="se-url" value="${this.escape(s.appUrl||"")}" placeholder="https://votre-nom.github.io/animaux-dabord/"></div>
+        <div class="hint" style="margin:0 0 12px">Laissez vide pour utiliser l'adresse actuelle. Enregistrez pour mettre à jour le QR code.</div>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <div id="se-qr" style="width:176px;height:176px;background:#fff;border-radius:14px;border:1px solid var(--line);display:grid;place-items:center;padding:8px;flex:0 0 auto"></div>
+          <div style="flex:1;min-width:180px">
+            <div style="font-size:.82rem;font-weight:700;color:var(--ink-2);word-break:break-all;margin-bottom:10px">${this.escape(this.appUrl())}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-soft btn-sm" onclick="App.copyAppLink()">🔗 Copier le lien</button>
+              <button class="btn btn-ok btn-sm" onclick="App.shareWhatsApp()">💬 WhatsApp</button>
+            </div>
+            <div class="hint" style="margin-top:10px">Vos clients scannent ce code pour ouvrir l'application. 🐾</div>
+          </div>
+        </div>
       </div>
 
       <button class="btn btn-primary btn-block btn-lg mb" onclick="App.saveSettings()">💾 Enregistrer les réglages</button>
       <button class="btn btn-danger btn-block" onclick="App.resetData()">🗑️ Réinitialiser les données de démonstration</button>
-      <div class="hint center mt" style="padding-bottom:20px">Les données sont stockées sur cet appareil (localStorage). Connexion Firebase à venir pour la synchronisation multi-appareils.</div>`;
+      <div class="hint center mt" style="padding-bottom:20px">Les données sont synchronisées dans le cloud (Firebase) et disponibles sur tous les appareils. Sans réseau, l'app reste utilisable en local.</div>`;
+    this.renderQR("se-qr", this.appUrl());   // génère le QR code de partage
   },
   toggleDayInputs(d){ const on=document.getElementById("h-open-"+d).checked; const t=document.getElementById("h-times-"+d); if(t) t.style.display=on?"block":"none"; },
   saveSettings(){
@@ -2293,6 +2319,32 @@ const App = {
       appUrl:g("se-url").trim(), hours };
     DB.set("settings", Object.assign({},this.settings(),s));
     this.toast("Réglages enregistrés ✓","ok"); this.renderAll();
+  },
+  // Génère un QR code (via la librairie qrcode-generator) dans un conteneur.
+  renderQR(containerId, text){
+    const box=document.getElementById(containerId);
+    if(!box) return;
+    if(!text || typeof qrcode==="undefined"){
+      box.innerHTML='<div class="hint" style="text-align:center;padding:6px">QR indisponible<br>(hors-ligne)</div>';
+      return;
+    }
+    try{
+      const qr=qrcode(0,"M");        // 0 = taille auto, correction "M"
+      qr.addData(text); qr.make();
+      const url=qr.createDataURL(6,0);
+      box.innerHTML='<img alt="QR code de l\'application" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated" src="'+url+'">';
+    }catch(e){ box.innerHTML='<div class="hint" style="text-align:center">QR indisponible</div>'; }
+  },
+  copyAppLink(){
+    const u=this.appUrl(); if(!u) return this.toast("Aucun lien à copier.","err");
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(u).then(()=>this.toast("Lien copié ✓","ok")).catch(()=>this.toast("Copie impossible.","err"));
+    } else { this.toast("Copie non supportée sur ce navigateur.","err"); }
+  },
+  shareWhatsApp(){
+    const u=this.appUrl();
+    const t=encodeURIComponent("Animaux d'abord — suivez la santé de votre animal : "+u);
+    window.open("https://wa.me/?text="+t,"_blank");
   },
   resetData(){
     if(!confirm("Réinitialiser TOUTES les données (produits, RDV, commandes, patients…) et recharger la démo ? Cette action est irréversible.")) return;
