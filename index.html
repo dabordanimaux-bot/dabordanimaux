@@ -1274,6 +1274,10 @@ const App = {
       <div class="spread"><div><div class="hint" style="font-weight:800;color:var(--rose-deep)">${this.speciesEmo(p.espece)} ${this.escape(p.nom)}</div>
       <div class="hint">${this.speciesLabel(p.espece)}${p.race?" · "+this.escape(p.race):""} · ${this.age(p.naissance)}</div></div>
       ${p.sterilise?`<span class="badge b-ok">Stérilisé·e</span>`:""}</div></div>`;
+    const wlog=p.poidsLog||[];
+    if(wlog.length){
+      body+=`<div class="card" style="margin-bottom:12px"><div class="hint" style="font-weight:800;margin-bottom:6px;color:var(--rose-deep)">📈 Courbe de poids</div>${this.weightChartSVG(wlog)}</div>`;
+    }
     body+=`<div class="rec-tabs" style="flex-wrap:wrap;gap:6px">${tabsBtns}</div>`;
     if(!recs.length){
       body+=`<div class="empty"><span class="ic">🩺</span><div class="et">Aucun élément</div>
@@ -1534,7 +1538,8 @@ const App = {
         return `<div class="order">
           <div class="o-top"><span class="o-id">Commande #${o.id.slice(-4).toUpperCase()}</span><span class="badge ${st.badge}">${st.label}</span></div>
           <div class="o-items">${o.items.map(it=>`<div class="o-line"><span>${it.emo||"•"} ${this.escape(it.nom)} ×${it.qty}</span><span>${this.money(it.prix*it.qty)}</span></div>`).join("")}</div>
-          <div class="o-foot"><span class="lr-s">${this.fmtDateShort(this.dstr(new Date(o.createdAt)))}</span><span class="o-total">${this.money(o.total)}</span></div>
+          <div class="o-foot"><span class="lr-s">${this.fmtDateShort(this.dstr(new Date(o.createdAt)))}</span>
+            <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-soft btn-sm" onclick="App.printOrderReceipt('${o.id}')">🧾 Reçu</button><span class="o-total">${this.money(o.total)}</span></div></div>
         </div>`; }).join("");
   },
 
@@ -1901,6 +1906,124 @@ const App = {
     this.toast("Export CSV téléchargé ✓","ok");
   },
 
+  /* ---------- Reçu / facture imprimable ---------- */
+  _openReceipt(kind, num, dateStr, clientNom, rows, total){
+    const s=this.settings();
+    const isFacture = kind==="commande";
+    const doc=`<!doctype html><html lang="fr"><head><meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <title>${isFacture?"Facture":"Reçu"} — ${this.escape(s.clinicName||"Animaux d'abord")}</title>
+      <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#222;background:#f4f4f4;padding:20px}
+        .receipt{max-width:520px;margin:0 auto;background:#fff;border-radius:14px;padding:28px 30px;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+        .top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;border-bottom:3px solid #FF3E7F;padding-bottom:16px;margin-bottom:16px}
+        .brand{font-size:21px;font-weight:800;color:#E11D63;line-height:1.15}
+        .brand small{display:block;font-size:12px;color:#888;font-weight:600;margin-top:3px}
+        .clinic{text-align:right;font-size:11.5px;color:#555;line-height:1.55}
+        h1{font-size:18px;margin:6px 0 4px}
+        .meta{font-size:13px;color:#666;margin-bottom:16px;line-height:1.7}
+        .meta b{color:#222}
+        table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:14px}
+        th{text-align:left;background:#FFF0F5;padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#B0246A}
+        td{padding:9px 10px;border-bottom:1px solid #eee}
+        td.r,th.r{text-align:right}
+        .total{text-align:right;font-size:18px;font-weight:800;color:#E11D63;padding-top:6px}
+        .foot{margin-top:22px;text-align:center;color:#999;font-size:12px;border-top:1px solid #eee;padding-top:14px;line-height:1.6}
+        .btns{text-align:center;margin-top:18px}
+        button{background:#FF3E7F;color:#fff;border:0;padding:11px 22px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin:0 4px}
+        button.sec{background:#eee;color:#333}
+        @media print{body{background:#fff;padding:0}.receipt{box-shadow:none;border-radius:0;max-width:100%}.no-print{display:none!important}}
+      </style></head><body>
+      <div class="receipt">
+        <div class="top">
+          <div class="brand">🐾 Animaux d'abord<small>${this.escape(s.clinicName||"")}</small></div>
+          <div class="clinic">${this.escape(s.doctor||"")}<br>${this.escape(s.address||"")}<br>${this.escape(this.phoneFmt(s.phone))}</div>
+        </div>
+        <h1>${isFacture?"Facture":"Reçu"} ${this.escape(num)}</h1>
+        <div class="meta"><b>Date :</b> ${this.escape(dateStr)}<br><b>Client :</b> ${this.escape(clientNom||"—")}</div>
+        <table><thead><tr><th>Désignation</th><th class="r">Montant</th></tr></thead><tbody>
+          ${rows.map(r=>`<tr><td>${this.escape(r.label)}</td><td class="r">${this.money(r.montant)}</td></tr>`).join("")}
+        </tbody></table>
+        <div class="total">Total : ${this.money(total)}</div>
+        <div class="foot">Merci de votre confiance 🐾<br>${this.escape(s.clinicName||"")}${s.phone?" · "+this.escape(this.phoneFmt(s.phone)):""}</div>
+        <div class="btns no-print"><button onclick="window.print()">🖨️ Imprimer / PDF</button><button class="sec" onclick="window.close()">Fermer</button></div>
+      </div>
+      <script>window.addEventListener('load',function(){setTimeout(function(){window.print();},350);});<\/script>
+    </body></html>`;
+    const wnd=window.open("","_blank");
+    if(!wnd){ this.toast("Autorisez les fenêtres pop-up pour imprimer le reçu.","err"); return; }
+    wnd.document.open(); wnd.document.write(doc); wnd.document.close();
+  },
+  printOrderReceipt(id){
+    const o=DB.find("orders",id); if(!o) return;
+    const rows=(o.items||[]).map(it=>({label:`${it.nom} × ${it.qty}`, montant:it.prix*it.qty}));
+    this._openReceipt("commande", "#"+String(o.id).slice(-4).toUpperCase(), this.fmtDate(this.dstr(new Date(o.createdAt))), o.clientNom, rows, o.total);
+  },
+  printConsultReceipt(id){
+    const r=DB.find("rdv",id); if(!r) return;
+    const a=r.animalId?DB.find("animals",r.animalId):null;
+    const label="Consultation vétérinaire"+(r.motif?" — "+r.motif:"")+(a?" ("+a.nom+")":"");
+    this._openReceipt("consultation", "#"+String(r.id).slice(-4).toUpperCase(), this.fmtDate(r.date), r.clientNom, [{label, montant:+r.prix||0}], +r.prix||0);
+  },
+
+  /* ---------- Courbe de poids ---------- */
+  weightChartSVG(entries){
+    const list=(entries||[]).slice().filter(e=>e&&e.poids!=null).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+    if(!list.length) return `<div class="hint" style="text-align:center;padding:12px">Aucune pesée enregistrée pour l'instant.</div>`;
+    const W=320,H=152,padL=38,padR=14,padT=14,padB=28;
+    const ws=list.map(e=>+e.poids); let mn=Math.min(...ws), mx=Math.max(...ws);
+    if(mn===mx){ mn=Math.max(0,mn-0.5); mx=mx+0.5; }
+    const span=mx-mn||1, n=list.length;
+    const px=i=> n===1 ? W/2 : padL + i*(W-padL-padR)/(n-1);
+    const py=w=> padT + (1-(w-mn)/span)*(H-padT-padB);
+    const pts=list.map((e,i)=>`${px(i).toFixed(1)},${py(+e.poids).toFixed(1)}`).join(" ");
+    const dots=list.map((e,i)=>`<circle cx="${px(i).toFixed(1)}" cy="${py(+e.poids).toFixed(1)}" r="4" fill="#E11D63" stroke="#fff" stroke-width="1.5"/>`).join("");
+    const dfmt=d=>{ const p=(d||"").split("-"); return p.length===3?p[2]+"/"+p[1]:d; };
+    const xLabels=list.map((e,i)=>{
+      if(n>4 && i!==0 && i!==n-1 && i!==Math.floor((n-1)/2)) return "";
+      const anc=i===0?"start":(i===n-1?"end":"middle");
+      return `<text x="${px(i).toFixed(1)}" y="${H-9}" font-size="9" fill="#999" text-anchor="${anc}">${dfmt(e.date)}</text>`;
+    }).join("");
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <line x1="${padL}" y1="${py(mx).toFixed(1)}" x2="${W-padR}" y2="${py(mx).toFixed(1)}" stroke="#f2e2e8" stroke-width="1"/>
+      <line x1="${padL}" y1="${py(mn).toFixed(1)}" x2="${W-padR}" y2="${py(mn).toFixed(1)}" stroke="#f2e2e8" stroke-width="1"/>
+      <text x="4" y="${(py(mx)+3).toFixed(1)}" font-size="9" fill="#999">${mx} kg</text>
+      <text x="4" y="${(py(mn)+3).toFixed(1)}" font-size="9" fill="#999">${mn} kg</text>
+      <polyline points="${pts}" fill="none" stroke="#FF3E7F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}${xLabels}
+    </svg>`;
+  },
+  openWeightForm(animalId){
+    const a=DB.find("animals",animalId); if(!a) return;
+    this._weightAnimal=animalId;
+    const body=`<div class="two-col">
+      <div class="field"><label>Date de la pesée</label><input class="input" type="date" id="wt-date" value="${this.todayStr()}"></div>
+      <div class="field"><label>Poids (kg)</label><input class="input" type="number" inputmode="decimal" min="0" step="0.1" id="wt-poids" value="${a.poids||""}" placeholder="Ex : 2.5"></div>
+    </div><div class="hint">Le poids le plus récent devient le poids actuel de l'animal.</div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveWeight()">💾 Enregistrer la pesée</button>`;
+    this.openSheet("Nouvelle pesée · "+this.escape(a.nom), body, foot);
+  },
+  saveWeight(){
+    const id=this._weightAnimal; const a=DB.find("animals",id); if(!a) return;
+    const date=document.getElementById("wt-date").value||this.todayStr();
+    const v=parseFloat((document.getElementById("wt-poids").value||"").replace(",","."));
+    if(isNaN(v)||v<=0) return this.toast("Entrez un poids valide.","err");
+    const log=(a.poidsLog||[]).slice();
+    log.push({id:this.uid("w"), date, poids:Math.round(v*100)/100});
+    log.sort((x,y)=>(x.date||"").localeCompare(y.date||""));
+    DB.update("animals", id, {poidsLog:log, poids:log[log.length-1].poids});
+    this.closeSheet(); this.toast("Pesée enregistrée ✓","ok");
+    this.openAdminCarnet(id); this.renderAll();
+  },
+  deleteWeight(animalId, wid){
+    if(!confirm("Supprimer cette pesée ?")) return;
+    const a=DB.find("animals",animalId); if(!a) return;
+    const log=(a.poidsLog||[]).filter(e=>e.id!==wid).sort((x,y)=>(x.date||"").localeCompare(y.date||""));
+    DB.update("animals", animalId, {poidsLog:log, poids:log.length?log[log.length-1].poids:a.poids});
+    this.openAdminCarnet(animalId); this.renderAll();
+  },
+
   renderHomeAdmin(){
     const w=document.getElementById("ahome-c"); if(!w) return;
     const u=this.currentUser(); const st=this.clinicStatus();
@@ -2068,7 +2191,8 @@ const App = {
       actions=`<button class="btn btn-soft btn-sm" onclick="App.completeRdv('${r.id}')">Marquer terminé</button>
         <button class="btn btn-danger btn-sm" onclick="App.refuseRdv('${r.id}')">Annuler</button>`;
     } else if(r.status==="termine"){
-      actions=`<button class="btn btn-soft btn-sm" onclick="App.completeRdv('${r.id}')">💰 Modifier le prix</button>`;
+      actions=`<button class="btn btn-soft btn-sm" onclick="App.completeRdv('${r.id}')">💰 Modifier le prix</button>
+        ${+r.prix>0?`<button class="btn btn-soft btn-sm" onclick="App.printConsultReceipt('${r.id}')">🧾 Reçu</button>`:""}`;
     }
     return `<div class="order">
       <div class="o-top"><span class="o-id">🕒 ${r.time} · ${this.fmtDateShort(r.date)}</span><span class="badge ${st.badge}">${st.label}</span></div>
@@ -2215,6 +2339,7 @@ const App = {
         </div>
         <div class="o-foot"><span class="o-total">${this.money(o.total)}</span>
           <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-soft btn-sm" onclick="App.printOrderReceipt('${o.id}')" title="Imprimer le reçu">🧾</button>
             <select style="width:auto;padding:8px 10px;font-size:.82rem" onchange="App.setOrderStatus('${o.id}',this.value)">${statusOpts(o.status)}</select>
             ${(o.status==="livree"||o.status==="annulee")?`<button class="btn btn-danger btn-sm" onclick="App.deleteOrder('${o.id}')" title="Supprimer la commande">🗑️</button>`:""}
           </div></div>
@@ -2462,6 +2587,14 @@ const App = {
           <div class="lr-s">${this.speciesLabel(a.espece)}${a.sexe?" · "+(a.sexe==="M"?"♂":"♀"):""}${a.naissance?" · "+this.age(a.naissance):""}${a.poids?" · "+a.poids+" kg":""}</div></div>
       </div>`;
     if(a.notes) body+=`<div class="advice" style="margin-bottom:14px"><div class="adi">📝</div><div><div class="adt">Notes</div><div class="ads">${this.escape(a.notes)}</div></div></div>`;
+    // Poids & croissance
+    const wlog=a.poidsLog||[];
+    body+=`<div class="card" style="margin-bottom:14px">
+      <div class="section-head" style="margin-bottom:6px"><div><div class="eyebrow">Suivi</div><h2 style="font-size:1.1rem">Poids & croissance</h2></div>
+        <button class="btn btn-primary btn-sm" onclick="App.openWeightForm('${animalId}')">➕ Pesée</button></div>
+      ${this.weightChartSVG(wlog)}
+      ${wlog.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${wlog.slice().sort((x,y)=>(y.date||"").localeCompare(x.date||"")).slice(0,8).map(e=>`<span class="badge b-grey" onclick="App.deleteWeight('${animalId}','${e.id}')" style="cursor:pointer" title="Supprimer cette pesée">${this.fmtDateShort(e.date)} · ${e.poids} kg ✕</span>`).join("")}</div>`:""}
+    </div>`;
     body+=`<div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Historique médical</div><h2 style="font-size:1.1rem">Carnet de santé</h2></div></div>`;
     if(!recs.length){
       body+=`<div class="hint mb">Aucune entrée. Ajoutez le premier acte médical ci-dessous.</div>`;
