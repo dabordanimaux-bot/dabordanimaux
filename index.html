@@ -2997,7 +2997,12 @@ document.addEventListener("DOMContentLoaded", function(){
       const idx=imgs.indexOf(t);
       App.openZoom(imgs.map(x=>x.getAttribute("src")), idx>=0?idx:0);
     } else {
-      App.zoomImage(src);
+      // Photo isolée (couverture, avatar…) : si elle appartient à un animal,
+      // on ouvre TOUTE sa galerie pour pouvoir naviguer, où qu'on ait cliqué.
+      let matched=null, mIdx=0;
+      DB.get("animals",[]).some(a=>{ const ph=App.animalPhotos(a); const k=ph.indexOf(src); if(k>=0){ matched=ph; mIdx=k; return true; } return false; });
+      if(matched && matched.length>1) App.openZoom(matched, mIdx);
+      else App.zoomImage(src);
     }
   }, true);
   // Touches : Échap ferme, flèches ← → pour naviguer dans la galerie
