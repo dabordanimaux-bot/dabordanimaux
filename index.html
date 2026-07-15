@@ -464,8 +464,12 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .img-viewer{position:fixed;inset:0;z-index:200;background:rgba(24,12,18,.93);display:none;align-items:center;justify-content:center;padding:22px;cursor:zoom-out}
 .img-viewer.show{display:flex}
 .img-viewer img{max-width:100%;max-height:100%;border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.55);animation:pop .3s cubic-bezier(.2,.9,.3,1.4)}
-.iv-close{position:absolute;top:16px;right:16px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:19px;font-weight:700;cursor:pointer;display:grid;place-items:center;backdrop-filter:blur(4px)}
+.iv-close{position:absolute;top:16px;right:16px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:19px;font-weight:700;cursor:pointer;display:grid;place-items:center;backdrop-filter:blur(4px);z-index:2}
 .iv-close:hover{background:rgba(255,255,255,.3)}
+.iv-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:30px;font-weight:700;cursor:pointer;display:grid;place-items:center;backdrop-filter:blur(4px);line-height:1;padding-bottom:5px;z-index:2}
+.iv-nav:hover{background:rgba(255,255,255,.3)}
+.iv-prev{left:14px}.iv-next{right:14px}
+.iv-count{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);color:#fff;font-weight:700;font-size:.9rem;background:rgba(0,0,0,.45);padding:5px 15px;border-radius:999px;backdrop-filter:blur(4px)}
 .pet-card .pc-photo img,.lr-av img,.prod .p-img img,.post .cover img{cursor:zoom-in}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.ok{background:var(--ok)}.toast.err{background:var(--danger)}
@@ -688,8 +692,11 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 
   <!-- Visionneuse plein écran : agrandit n'importe quelle photo au clic -->
   <div class="img-viewer" id="img-viewer" onclick="App.closeZoom()">
-    <button class="iv-close" onclick="App.closeZoom()" aria-label="Fermer">✕</button>
-    <img id="iv-img" src="" alt="Photo agrandie">
+    <button class="iv-close" onclick="event.stopPropagation();App.closeZoom()" aria-label="Fermer">✕</button>
+    <button class="iv-nav iv-prev" id="iv-prev" onclick="event.stopPropagation();App.zoomStep(-1)" aria-label="Précédent">‹</button>
+    <img id="iv-img" src="" alt="Photo agrandie" onclick="event.stopPropagation()">
+    <button class="iv-nav iv-next" id="iv-next" onclick="event.stopPropagation();App.zoomStep(1)" aria-label="Suivant">›</button>
+    <div class="iv-count" id="iv-count"></div>
   </div>
   <div id="print-area" style="display:none"></div>
 
@@ -1053,17 +1060,30 @@ const App = {
     document.body.style.overflow="";
   },
   // Visionneuse plein écran d'une photo (animaux, produits, publications…).
-  zoomImage(src){
-    if(!src) return;
-    const v=document.getElementById("img-viewer"), im=document.getElementById("iv-img");
-    if(!v||!im) return;
-    im.src=src; v.classList.add("show"); document.body.style.overflow="hidden";
+  zoomImage(src){ this.openZoom([src], 0); }, // rétrocompat : une seule image
+  openZoom(list, index){
+    this._zoomList=(list&&list.length)?list.slice():[]; this._zoomIndex=index||0;
+    if(!this._zoomList.length) return;
+    const v=document.getElementById("img-viewer"); if(!v) return;
+    this._renderZoom(); v.classList.add("show"); document.body.style.overflow="hidden";
+  },
+  _renderZoom(){
+    const im=document.getElementById("iv-img"); if(!im) return;
+    const n=this._zoomList.length, i=this._zoomIndex, multi=n>1;
+    im.src=this._zoomList[i]||"";
+    const prev=document.getElementById("iv-prev"), next=document.getElementById("iv-next"), cnt=document.getElementById("iv-count");
+    if(prev) prev.style.display=multi?"grid":"none";
+    if(next) next.style.display=multi?"grid":"none";
+    if(cnt){ cnt.style.display=multi?"block":"none"; cnt.textContent=(i+1)+" / "+n; }
+  },
+  zoomStep(d){
+    const n=(this._zoomList||[]).length; if(n<=1) return;
+    this._zoomIndex=(this._zoomIndex+d+n)%n; this._renderZoom();
   },
   closeZoom(){
     const v=document.getElementById("img-viewer"), im=document.getElementById("iv-img");
     if(v) v.classList.remove("show");
     if(im) im.src="";
-    // on ne rétablit le défilement que si aucune feuille n'est ouverte
     const sh=document.getElementById("sheet-backdrop");
     if(!sh || !sh.classList.contains("show")) document.body.style.overflow="";
   },
@@ -1563,7 +1583,7 @@ const App = {
           <div class="o-top"><span class="o-id">Commande #${o.id.slice(-4).toUpperCase()}</span><span class="badge ${st.badge}">${st.label}</span></div>
           <div class="o-items">${o.items.map(it=>`<div class="o-line"><span>${it.emo||"•"} ${this.escape(it.nom)} ×${it.qty}</span><span>${this.money(it.prix*it.qty)}</span></div>`).join("")}</div>
           <div class="o-foot"><span class="lr-s">${this.fmtDateShort(this.dstr(new Date(o.createdAt)))}</span>
-            <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-soft btn-sm" onclick="App.printOrderReceipt('${o.id}')">🧾 Reçu</button><span class="o-total">${this.money(o.total)}</span></div></div>
+            <div style="display:flex;gap:8px;align-items:center">${(o.status==="attente"||o.status==="preparation")?`<button class="btn btn-danger btn-sm" onclick="App.cancelOrder('${o.id}')">Annuler</button>`:""}<button class="btn btn-soft btn-sm" onclick="App.printOrderReceipt('${o.id}')">🧾 Reçu</button><span class="o-total">${this.money(o.total)}</span></div></div>
         </div>`; }).join("");
   },
 
@@ -1725,6 +1745,11 @@ const App = {
     if(r) this.notify("admin","rdv_no","Rendez-vous annulé",`${r.clientNom} · ${this.fmtDateShort(r.date)} ${r.time}`);
     this.toast("Rendez-vous annulé.","ok"); this.renderAll();
   },
+  deleteAdvice(id){
+    if(!confirm("Supprimer ce conseil ?")) return;
+    DB.del("advices", id);
+    this.toast("Conseil supprimé.","ok"); this.renderAll();
+  },
 
   /* ============================================================
      CLIENT — MESSAGES : questions au vétérinaire + conseils reçus
@@ -1753,6 +1778,7 @@ const App = {
           <div style="flex:1"><div class="adt">${this.escape(a.titre)}</div>
             <div class="ads">${this.escape(a.texte)}</div>
             <div class="add">${a.animalId?this.speciesEmo((DB.find("animals",a.animalId)||{}).espece)+" "+this.escape(this.animalName(a.animalId))+" · ":""}${this.fmtDate(this.dstr(new Date(a.createdAt)))}</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="App.deleteAdvice('${a.id}')" title="Supprimer ce conseil" style="flex:none;align-self:flex-start;padding:4px 9px">✕</button>
         </div>`).join("")+`</div>`;
     }
 
@@ -2216,7 +2242,10 @@ const App = {
         <button class="btn btn-danger btn-sm" onclick="App.refuseRdv('${r.id}')">Annuler</button>`;
     } else if(r.status==="termine"){
       actions=`<button class="btn btn-soft btn-sm" onclick="App.completeRdv('${r.id}')">💰 Modifier le prix</button>
-        ${+r.prix>0?`<button class="btn btn-soft btn-sm" onclick="App.printConsultReceipt('${r.id}')">🧾 Reçu</button>`:""}`;
+        ${+r.prix>0?`<button class="btn btn-soft btn-sm" onclick="App.printConsultReceipt('${r.id}')">🧾 Reçu</button>`:""}
+        <button class="btn btn-danger btn-sm" onclick="App.deleteRdv('${r.id}')" title="Supprimer ce rendez-vous">🗑️</button>`;
+    } else if(r.status==="refuse"||r.status==="annule"){
+      actions=`<button class="btn btn-danger btn-sm" onclick="App.deleteRdv('${r.id}')">🗑️ Supprimer</button>`;
     }
     return `<div class="order">
       <div class="o-top"><span class="o-id">🕒 ${r.time} · ${this.fmtDateShort(r.date)}</span><span class="badge ${st.badge}">${st.label}</span></div>
@@ -2243,6 +2272,15 @@ const App = {
     DB.update("rdv",id,{status:wasConfirmed?"annule":"refuse"});
     this.notify(r.clientId,"rdv_no", wasConfirmed?"Rendez-vous annulé":"Rendez-vous refusé",`${this.fmtDate(r.date)} à ${r.time} — contactez le cabinet pour reprogrammer.`);
     this.toast(wasConfirmed?"Rendez-vous annulé.":"Demande refusée. Le client est prévenu.","ok"); this.renderAll();
+  },
+  deleteRdv(id){
+    const r=DB.find("rdv",id); if(!r) return;
+    const msg = (r.status==="termine" && +r.prix>0)
+      ? "Supprimer ce rendez-vous terminé ?\n\nIl sera aussi retiré du total de la caisse. Cette action est irréversible."
+      : "Supprimer ce rendez-vous ?\n\nCette action est irréversible.";
+    if(!confirm(msg)) return;
+    DB.del("rdv", id);
+    this.toast("Rendez-vous supprimé.","ok"); this.renderAll();
   },
   completeRdv(id){
     const r=DB.find("rdv",id); if(!r) return;
@@ -2387,6 +2425,16 @@ const App = {
     if(!confirm(msg)) return;
     DB.del("orders", id);
     this.toast("Commande supprimée.","ok"); this.renderAll();
+  },
+  cancelOrder(id){
+    const o=DB.find("orders",id); if(!o) return;
+    if(o.status!=="attente" && o.status!=="preparation"){ this.toast("Cette commande ne peut plus être annulée.","err"); return; }
+    if(!confirm("Annuler cette commande ?")) return;
+    // on restaure le stock des produits commandés
+    (o.items||[]).forEach(it=>{ const p=DB.find("products", it.id); if(p && p.stock!=null) DB.update("products", it.id, {stock:(+p.stock||0)+(+it.qty||0)}); });
+    DB.update("orders", id, {status:"annulee"});
+    this.notify("admin","order_up","Commande annulée par le client",`${o.clientNom||"Client"} · ${this.money(o.total)}`);
+    this.toast("Commande annulée.","ok"); this.renderAll();
   },
   // ---------- Caisse (recettes) ----------
   // Filtre de période pour la caisse.
@@ -2943,10 +2991,31 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!/^data:|^https?:/.test(src)) return;   // vraies photos uniquement
     if(/logo-mark\.png/i.test(src)) return;    // on n'agrandit pas le logo
     e.stopPropagation(); e.preventDefault();
-    App.zoomImage(src);
+    const gallery=t.closest(".pet-gallery");
+    if(gallery){
+      const imgs=Array.from(gallery.querySelectorAll("img"));
+      const idx=imgs.indexOf(t);
+      App.openZoom(imgs.map(x=>x.getAttribute("src")), idx>=0?idx:0);
+    } else {
+      App.zoomImage(src);
+    }
   }, true);
-  // Touche Échap : ferme la visionneuse
-  document.addEventListener("keydown", function(e){ if(e.key==="Escape") App.closeZoom(); });
+  // Touches : Échap ferme, flèches ← → pour naviguer dans la galerie
+  document.addEventListener("keydown", function(e){
+    const viewer=document.getElementById("img-viewer");
+    const open=viewer&&viewer.classList.contains("show");
+    if(e.key==="Escape") App.closeZoom();
+    else if(open && e.key==="ArrowLeft") App.zoomStep(-1);
+    else if(open && e.key==="ArrowRight") App.zoomStep(1);
+  });
+  // Balayage tactile (mobile) pour changer de photo
+  (function(){
+    const v=document.getElementById("img-viewer"); if(!v) return;
+    let sx=0, sy=0;
+    v.addEventListener("touchstart",e=>{ sx=e.touches[0].clientX; sy=e.touches[0].clientY; },{passive:true});
+    v.addEventListener("touchend",e=>{ const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+      if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)) App.zoomStep(dx<0?1:-1); },{passive:true});
+  })();
 
   // Démarrage de l'application
   App.init();
