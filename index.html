@@ -1760,7 +1760,23 @@ const App = {
         <div class="section-head" style="margin-bottom:8px"><div><div class="eyebrow">Horaires</div><h2 style="font-size:1.2rem">Heures d'ouverture</h2></div></div>
         <div class="hours-list" style="padding:0">${hoursRows}</div>
         ${s.emergency24?`<div class="vax-alert" style="margin:12px 0 0"><span class="vic">🚨</span> Urgences vétérinaires 24h/24, 7j/7 au ${this.escape(tel)}</div>`:""}
+      </div>
+
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Partage</div><h2 style="font-size:1.2rem">Application &amp; QR code</h2></div></div>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <div id="qr-${role}" style="width:176px;height:176px;background:#fff;border-radius:14px;border:1px solid var(--line);display:grid;place-items:center;padding:8px;flex:0 0 auto"></div>
+          <div style="flex:1;min-width:170px">
+            <div style="font-size:.82rem;font-weight:700;color:var(--ink-2);word-break:break-all;margin-bottom:10px">${this.escape(this.appUrl())}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-soft btn-sm" onclick="App.copyAppLink()">🔗 Copier le lien</button>
+              <button class="btn btn-ok btn-sm" onclick="App.shareWhatsApp()">💬 WhatsApp</button>
+            </div>
+            <div class="hint" style="margin-top:10px">Scannez ou partagez ce code pour ouvrir l'application. 🐾</div>
+          </div>
+        </div>
       </div>`;
+    this.renderQR("qr-"+role, this.appUrl());   // QR code de partage
   },
   phoneFmt(p){ // formate 22024232 -> +216 22 024 232
     const d=(p||"").replace(/\D/g,"").replace(/^216/,"");
@@ -2367,26 +2383,14 @@ const App = {
       </div>
 
       <div class="card mb">
-        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Partage</div><h2 style="font-size:1.2rem">Application &amp; QR code</h2></div></div>
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Partage</div><h2 style="font-size:1.2rem">Lien de l'application</h2></div></div>
         <div class="field" style="margin-bottom:4px"><label>Lien public de l'app</label><input class="input" id="se-url" value="${this.escape(s.appUrl||"")}" placeholder="https://votre-nom.github.io/animaux-dabord/"></div>
-        <div class="hint" style="margin:0 0 12px">Laissez vide pour utiliser l'adresse actuelle. Enregistrez pour mettre à jour le QR code.</div>
-        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-          <div id="se-qr" style="width:176px;height:176px;background:#fff;border-radius:14px;border:1px solid var(--line);display:grid;place-items:center;padding:8px;flex:0 0 auto"></div>
-          <div style="flex:1;min-width:180px">
-            <div style="font-size:.82rem;font-weight:700;color:var(--ink-2);word-break:break-all;margin-bottom:10px">${this.escape(this.appUrl())}</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-soft btn-sm" onclick="App.copyAppLink()">🔗 Copier le lien</button>
-              <button class="btn btn-ok btn-sm" onclick="App.shareWhatsApp()">💬 WhatsApp</button>
-            </div>
-            <div class="hint" style="margin-top:10px">Vos clients scannent ce code pour ouvrir l'application. 🐾</div>
-          </div>
-        </div>
+        <div class="hint" style="margin:0">Laissez vide pour utiliser l'adresse actuelle. Le <b>QR code</b> de partage s'affiche dans la page « À propos ».</div>
       </div>
 
       <button class="btn btn-primary btn-block btn-lg mb" onclick="App.saveSettings()">💾 Enregistrer les réglages</button>
       <button class="btn btn-danger btn-block" onclick="App.resetData()">🗑️ Réinitialiser les données de démonstration</button>
       <div class="hint center mt" style="padding-bottom:20px">Les données sont synchronisées dans le cloud (Firebase) et disponibles sur tous les appareils. Sans réseau, l'app reste utilisable en local.</div>`;
-    this.renderQR("se-qr", this.appUrl());   // génère le QR code de partage
   },
   toggleDayInputs(d){ const on=document.getElementById("h-open-"+d).checked; const t=document.getElementById("h-times-"+d); if(t) t.style.display=on?"block":"none"; },
   saveSettings(){
