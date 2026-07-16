@@ -373,6 +373,20 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .bubble.a .b-who{opacity:.9}
 .q-meta{font-size:.72rem;color:var(--muted);font-weight:700;margin-top:8px;display:flex;justify-content:space-between;align-items:center}
 
+/* fil de discussion (chat client ↔ vétérinaire) */
+.msg-list{display:flex;flex-direction:column;gap:8px;margin:2px 0 2px}
+.msg-row{display:flex;flex-direction:column;max-width:88%}
+.msg-row.me{align-self:flex-end;align-items:flex-end}
+.msg-row.them{align-self:flex-start;align-items:flex-start}
+.msg-row .bubble{max-width:100%;margin:0}
+.msg-row.me .bubble{background:var(--grad);color:#fff;border-bottom-right-radius:4px}
+.msg-row.them .bubble{background:var(--rose-tint);color:var(--ink);border-bottom-left-radius:4px}
+.msg-row .b-time{font-size:.64rem;color:var(--muted);font-weight:700;margin-top:3px;padding:0 5px}
+.msg-reply{display:flex;gap:8px;align-items:flex-end;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.msg-reply textarea{flex:1;min-height:44px;max-height:130px;margin:0}
+.msg-reply .btn{flex:none;white-space:nowrap}
+.await-note{font-size:.74rem;color:var(--muted);font-weight:700;margin-top:8px;display:flex;align-items:center;gap:6px}
+
 /* conseil du véto */
 .advice{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,var(--rose-tint),#fff);border:1px solid var(--rose-soft);border-radius:var(--radius);padding:14px;margin-bottom:12px}
 .advice .adi{width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:19px;background:var(--rose-soft);color:var(--rose-deep)}
@@ -899,6 +913,7 @@ const AR_DICT = {
   "Demandes en attente":"الطلبات المعلّقة","Rendez-vous du jour":"مواعيد اليوم","Créneaux disponibles":"المواعيد المتاحة",
   "Répondues":"تمّت الإجابة","Questions des clients":"أسئلة الزبائن","Conseils du vétérinaire 💡":"نصائح الطبيب البيطري 💡",
   "Conseil du Dr. Asma":"نصيحة من د. أسماء","Grattez pour révéler":"احكّ للكشف عن النصيحة",
+  "En attente de réponse du vétérinaire…":"في انتظار ردّ الطبيب البيطري…","Répondre":"ردّ","Répondre ✍️":"ردّ ✍️","Conversations":"المحادثات","Vous":"أنت","Votre message":"رسالتك",
   "Blog & astuces":"المدونة والنصائح","Astuces santé":"نصائح صحية","Actualités":"الأخبار",
   "Le cabinet":"العيادة","Heures d'ouverture":"ساعات العمل","Horaires d'ouverture":"مواقيت العمل",
   "Lien de l'application":"رابط التطبيق","Application & QR code":"التطبيق ورمز QR",
@@ -1974,6 +1989,8 @@ const App = {
   renderMsgClient(){
     const w=document.getElementById("msg-c"); if(!w) return;
     if(this._activeScratch) return;   // ne pas reconstruire pendant que le client gratte une carte
+    if(this._typingMsg) return;       // ni pendant que le client écrit un message
+    this._draft=this._draft||{};
     const u=this.currentUser();
     const pets=this.myAnimals();
     const petSel = pets.length
@@ -1984,7 +2001,7 @@ const App = {
 
     let html=`<div class="card mb">
       <div class="field" style="margin-bottom:10px"><label>💬 Une question pour le Dr. Asma ?</label>
-        <textarea id="q-text" placeholder="Ex : mon chat mange moins depuis 2 jours, est-ce inquiétant ?"></textarea></div>
+        <textarea id="q-text" placeholder="Ex : mon chat mange moins depuis 2 jours, est-ce inquiétant ?" onfocus="App._typingMsg='new'" onblur="App._typingMsg=null"></textarea></div>
       ${petSel?`<div class="field" style="margin-bottom:10px"><label>Concerne</label>${petSel}</div>`:""}
       <button class="btn btn-primary btn-block" onclick="App.sendQuestion()">Envoyer ma question ✉️</button>
     </div>`;
@@ -2019,18 +2036,37 @@ const App = {
     if(!questions.length){
       html+=`<div class="empty"><span class="ic">💬</span><div class="et">Aucune question</div><div class="hint">Posez votre première question ci-dessus.</div></div>`;
     } else {
-      html+=`<div class="stagger">`+questions.map(q=>`
-        <div class="card" style="margin-bottom:12px">
-          <div class="bubble q"><span class="b-who">Vous${q.animalId?" · "+this.escape(this.animalName(q.animalId)):""}</span>${this.escape(q.texte)}</div>
-          ${q.reponse
-            ? `<div class="bubble a"><span class="b-who">Dr. Asma Gnaoui</span>${this.escape(q.reponse)}</div>`
-            : `<div class="lr-s" style="margin-top:8px">⏳ En attente de réponse du vétérinaire…</div>`}
+      const rph = this.lang==="ar" ? "اكتب رسالة…" : "Écrire un message…";
+      html+=`<div class="stagger">`+questions.map(q=>{
+        const thread=this.threadOf(q);
+        const scope=q.animalId?" · "+this.escape(this.animalName(q.animalId)):"";
+        const bubbles=thread.map(m=>{
+          const me=m.from==="client";
+          const who=me?("Vous"+ (scope&&m===thread[0]?scope:"")):"Dr. Asma Gnaoui";
+          return `<div class="msg-row ${me?"me":"them"}">
+            <div class="bubble"><span class="b-who">${who}</span>${this.escape(m.texte)}</div>
+            <div class="b-time">${this.ago(m.at)}</div>
+          </div>`;
+        }).join("");
+        const waiting=this.awaitingVet(q);   // dernier message = du client → en attente du véto
+        const onlyFirst=thread.length<=1;    // pas encore d'échange → modification possible
+        const draft=this.escape((this._draft&&this._draft[q.id])||"");
+        return `<div class="card" style="margin-bottom:12px">
+          <div class="msg-list">${bubbles}</div>
+          ${waiting?`<div class="await-note">⏳ En attente de réponse du vétérinaire…</div>`:""}
+          <div class="msg-reply">
+            <textarea class="q-reply" data-qid="${q.id}" placeholder="${rph}" rows="1"
+              oninput="App._draftMsg('${q.id}',this.value)"
+              onfocus="App._typingMsg='${q.id}'" onblur="App._typingMsg=null">${draft}</textarea>
+            <button class="btn btn-primary btn-sm" onclick="App.replyQuestion('${q.id}')">Répondre</button>
+          </div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-            <div class="add" style="margin:0;flex:1">${this.ago(q.createdAt)}</div>
-            ${!q.reponse?`<button class="btn btn-soft btn-sm" onclick="App.editQuestion('${q.id}')">✏️ Modifier</button>`:""}
+            <div class="add" style="margin:0;flex:1"></div>
+            ${onlyFirst?`<button class="btn btn-soft btn-sm" onclick="App.editQuestion('${q.id}')">✏️ Modifier</button>`:""}
             <button class="btn btn-danger btn-sm" onclick="App.deleteQuestion('${q.id}')">🗑️</button>
           </div>
-        </div>`).join("")+`</div>`;
+        </div>`;
+      }).join("")+`</div>`;
     }
     w.innerHTML=html;
     this.initScratchCards();
@@ -2131,12 +2167,52 @@ const App = {
     }
   },
 
+  /* ---- Fil de discussion : normalise anciens et nouveaux formats ---- */
+  // Ancien format : {texte, reponse}. Nouveau : {messages:[{from,texte,at}]}.
+  threadOf(q){
+    if(q && Array.isArray(q.messages) && q.messages.length) return q.messages;
+    const arr=[{from:"client",texte:(q&&q.texte)||"",at:(q&&q.createdAt)||Date.now()}];
+    if(q && q.reponse) arr.push({from:"admin",texte:q.reponse,at:q.answeredAt||q.createdAt||Date.now()});
+    return arr;
+  },
+  lastMsg(q){ const t=this.threadOf(q); return t[t.length-1]||null; },
+  // « En attente » côté véto = le dernier message vient du client
+  awaitingVet(q){ const m=this.lastMsg(q); return !!(m && m.from==="client"); },
+  // Ajoute un message au fil et persiste (migre l'ancien format au passage)
+  appendMessage(qid, from, texte){
+    const q=DB.find("questions",qid); if(!q) return false;
+    const thread=this.threadOf(q).slice();
+    thread.push({from, texte, at:Date.now()});
+    const patch={ messages:thread };
+    if(from==="admin"){ patch.reponse=texte; patch.answeredAt=Date.now(); } // compat rétro
+    DB.update("questions",qid,patch);
+    return true;
+  },
+  _draftMsg(qid,val){ this._draft=this._draft||{}; this._draft[qid]=val; },
+  // Le client répond dans le fil → reste ouvert pour continuer l'échange
+  replyQuestion(qid){
+    this._typingMsg=null;
+    const el=document.querySelector('.q-reply[data-qid="'+qid+'"]');
+    const t=(el?el.value:"").trim();
+    if(!t){ this.toast(this.lang==="ar"?"اكتب رسالتك أولًا.":"Écrivez votre message d'abord.","err"); return; }
+    const q=DB.find("questions",qid); const u=this.currentUser();
+    if(!q || !u || q.clientId!==u.id) return;   // sécurité : uniquement sa conversation
+    this.appendMessage(qid,"client",t);
+    this._draft=this._draft||{}; delete this._draft[qid];
+    const petLbl=q.animalId?" · "+this.animalName(q.animalId):"";
+    this.notify("admin","question","Nouvelle réponse d'un client",`${u.nom||"Un client"}${petLbl}`);
+    this.toast(this.lang==="ar"?"تمّ إرسال الرسالة ✓":"Message envoyé ✓","ok");
+    this.renderAll();
+  },
+
   sendQuestion(){
+    this._typingMsg=null;
     const t=(document.getElementById("q-text").value||"").trim();
     if(!t){ this.toast("Écrivez votre question d'abord.","err"); return; }
     const u=this.currentUser();
     const animalId=(document.getElementById("q-animal")||{}).value||"";
-    DB.push("questions",{ id:this.uid("q"), clientId:u.id, clientNom:u.nom||"Client", animalId, texte:t, reponse:"", answeredAt:0, createdAt:Date.now() });
+    const now=Date.now();
+    DB.push("questions",{ id:this.uid("q"), clientId:u.id, clientNom:u.nom||"Client", animalId, texte:t, reponse:"", answeredAt:0, createdAt:now, messages:[{from:"client",texte:t,at:now}] });
     const petLbl=animalId?" · "+this.animalName(animalId):"";
     this.notify("admin","question","Nouvelle question",`${u.nom||"Un client"}${petLbl}`);
     this.toast("Question envoyée ! Le vétérinaire vous répondra. ✉️","ok");
@@ -2145,7 +2221,7 @@ const App = {
   editQuestion(id){
     const q=DB.find("questions",id); const u=this.currentUser();
     if(!q || (u && u.role!=="admin" && q.clientId!==u.id)) return;   // sécurité : uniquement ses propres questions
-    if(q.reponse){ this.toast("Une question déjà répondue ne peut plus être modifiée.","err"); return; }
+    if(this.threadOf(q).length>1){ this.toast(this.lang==="ar"?"لا يمكن تعديل محادثة بدأت بالفعل.":"Une conversation déjà commencée ne peut plus être modifiée.","err"); return; }
     this._qEdit=id;
     const pets=this.myAnimals();
     const petSel = pets.length
@@ -2161,7 +2237,11 @@ const App = {
     const t=(document.getElementById("qe-text").value||"").trim();
     if(!t){ this.toast("La question ne peut pas être vide.","err"); return; }
     const animalId=(document.getElementById("qe-animal")||{}).value||"";
-    DB.update("questions",id,{texte:t, animalId});
+    const q=DB.find("questions",id);
+    const patch={texte:t, animalId};
+    const thr=this.threadOf(q);
+    if(thr.length){ patch.messages=[{...thr[0], texte:t}]; }   // garder le 1er message du fil à jour
+    DB.update("questions",id,patch);
     this.closeSheet(); this.toast("Question modifiée ✓","ok"); this.renderAll();
   },
   deleteQuestion(id){
@@ -2245,7 +2325,7 @@ const App = {
   allClients(){ return DB.get("users",[]).filter(u=>u.role==="client").sort((a,b)=>b.createdAt-a.createdAt); },
   rdvToday(){ const t=this.todayStr(); return DB.get("rdv",[]).filter(r=>r.date===t && (r.status==="attente"||r.status==="confirme")); },
   pendingOrders(){ return DB.get("orders",[]).filter(o=>o.status==="attente"||o.status==="preparation"); },
-  openQuestions(){ return DB.get("questions",[]).filter(q=>!q.reponse); },
+  openQuestions(){ return DB.get("questions",[]).filter(q=>this.awaitingVet(q)); },
   pendingRdv(){ return DB.get("rdv",[]).filter(r=>r.status==="attente"); },
   // Rappels de vaccins/actes à venir (tous animaux) : en retard ou dans les 60 jours.
   upcomingReminders(){
@@ -3089,8 +3169,12 @@ const App = {
      ============================================================ */
   renderMsgAdmin(){
     const w=document.getElementById("amsg-c"); if(!w) return;
-    const all=DB.get("questions",[]).slice().sort((a,b)=>b.createdAt-a.createdAt);
-    const open=all.filter(q=>!q.reponse), done=all.filter(q=>q.reponse);
+    // trier par activité récente (dernier message)
+    const all=DB.get("questions",[]).slice().sort((a,b)=>{
+      const la=(this.lastMsg(a)||{}).at||a.createdAt, lb=(this.lastMsg(b)||{}).at||b.createdAt;
+      return lb-la;
+    });
+    const open=all.filter(q=>this.awaitingVet(q)), done=all.filter(q=>!this.awaitingVet(q));
     let html="";
     if(!all.length){
       html=`<div class="empty"><span class="ic">💬</span><div class="et">Aucune question</div><div class="hint">Les questions des clients arriveront ici.</div></div>`;
@@ -3101,40 +3185,55 @@ const App = {
       html+=open.map(q=>this.questionCard(q,true)).join("");
     }
     if(done.length){
-      html+=`<div class="section-head mt"><div><div class="eyebrow">Historique</div><h2 style="font-size:1.25rem">Répondues</h2></div></div>`;
+      html+=`<div class="section-head mt"><div><div class="eyebrow">Historique</div><h2 style="font-size:1.25rem">Conversations</h2></div></div>`;
       html+=done.map(q=>this.questionCard(q,false)).join("");
     }
     w.innerHTML=html;
   },
-  questionCard(q, openReply){
+  questionCard(q, awaiting){
     const cli=DB.find("users",q.clientId);
     const animal=q.animalId?DB.find("animals",q.animalId):null;
+    const thread=this.threadOf(q);
+    const bubbles=thread.map(m=>{
+      const me=m.from==="admin";   // « moi » = le vétérinaire côté admin
+      return `<div class="msg-row ${me?"me":"them"}">
+        <div class="bubble"><span class="b-who">${me?"Vous":this.escape(q.clientNom||(cli?cli.nom:"Client"))}</span>${this.escape(m.texte)}</div>
+        <div class="b-time">${this.ago(m.at)}</div>
+      </div>`;
+    }).join("");
     return `<div class="card" style="margin-bottom:12px">
-      <div class="lr-s" style="margin-bottom:8px">👤 <b>${this.escape(q.clientNom||(cli?cli.nom:"Client"))}</b>${animal?` · ${this.speciesEmo(animal.espece)} ${this.escape(animal.nom)}`:""} · ${this.ago(q.createdAt)}</div>
-      <div class="bubble q">${this.escape(q.texte)}</div>
-      ${q.reponse?`<div class="bubble a"><span class="b-who">Vous</span>${this.escape(q.reponse)}</div>`:""}
+      <div class="lr-s" style="margin-bottom:8px">👤 <b>${this.escape(q.clientNom||(cli?cli.nom:"Client"))}</b>${animal?` · ${this.speciesEmo(animal.espece)} ${this.escape(animal.nom)}`:""}</div>
+      <div class="msg-list">${bubbles}</div>
       <div class="o-foot" style="justify-content:flex-end;gap:6px">
         ${cli&&cli.tel?`<a href="tel:+${this.phoneDigits(cli.tel)}" class="btn btn-ghost btn-sm" style="text-decoration:none">📞</a>`:""}
-        <button class="btn ${openReply?"btn-primary":"btn-soft"} btn-sm" onclick="App.openReply('${q.id}')">${openReply?"Répondre ✍️":"Modifier la réponse"}</button>
+        <button class="btn ${awaiting?"btn-primary":"btn-soft"} btn-sm" onclick="App.openReply('${q.id}')">Répondre ✍️</button>
       </div>
     </div>`;
   },
   openReply(id){
     const q=DB.find("questions",id); if(!q) return; this._replyId=id;
     const animal=q.animalId?DB.find("animals",q.animalId):null;
-    const body=`<div class="lr-s" style="margin-bottom:6px">Question de <b>${this.escape(q.clientNom)}</b>${animal?` · ${this.escape(animal.nom)}`:""}</div>
-      <div class="bubble q" style="margin-bottom:12px">${this.escape(q.texte)}</div>
-      <div class="field"><label>Votre réponse</label><textarea id="rep-text" style="min-height:120px" placeholder="Répondez au client…">${this.escape(q.reponse||"")}</textarea></div>`;
-    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveReply()">Envoyer la réponse ✉️</button>`;
+    const thread=this.threadOf(q);
+    const bubbles=thread.map(m=>{
+      const me=m.from==="admin";
+      return `<div class="msg-row ${me?"me":"them"}">
+        <div class="bubble"><span class="b-who">${me?"Vous":this.escape(q.clientNom||"Client")}</span>${this.escape(m.texte)}</div>
+        <div class="b-time">${this.ago(m.at)}</div>
+      </div>`;
+    }).join("");
+    const body=`<div class="lr-s" style="margin-bottom:8px">Conversation avec <b>${this.escape(q.clientNom||"le client")}</b>${animal?` · ${this.escape(animal.nom)}`:""}</div>
+      <div class="msg-list" style="margin-bottom:12px">${bubbles}</div>
+      <div class="field"><label>Votre message</label><textarea id="rep-text" style="min-height:110px" placeholder="Écrire un message…"></textarea></div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveReply()">Envoyer ✉️</button>`;
     this.openSheet("Répondre au client", body, foot);
   },
   saveReply(){
     const t=(document.getElementById("rep-text").value||"").trim();
-    if(!t){ this.toast("Écrivez une réponse.","err"); return; }
-    DB.update("questions",this._replyId,{reponse:t,answeredAt:Date.now()});
+    if(!t){ this.toast("Écrivez un message.","err"); return; }
     const q=DB.find("questions",this._replyId);
-    if(q) this.notify(q.clientId,"answer","💬 Réponse du vétérinaire","Le Dr. Asma a répondu à votre question.");
-    this.closeSheet(); this.toast("Réponse envoyée au client ✓","ok"); this.renderAll();
+    this.appendMessage(this._replyId,"admin",t);
+    if(q) this.notify(q.clientId,"answer","💬 Réponse du vétérinaire","Le Dr. Asma vous a répondu.");
+    this.closeSheet(); this.toast("Message envoyé au client ✓","ok"); this.renderAll();
   },
 
   /* ============================================================
