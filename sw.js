@@ -8,7 +8,7 @@
      au réseau, JAMAIS interceptées → la synchro cloud temps réel fonctionne.
    Pense à incrémenter CACHE_VERSION à chaque mise à jour du site.
    ===================================================================== */
-const CACHE_VERSION = "animaux-dabord-v1";
+const CACHE_VERSION = "animaux-dabord-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -17,7 +17,9 @@ const APP_SHELL = [
   "./icon-512.png",
   "./icon-180.png",
   "./icon-maskable-512.png",
-  "./logo-mark.png"
+  "./logo-mark.png",
+  "./pet-dog.png",
+  "./pet-cat.png"
 ];
 
 // Installation : pré-cache de la coquille de l'application.
