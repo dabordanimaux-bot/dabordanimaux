@@ -608,7 +608,8 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
         <div class="field"><label>Numéro de téléphone</label>
           <input class="input" id="reg-phone" type="tel" inputmode="numeric" placeholder="Ex : 95 063 068" autocomplete="tel" /></div>
         <div class="field"><label>Mot de passe</label>
-          <input class="input" id="reg-pass" type="password" placeholder="Choisissez un mot de passe" autocomplete="new-password" /></div>
+          <input class="input" id="reg-pass" type="password" placeholder="Choisissez un mot de passe" autocomplete="new-password" />
+          <div class="hint" style="margin-top:6px">Au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un symbole.</div></div>
         <button class="btn btn-primary btn-block btn-lg" onclick="App.register()">Créer mon compte 🐾</button>
       </div>
     </div>
@@ -958,6 +959,16 @@ const AR_DICT = {
   "♂ Mâle":"ذكر ♂","♀ Femelle":"أنثى ♀","Notes":"ملاحظات","Titre":"العنوان","Date":"التاريخ",
   "Date de la pesée":"تاريخ الوزن","Motif":"السبب","Précisions (optionnel)":"تفاصيل (اختياري)",
   "Mot de passe":"كلمة المرور","Nom du cabinet":"اسم العيادة","Adresse":"العنوان","Téléphone":"الهاتف",
+  "Sécurité":"الأمان","Mot de passe administrateur":"كلمة مرور المسؤول",
+  "Mot de passe actuel":"كلمة المرور الحالية","Nouveau mot de passe":"كلمة مرور جديدة","Confirmer le nouveau mot de passe":"تأكيد كلمة المرور الجديدة",
+  "🔒 Modifier le mot de passe":"🔒 تغيير كلمة المرور","Mot de passe modifié ✓":"تم تغيير كلمة المرور ✓",
+  "Au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un symbole.":"‏8 أحرف على الأقل، مع حرف كبير وحرف صغير ورقم ورمز.",
+  "Remplissez tous les champs.":"املأ جميع الحقول.","Mot de passe actuel incorrect.":"كلمة المرور الحالية غير صحيحة.",
+  "La confirmation ne correspond pas.":"التأكيد غير مطابق.","Le nouveau mot de passe doit être différent de l'ancien.":"يجب أن تختلف كلمة المرور الجديدة عن القديمة.",
+  "Action réservée à l'administrateur.":"إجراء مخصّص للمسؤول فقط.",
+  "Mot de passe : au moins 8 caractères.":"كلمة المرور: 8 أحرف على الأقل.","Mot de passe : au moins une lettre majuscule.":"كلمة المرور: حرف كبير واحد على الأقل.",
+  "Mot de passe : au moins une lettre minuscule.":"كلمة المرور: حرف صغير واحد على الأقل.","Mot de passe : au moins un chiffre.":"كلمة المرور: رقم واحد على الأقل.",
+  "Mot de passe : au moins un symbole (ex : ! ? @ # …).":"كلمة المرور: رمز واحد على الأقل (مثل: ! ? @ # …).",
   "Lien public de l'app":"الرابط العمومي للتطبيق","Type":"النوع","Contenu":"المحتوى",
   "Aujourd'hui":"اليوم","Demain":"غدًا","Hier":"أمس","Cette semaine":"هذا الأسبوع","Ce mois":"هذا الشهر","Total général":"المجموع الكلي",
   "Semaine":"أسبوع","Mois":"شهر","Voici l'activité de votre cabinet aujourd'hui.":"إليك نشاط عيادتك اليوم.",
@@ -1093,11 +1104,25 @@ const App = {
     this.toast("Bienvenue "+(u.nom?u.nom.split(" ")[0]:"")+" 🐾","ok");
     this.route();
   },
+  // Vérifie la robustesse d'un mot de passe.
+  // Renvoie un message d'erreur (string) si une règle n'est pas respectée, sinon null.
+  // Règles : au moins 8 caractères, une majuscule, une minuscule, un chiffre et un symbole.
+  passwordIssue(pass){
+    pass = pass || "";
+    if(pass.length < 8)            return "Mot de passe : au moins 8 caractères.";
+    if(!/[A-Z]/.test(pass))        return "Mot de passe : au moins une lettre majuscule.";
+    if(!/[a-z]/.test(pass))        return "Mot de passe : au moins une lettre minuscule.";
+    if(!/[0-9]/.test(pass))        return "Mot de passe : au moins un chiffre.";
+    if(!/[^A-Za-z0-9]/.test(pass)) return "Mot de passe : au moins un symbole (ex : ! ? @ # …).";
+    return null;
+  },
   register(){
     const nom=(document.getElementById("reg-name").value||"").trim();
     const tel=this.normPhone(document.getElementById("reg-phone").value);
     const pass=document.getElementById("reg-pass").value;
     if(!nom||!tel||!pass) return this.toast("Remplissez tous les champs.","err");
+    const pwIssue=this.passwordIssue(pass);            // contrôle de robustesse du mot de passe
+    if(pwIssue) return this.toast(pwIssue,"err");
     const users=DB.get("users",[]);
     const key=this.phoneKey(tel);
     if(users.some(x=> x.username===tel || (key && this.phoneKey(x.tel)===key)))
@@ -3298,6 +3323,18 @@ const App = {
         <div class="hint" style="margin:0">Laissez vide pour utiliser l'adresse actuelle. Le <b>QR code</b> de partage s'affiche dans la page « À propos ».</div>
       </div>
 
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Sécurité</div><h2 style="font-size:1.2rem">Mot de passe administrateur</h2></div></div>
+        <div class="field"><label>Mot de passe actuel</label>
+          <input class="input" id="se-pass-old" type="password" placeholder="••••••" autocomplete="current-password"></div>
+        <div class="field"><label>Nouveau mot de passe</label>
+          <input class="input" id="se-pass-new" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password"></div>
+        <div class="field" style="margin-bottom:4px"><label>Confirmer le nouveau mot de passe</label>
+          <input class="input" id="se-pass-conf" type="password" placeholder="Retapez le mot de passe" autocomplete="new-password"></div>
+        <div class="hint" style="margin:0 0 12px">Au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un symbole.</div>
+        <button class="btn btn-primary btn-block" onclick="App.changeAdminPassword()">🔒 Modifier le mot de passe</button>
+      </div>
+
       <button class="btn btn-primary btn-block btn-lg mb" onclick="App.saveSettings()">💾 Enregistrer les réglages</button>
       <button class="btn btn-danger btn-block" onclick="App.resetData()">🗑️ Réinitialiser les données de démonstration</button>
       <div class="hint center mt" style="padding-bottom:20px">Les données sont synchronisées dans le cloud (Firebase) et disponibles sur tous les appareils. Sans réseau, l'app reste utilisable en local.</div>`;
@@ -3316,6 +3353,22 @@ const App = {
       appUrl:g("se-url").trim(), hours };
     DB.set("settings", Object.assign({},this.settings(),s));
     this.toast("Réglages enregistrés ✓","ok"); this.renderAll();
+  },
+  // Permet à l'administrateur connecté de changer son propre mot de passe.
+  changeAdminPassword(){
+    const u=this.currentUser();
+    if(!u || u.role!=="admin"){ this.toast("Action réservée à l'administrateur.","err"); return; }
+    const g=id=>{ const e=document.getElementById(id); return e?e.value:""; };
+    const oldP=g("se-pass-old"), newP=g("se-pass-new"), confP=g("se-pass-conf");
+    if(!oldP||!newP||!confP){ this.toast("Remplissez tous les champs.","err"); return; }
+    if(oldP!==u.password){ this.toast("Mot de passe actuel incorrect.","err"); return; }
+    const issue=this.passwordIssue(newP);            // mêmes règles que l'inscription
+    if(issue){ this.toast(issue,"err"); return; }
+    if(newP!==confP){ this.toast("La confirmation ne correspond pas.","err"); return; }
+    if(newP===oldP){ this.toast("Le nouveau mot de passe doit être différent de l'ancien.","err"); return; }
+    DB.update("users", u.id, {password:newP});
+    ["se-pass-old","se-pass-new","se-pass-conf"].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=""; });
+    this.toast("Mot de passe modifié ✓","ok");
   },
   // Génère un QR code (via la librairie qrcode-generator) dans un conteneur.
   renderQR(containerId, text){
