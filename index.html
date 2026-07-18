@@ -137,13 +137,66 @@ html.rtl .bell-badge{right:auto;left:-4px}
 /* Le logo et les textes restent au-dessus des photos d'animaux */
 .auth-logo,.auth-hero h1,.auth-hero .sub{position:relative;z-index:2}
 /* Photos des animaux (chien dalmatien + chat noir) qui encadrent le héros */
-.auth-pet{position:absolute;bottom:34px;z-index:1;pointer-events:none;user-select:none;filter:drop-shadow(0 10px 12px rgba(90,20,40,.30));animation:petRise .8s cubic-bezier(.2,.9,.3,1.35) both}
-.auth-dog{left:0px;width:76px}
-.auth-cat{right:-14px;width:80px;animation-delay:.14s}
-@keyframes petRise{0%{transform:translateY(34px) scale(.96);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
-/* Position des mascottes VERROUILLÉE comme en français (chien à gauche, chat à droite),
-   même lorsque l'arabe est actif : on n'inverse plus leur placement en mode RTL. */
-@media (max-width:360px){.auth-dog{width:68px;left:0px}.auth-cat{width:70px;right:-12px}}
+/* ————— CACHE-CACHE : le chien et le chat surgissent d'un bord du héros,
+   restent quelques secondes, se cachent, puis réapparaissent AILLEURS.
+   6 emplacements possibles (2 en haut, 2 sur les côtés, 2 en bas). Chaque
+   emplacement définit sa position, son inclinaison (--rot) et la direction
+   depuis laquelle la mascotte arrive (--hx / --hy). Le JS (App.startHideSeek)
+   se charge de tirer un emplacement au sort à chaque tour. ————— */
+.auth-pet{
+  position:absolute;z-index:1;pointer-events:none;user-select:none;
+  filter:drop-shadow(0 9px 12px rgba(90,20,40,.28));
+  /* Les photos des mascottes sont coupées net (bas + un côté). On dissout ces
+     bords pour qu'elles se fondent dans le dégradé, quelle que soit la cachette. */
+  --pet-mask:
+    linear-gradient(to bottom,#000 0,#000 78%,rgba(0,0,0,.45) 91%,transparent 100%),
+    linear-gradient(to right,transparent 0,rgba(0,0,0,.5) 5%,#000 11%,#000 89%,rgba(0,0,0,.5) 95%,transparent 100%);
+  -webkit-mask-image:var(--pet-mask);          mask-image:var(--pet-mask);
+  -webkit-mask-repeat:no-repeat;               mask-repeat:no-repeat;
+  -webkit-mask-composite:source-in;            mask-composite:intersect;
+  --rot:0deg; --hx:0px; --hy:0px;
+  opacity:0;
+  translate:var(--hx) var(--hy);
+  rotate:calc(var(--rot) * .35);
+  scale:.86;
+  transition:translate .66s cubic-bezier(.18,.9,.28,1.4),
+             rotate    .66s cubic-bezier(.18,.9,.28,1.4),
+             scale     .66s cubic-bezier(.18,.9,.28,1.4),
+             opacity   .34s ease;
+  will-change:translate,rotate,scale,opacity;
+}
+/* état « je sors de ma cachette » */
+.auth-pet.peek{
+  opacity:1; translate:0 0; scale:1; rotate:var(--rot);
+  animation:petWiggle 3.6s ease-in-out .66s infinite;   /* petit balancement de tête */
+}
+@keyframes petWiggle{
+  0%,100%{ rotate:var(--rot); }
+  50%    { rotate:calc(var(--rot) + 4deg); }
+}
+/* ---- les 6 cachettes ---- */
+.auth-pet.sp-tl{ top:48px;   left:-18px;  right:auto; bottom:auto; --rot:-16deg; --hx:-104px; --hy:-14px }
+.auth-pet.sp-tr{ top:48px;   right:-18px; left:auto;  bottom:auto; --rot: 16deg; --hx: 104px; --hy:-14px }
+.auth-pet.sp-ml{ top:44%;    left:-26px;  right:auto; bottom:auto; --rot:-12deg; --hx:-108px; --hy:0px   }
+.auth-pet.sp-mr{ top:44%;    right:-26px; left:auto;  bottom:auto; --rot: 12deg; --hx: 108px; --hy:0px   }
+.auth-pet.sp-bl{ bottom:26px;left:-8px;   right:auto; top:auto;    --rot: -7deg; --hx:-34px;  --hy: 66px }
+.auth-pet.sp-br{ bottom:26px;right:-12px; left:auto;  top:auto;    --rot:  7deg; --hx: 34px;  --hy: 66px }
+/* de côté, la mascotte est rognée par le bord → on la grossit pour l'effet « elle se penche » */
+.auth-pet.sp-ml,.auth-pet.sp-mr{ width:96px }
+.auth-dog{width:78px}
+.auth-cat{width:82px}
+/* Position des mascottes VERROUILLÉE comme en français (les cachettes sont
+   des positions physiques), même lorsque l'arabe est actif. */
+@media (max-width:360px){
+  .auth-dog{width:70px} .auth-cat{width:72px}
+  .auth-pet.sp-ml,.auth-pet.sp-mr{width:84px}
+  .auth-pet.sp-tl,.auth-pet.sp-tr{top:44px}
+}
+/* Accessibilité : si l'utilisateur limite les animations, une seule apparition douce. */
+@media (prefers-reduced-motion:reduce){
+  .auth-pet{transition:opacity .3s ease;translate:0 0;scale:1;rotate:var(--rot)}
+  .auth-pet.peek{animation:none}
+}
 .auth-wrap{padding:0 16px 40px;margin-top:-34px;position:relative;z-index:2}
 .tabs-pill{display:flex;gap:6px;background:#fff;padding:6px;border-radius:15px;margin-bottom:16px;border:1px solid var(--line);box-shadow:var(--shadow-sm)}
 .tabs-pill button{flex:1;border:0;background:transparent;color:var(--ink-2);font-family:var(--display);font-weight:700;font-size:.9rem;padding:11px;border-radius:11px;cursor:pointer;transition:.16s}
@@ -1072,6 +1125,67 @@ const App = {
     }
   },
 
+  /* ---------- CACHE-CACHE des mascottes (écran de connexion) ----------
+     Le chien et le chat surgissent d'un bord, restent quelques secondes,
+     se cachent, puis réapparaissent dans une AUTRE cachette tirée au sort.
+     Les deux ne partagent jamais le même emplacement et sont décalés dans
+     le temps pour que ça ressemble vraiment à une partie de cache-cache. */
+  PET_SPOTS:["sp-tl","sp-tr","sp-ml","sp-mr","sp-bl","sp-br"],
+  _petTimers:[], _petSpot:{dog:null,cat:null}, _petOn:false,
+
+  startHideSeek(){
+    this.stopHideSeek();
+    const dog=document.querySelector(".auth-dog");
+    const cat=document.querySelector(".auth-cat");
+    if(!dog||!cat) return;
+    this._petOn=true;
+    this._petSpot={dog:null,cat:null};
+    // Première apparition : le chien d'abord, le chat juste après.
+    this._petCycle(dog,"dog");
+    this._petWait(()=>this._petCycle(cat,"cat"), 520);
+  },
+
+  stopHideSeek(){
+    this._petOn=false;
+    (this._petTimers||[]).forEach(clearTimeout);
+    this._petTimers=[];
+    document.querySelectorAll(".auth-pet").forEach(el=>el.classList.remove("peek"));
+  },
+
+  _petWait(fn, ms){ this._petTimers.push(setTimeout(fn, ms)); },
+
+  // Un tour complet : choisir une cachette → sortir → attendre → se recacher → recommencer.
+  _petCycle(el, who){
+    if(!this._petOn || !el) return;
+    const other = this._petSpot[who==="dog"?"cat":"dog"];
+    // Règle du jeu : jamais la cachette précédente, et jamais du même côté que
+    // l'autre mascotte (sinon elles se chevauchent et le héros est déséquilibré).
+    const side = s => (s && s.slice(-1)==="l") ? "g" : "d";
+    let pool = this.PET_SPOTS.filter(s => s!==this._petSpot[who] && s!==other);
+    if(other) pool = pool.filter(s => side(s)!==side(other));
+    const spot = pool[Math.floor(Math.random()*pool.length)] || "sp-bl";
+    this._petSpot[who]=spot;
+    this.PET_SPOTS.forEach(s=>el.classList.remove(s));
+    el.classList.remove("peek");
+    el.classList.add(spot);
+
+    // Deux rAF : le navigateur enregistre d'abord la position « cachée »,
+    // sinon il n'y a aucune transition à animer.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(this._petOn) el.classList.add("peek");
+    }));
+
+    // Si l'utilisateur a demandé moins d'animations, on s'arrête après l'apparition.
+    const calme = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(calme) return;
+
+    const visible = 3600 + Math.random()*2600;   // durée d'exposition variable
+    this._petWait(()=>{
+      el.classList.remove("peek");               // il se recache…
+      this._petWait(()=>this._petCycle(el,who), 780 + Math.random()*500);  // …puis ressort ailleurs
+    }, visible);
+  },
+
   /* ---------- utilisateurs / session ---------- */
   currentUser(){ if(!this.session) return null; return DB.find("users", this.session.userId); },
   isAdmin(){ const u=this.currentUser(); return !!(u&&u.role==="admin"); },
@@ -1161,7 +1275,12 @@ const App = {
   },
 
   /* ---------- écrans / onglets ---------- */
-  show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id)); window.scrollTo(0,0); },
+  show(id){
+    document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));
+    window.scrollTo(0,0);
+    // Le cache-cache des mascottes ne tourne que sur l'écran de connexion.
+    if(id==="screen-auth") this.startHideSeek(); else this.stopHideSeek();
+  },
   showTab(tabId, navId){
     const nav=document.getElementById(navId); if(!nav) return;
     const screen=nav.closest(".screen");
