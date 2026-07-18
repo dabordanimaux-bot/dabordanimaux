@@ -99,7 +99,12 @@ header.topbar{display:flex;align-items:center;justify-content:space-between;gap:
 /* ===== RTL (arabe) : mise en page de droite à gauche ===== */
 html.rtl body{direction:rtl}
 html.rtl .lang-btn-auth{right:auto;left:16px}
-html.rtl .hero-card,html.rtl .auth-hero{text-align:right}
+html.rtl .hero-card{text-align:right}
+/* Le bandeau de connexion (logo, nom du cabinet, docteur, chien et chat) garde
+   TOUJOURS sa mise en page française et ignore le mode RTL, même en arabe.
+   Le RTL reste actif normalement sur les autres écrans (client / admin). */
+html.rtl .auth-hero{direction:ltr;text-align:center}
+html.rtl .auth-hero .lang-btn-auth{right:16px;left:auto}
 html.rtl .list-row,html.rtl .o-line,html.rtl .spread,html.rtl .advice,html.rtl .emergency,html.rtl .notif-item{direction:rtl}
 html.rtl .iv-prev{left:auto;right:14px}
 html.rtl .iv-next{right:auto;left:14px}
@@ -136,8 +141,8 @@ html.rtl .bell-badge{right:auto;left:-4px}
 .auth-dog{left:0px;width:76px}
 .auth-cat{right:-14px;width:80px;animation-delay:.14s}
 @keyframes petRise{0%{transform:translateY(34px) scale(.96);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
-html.rtl .auth-dog{left:auto;right:0px}
-html.rtl .auth-cat{right:auto;left:-10px}
+/* Position des mascottes VERROUILLÉE comme en français (chien à gauche, chat à droite),
+   même lorsque l'arabe est actif : on n'inverse plus leur placement en mode RTL. */
 @media (max-width:360px){.auth-dog{width:68px;left:0px}.auth-cat{width:70px;right:-12px}}
 .auth-wrap{padding:0 16px 40px;margin-top:-34px;position:relative;z-index:2}
 .tabs-pill{display:flex;gap:6px;background:#fff;padding:6px;border-radius:15px;margin-bottom:16px;border:1px solid var(--line);box-shadow:var(--shadow-sm)}
