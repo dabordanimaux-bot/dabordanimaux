@@ -1,1 +1,14 @@
-
+{
+  "name": "animaux-dabord-rappels",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Envoi des rappels push (vaccins et rendez-vous) du Cabinet Vétérinaire de Manouba.",
+  "scripts": {
+    "rappels": "node envoyer-rappels.mjs",
+    "test": "DRY_RUN=1 node envoyer-rappels.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.2"
+  }
+}
