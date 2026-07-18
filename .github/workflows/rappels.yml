@@ -1,1 +1,49 @@
+# =====================================================================
+#  ANIMAUX D'ABORD — Rappels automatiques (vaccins et rendez-vous)
+#  ---------------------------------------------------------------------
+#  GitHub exécute ce robot deux fois par jour, gratuitement. Il envoie les
+#  notifications push aux clients et au cabinet, même application fermée.
+#
+#  Les heures sont en UTC. La Tunisie est à UTC+1 toute l'année :
+#     06:30 UTC = 07:30 à Tunis  → rappels du jour même + veille
+#     17:00 UTC = 18:00 à Tunis  → rattrapage de fin de journée
+#
+#  À faire une seule fois : déposer la clé de service dans
+#  Settings → Secrets and variables → Actions → New repository secret
+#  Nom du secret : FIREBASE_SERVICE_ACCOUNT
+# =====================================================================
+name: Rappels push (vaccins et rendez-vous)
 
+on:
+  schedule:
+    - cron: "30 6 * * *"    # 07:30 heure de Tunis
+    - cron: "0 17 * * *"    # 18:00 heure de Tunis
+  workflow_dispatch:         # bouton « Run workflow » pour tester à la demande
+
+# Deux exécutions ne doivent jamais se chevaucher.
+concurrency:
+  group: rappels-push
+  cancel-in-progress: false
+
+jobs:
+  envoyer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installer les dépendances
+        working-directory: scripts
+        run: npm install --omit=dev --no-audit --no-fund
+
+      - name: Envoyer les rappels
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node envoyer-rappels.mjs
