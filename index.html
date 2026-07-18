@@ -643,7 +643,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
     <div class="appbar">
       <header class="topbar">
         <div class="brand"><div class="mark"><img src="logo-mark.png" alt="" /></div>
-          <div><div class="name">Animaux <span>d'abord</span></div><div class="tag" id="client-hello">—</div></div>
+          <div><div class="name" data-i18n="off">Animaux <span>d'abord</span></div><div class="tag" id="client-hello">—</div></div>
         </div>
         <div class="top-actions">
           <button class="icon-btn lang-btn" id="lang-btn-client" onclick="App.toggleLang()" title="اللغة / Langue">العربية</button>
@@ -791,7 +791,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 
   <div id="boot">
     <div class="boot-badge"><img src="logo-mark.png" alt="Animaux d'abord" /></div>
-    <div class="boot-title">Animaux <span>d'abord</span></div>
+    <div class="boot-title" data-i18n="off">Animaux <span>d'abord</span></div>
     <div class="boot-spin"><i></i><i></i><i></i></div>
   </div>
 </div>
@@ -909,28 +909,11 @@ const DEFAULT_SETTINGS = {
   },
 };
 
-const DEFAULT_PRODUCTS = [
-  {id:"p1",nom:"Croquettes Chien Adulte 3kg",prix:38,cat:"Alimentation",emo:"🦴",desc:"Alimentation complète et équilibrée pour chien adulte.",stock:24,createdAt:Date.now()-9e8},
-  {id:"p2",nom:"Croquettes Chat Stérilisé 2kg",prix:32,cat:"Alimentation",emo:"🐟",desc:"Formule adaptée aux chats stérilisés d'intérieur.",stock:18,createdAt:Date.now()-8e8},
-  {id:"p3",nom:"Litière agglomérante 10L",prix:15,cat:"Hygiène",emo:"🧴",desc:"Absorbe et neutralise les odeurs, sans poussière.",stock:30,createdAt:Date.now()-7e8},
-  {id:"p4",nom:"Anti-puces & tiques (pipette)",prix:22,cat:"Santé",emo:"💊",desc:"Protection 1 mois contre puces et tiques.",stock:12,createdAt:Date.now()-6e8},
-  {id:"p5",nom:"Shampoing doux pour chien",prix:18,cat:"Hygiène",emo:"🫧",desc:"Pelage brillant, peau apaisée. Toutes races.",stock:9,createdAt:Date.now()-5e8},
-  {id:"p6",nom:"Laisse + Collier réglable",prix:25,cat:"Accessoires",emo:"🦮",desc:"Nylon résistant, confortable, plusieurs tailles.",stock:14,createdAt:Date.now()-4e8},
-  {id:"p7",nom:"Jouet corde à mâcher",prix:9,cat:"Jouets",emo:"🧸",desc:"Résistant, favorise l'hygiène dentaire.",stock:40,createdAt:Date.now()-3e8},
-  {id:"p8",nom:"Vitamines & complément pelage",prix:28,cat:"Santé",emo:"✨",desc:"Renforce le système immunitaire et le pelage.",stock:7,createdAt:Date.now()-2e8},
-];
-
-const DEFAULT_POSTS = [
-  {id:"post1",type:"blog",titre:"Bienvenue chez Animaux d'abord 🐾",emo:"🏥",
-   contenu:"Notre cabinet vous accueille à Manouba, juste à côté du lycée Ibn Abi Dhiaf. Le Dr. Asma Gnaoui et son équipe prennent soin de vos compagnons avec douceur et professionnalisme. Urgences 24h/24, 7j/7 au +216 22 024 232.",
-   date:Date.now()-6e8,createdAt:Date.now()-6e8},
-  {id:"post2",type:"astuce",titre:"Le calendrier de vaccination",emo:"💉",
-   contenu:"Un chiot ou chaton doit recevoir ses premiers vaccins dès 8 semaines, avec des rappels réguliers. Pensez à garder son carnet de santé à jour — l'app vous rappelle les échéances !",
-   date:Date.now()-4e8,createdAt:Date.now()-4e8},
-  {id:"post3",type:"astuce",titre:"Fortes chaleurs : protégez vos animaux",emo:"☀️",
-   contenu:"En été, ne laissez jamais votre animal dans une voiture. Assurez-lui de l'eau fraîche, de l'ombre, et évitez les promenades aux heures chaudes.",
-   date:Date.now()-2e8,createdAt:Date.now()-2e8},
-];
+/* Aucun contenu livré par défaut : la boutique et le blog restent vides tant que
+   la vétérinaire n'a rien publié. Elle saisit ses produits, astuces et actualités
+   dans la langue de son choix (arabe ou français) et le texte s'affiche tel quel. */
+const DEFAULT_PRODUCTS = [];
+const DEFAULT_POSTS = [];
 
 /* =====================================================================
    APPLICATION
@@ -968,18 +951,18 @@ const AR_DICT = {
   "Refuser":"رفض","Fermer":"إغلاق","Publier":"نشر","Connexion":"تسجيل الدخول","Créer un compte":"إنشاء حساب",
   "Se connecter":"دخول","S'inscrire":"تسجيل","Se déconnecter":"تسجيل الخروج","Notifications":"الإشعارات",
   "Marquer terminé":"وضع علامة منتهي","Voir l'agenda":"عرض الأجندة","Copier le lien":"نسخ الرابط",
-  "Réinitialiser les données de démonstration":"إعادة تعيين البيانات التجريبية","Enregistrer les réglages":"حفظ الإعدادات",
+  "Réinitialiser toutes les données":"إعادة تعيين كل البيانات","Enregistrer les réglages":"حفظ الإعدادات",
   "Ajouter au carnet":"إضافة إلى الدفتر","Envoyer un conseil":"إرسال نصيحة","Retour au dossier":"العودة إلى الملف",
   "En attente":"في الانتظار","En préparation":"قيد التحضير","Prête à retirer":"جاهزة للاستلام","Livrée":"تم التسليم","Annulée":"ملغاة",
   "Confirmé":"مؤكد","Refusé":"مرفوض","Terminé":"منتهي","Annulé":"ملغى",
   "Vaccin":"تلقيح","Consultation":"استشارة","Ordonnance":"وصفة طبية","Vermifuge":"مضاد الديدان","Analyse":"تحليل","Chirurgie":"جراحة",
   "Chien":"كلب","Chat":"قط","Oiseau":"طائر","Lapin":"أرنب","Rongeur":"قارض","Tortue":"سلحفاة","Poisson":"سمكة","Cheval":"حصان","Autre":"آخر",
   "Alimentation":"تغذية","Hygiène":"نظافة","Santé":"صحة","Accessoires":"إكسسوارات","Jouets":"ألعاب","Tous":"الكل",
-  "Nom":"الاسم","Nom *":"الاسم *","Espèce":"النوع","Sexe":"الجنس","Race":"السلالة","Poids (kg)":"الوزن (كغ)",
+  "Nom":"الاسم","Nom *":"الاسم *","Espèce":"الفصيلة","Sexe":"الجنس","Race":"السلالة","Poids (kg)":"الوزن (كغ)",
   "Notes (allergies, caractère…)":"ملاحظات (حساسية، طباع…)","Date de naissance":"تاريخ الميلاد","Stérilisé·e":"معقّم·ة",
   "Âge":"العمر","Poids":"الوزن","Prix (DT)":"السعر (د.ت)","Stock":"المخزون","Catégorie":"الفئة","Emoji":"إيموجي","Description":"الوصف",
   "Photos de l'animal (optionnel)":"صور الحيوان (اختياري)","Photo du produit (optionnel)":"صورة المنتج (اختياري)",
-  "♂ Mâle":"ذكر ♂","♀ Femelle":"أنثى ♀","Notes":"ملاحظات","Titre":"العنوان","Date":"التاريخ",
+  "♂ Mâle":"ذكر ♂","♀ Femelle":"أنثى ♀","Notes":"ملاحظات","Titre":"الموضوع","Date":"التاريخ",
   "Date de la pesée":"تاريخ الوزن","Motif":"السبب","Précisions (optionnel)":"تفاصيل (اختياري)",
   "Mot de passe":"كلمة المرور","Nom du cabinet":"اسم العيادة","Adresse":"العنوان","Téléphone":"الهاتف",
   "Sécurité":"الأمان","Mot de passe administrateur":"كلمة مرور المسؤول",
@@ -1006,7 +989,7 @@ const AR_DICT = {
   "Laisser vide pour ne pas changer":"اتركه فارغًا لعدم التغيير","Médicaments, posologie, observations…":"أدوية، جرعات، ملاحظات…",
   "Votre numéro, ex : 95 063 068":"رقمك، مثال: 95 063 068",
   "Tout":"الكل","Astuce":"نصيحة","Actu":"خبر","Astuce santé":"نصيحة صحية","Actualité":"خبر","Blog":"مدونة",
-  "Fermé aujourd'hui":"مغلق اليوم","Ouvert maintenant":"مفتوح الآن","Confirmer":"تأكيد","Terminer":"إنهاء",
+  "Fermé aujourd'hui":"مغلق اليوم","Ouvert maintenant":"مفتوح الآن","Terminer":"إنهاء",
   "Aucun rappel de vaccin ou de soin prévu dans les 60 prochains jours.":"لا يوجد تذكير تلقيح أو رعاية خلال الـ60 يومًا القادمة.",
   "Terminez un rendez-vous (avec un prix) ou livrez une commande pour alimenter la caisse.":"أنهِ موعدًا (بسعر) أو سلّم طلبًا لتغذية الصندوق.",
   "Les commandes des clients apparaîtront ici.":"ستظهر طلبات الزبائن هنا.","Vous serez prévenu ici.":"سيتم إشعارك هنا.",
@@ -1016,6 +999,99 @@ const AR_DICT = {
   "Suivi santé, rendez-vous et conseils du Dr. Asma Gnaoui, en un seul endroit.":"متابعة صحية، مواعيد ونصائح الدكتورة أسماء الغناوي، في مكان واحد.",
   "Prenez soin de vos compagnons 🐾":"اعتنِ برفاقك 🐾","Prenez soin de votre compagnon 🐾":"اعتنِ برفيقك 🐾",
   "💬 Une question pour le Dr. Asma ?":"💬 سؤال للدكتورة أسماء؟","Une question pour le Dr. Asma ?":"سؤال للدكتورة أسماء؟",
+
+  /* ================= AJOUTS : textes qui restaient en français ================= */
+  /* ---- Authentification ---- */
+  "Téléphone ou identifiant":"الهاتف أو المعرّف",
+  "Nouveau ? Créez un compte pour suivre la santé de votre animal.":"جديد؟ أنشئ حسابًا لمتابعة صحة حيوانك.",
+  "Nom complet":"الاسم الكامل","Numéro de téléphone":"رقم الهاتف","Créer mon compte":"إنشاء حسابي",
+  "Ex : Hamdi Rahmeni":"مثال: حمدي الرحماني","Ex : 95 063 068":"مثال: 95 063 068",
+  "Cabinet Vétérinaire de Manouba":"العيادة البيطرية بمنوبة",
+  "Compte créé, bienvenue !":"تم إنشاء الحساب، مرحبًا!","Ce numéro a déjà un compte.":"هذا الرقم له حساب بالفعل.",
+  "Identifiant ou mot de passe incorrect.":"المعرّف أو كلمة المرور غير صحيحة.",
+
+  /* ---- Bandeau d'installation (PWA) ---- */
+  "Installez l'app":"ثبّت التطبيق","Installer":"تثبيت",
+  "sur votre téléphone pour un accès rapide.":"على هاتفك للوصول السريع.",
+  "sur la tablette du cabinet.":"على لوحة العيادة.",
+
+  /* ---- Accueil client ---- */
+  "Prendre RDV":"احجز موعدًا","Urgence 24h/24 · 7j/7":"طوارئ 24/24 · 7/7",
+  "Une urgence ? Appelez le cabinet immédiatement.":"حالة طارئة؟ اتصل بالعيادة فورًا.",
+  "Appeler":"اتصال","Poser une question":"اطرح سؤالًا","Au vétérinaire":"للطبيبة البيطرية",
+  "Alimentation, soins…":"تغذية ورعاية…","Boutique du cabinet":"متجر العيادة",
+
+  /* ---- Mes animaux ---- */
+  "Ajoutez votre compagnon pour suivre sa santé, ses vaccins et ses consultations.":"أضف رفيقك لمتابعة صحته وتلاقيحه واستشاراته.",
+  "Ajouter mon animal":"إضافة حيواني","Ajouter l'animal":"إضافة الحيوان",
+  "Animal concerné":"الحيوان المعني","— Sélectionner —":"— اختر —",
+  "Ex : Rex":"مثال: ركس","Ex : Labrador":"مثال: لابرادور","Ex : 12":"مثال: 12",
+  "Le nom est requis.":"الاسم مطلوب.","Animal ajouté !":"تمت إضافة الحيوان!",
+  "Animal mis à jour ✓":"تم تحديث الحيوان ✓","Animal supprimé.":"تم حذف الحيوان.",
+
+  /* ---- Rendez-vous ---- */
+  "Choisissez une date":"اختر تاريخًا","Les créneaux libres s'afficheront ici.":"ستظهر المواعيد المتاحة هنا.",
+
+  /* ---- Messages ---- */
+  "Envoyer ma question":"إرسال سؤالي","Concerne":"يخصّ","Question générale":"سؤال عام","Conseil général":"نصيحة عامة",
+  "Ex : mon chat mange moins depuis 2 jours, est-ce inquiétant ?":"مثال: قطي يأكل أقلّ منذ يومين، هل هذا مقلق؟",
+
+  /* ---- Boutique & panier ---- */
+  "Ajouter au panier":"أضف إلى السلة","Votre panier est vide.":"سلتك فارغة.","Tout effacer":"مسح الكل",
+  "Produits en ligne":"المنتجات المنشورة","Stocks faibles":"مخزون منخفض","Produit":"منتج",
+
+  /* ---- À propos / cabinet ---- */
+  "Carte du cabinet":"خريطة العيادة","Juste à côté du lycée Ibn Abi Dhiaf":"بجانب معهد ابن أبي الضياف",
+  "Téléphone · 24h/24 · 7j/7":"الهاتف · 24/24 · 7/7",
+  "Urgences vétérinaires 24h/24, 7j/7 au +216 22 024 232":"طوارئ بيطرية 24/24، 7/7 على الرقم +216 22 024 232",
+  "Itinéraire Google Maps":"المسار عبر Google Maps",
+  "Scannez ou partagez ce code pour ouvrir l'application.":"امسح أو شارك هذا الرمز لفتح التطبيق.",
+  "Statut":"الحالة","Docteur":"الطبيبة","Espace":"مساحة","Bienvenue Dr.":"مرحبًا دكتورة",
+  "Ouvert":"مفتوح","Fermé":"مغلق","Repère":"علامة",
+
+  /* ---- Réglages (espace vétérinaire) ---- */
+  "Ouverture":"الفتح","Fermeture":"الإغلاق",
+  "Pause début (option.)":"بداية الاستراحة (اختياري)","Pause fin (option.)":"نهاية الاستراحة (اختياري)",
+  "Durée d'un créneau de RDV (minutes)":"مدة الموعد (بالدقائق)",
+  "15 min":"15 دقيقة","20 min":"20 دقيقة","30 min":"30 دقيقة","45 min":"45 دقيقة","60 min":"60 دقيقة",
+  "Urgences 24h/24 · 7j/7":"الطوارئ 24/24 · 7/7",
+  "Recherche Google Maps (adresse ou nom exact)":"بحث Google Maps (العنوان أو الاسم الدقيق)",
+  "Repère / point de repère":"علامة / نقطة استدلال",
+  "Laissez vide pour utiliser l'adresse actuelle. Le":"اتركه فارغًا لاستعمال العنوان الحالي. يظهر",
+  "de partage s'affiche dans la page « À propos ».":"للمشاركة في صفحة «من نحن».",
+  "Les données sont synchronisées dans le cloud (Firebase) et disponibles sur tous les appareils. Sans réseau, l'app reste utilisable en local.":"تُزامَن البيانات في السحابة (Firebase) وتتوفّر على كل الأجهزة. وبدون شبكة يبقى التطبيق صالحًا للاستعمال محليًا.",
+  "Retapez le mot de passe":"أعد كتابة كلمة المرور","Réglages enregistrés ✓":"تم حفظ الإعدادات ✓",
+
+  /* ---- États vides (espace vétérinaire) ---- */
+  "Journée libre pour l'instant.":"اليوم خالٍ حاليًا.","Les questions des clients arriveront ici.":"ستصل أسئلة الزبائن هنا.",
+  "Rien de prévu ce jour-là.":"لا شيء مبرمج في ذلك اليوم.",
+  "Essayez une autre recherche ou catégorie.":"جرّب بحثًا أو فئة أخرى.","Essayez un autre nom.":"جرّب اسمًا آخر.",
+  "Ajoutez un article ou une astuce pour vos clients.":"أضف مقالًا أو نصيحة لزبائنك.",
+  "Ajoutez votre premier produit avec le bouton « ＋ Produit ».":"أضف أول منتج عبر زر «＋ منتج».",
+  "Les clients apparaîtront ici après inscription.":"سيظهر الزبائن هنا بعد التسجيل.",
+
+  /* ---- Fiches, formulaires et feuilles (2e passe) ---- */
+  "Ajouter le produit":"إضافة المنتج","Nom du produit":"اسم المنتج","Panier":"السلة","Mon panier":"سلتي",
+  "Total":"المجموع","Vider le panier":"إفراغ السلة","Note pour le cabinet (optionnel)":"ملاحظة للعيادة (اختياري)",
+  "Client":"زبون","Animaux":"الحيوانات","Modifier le compte":"تعديل الحساب",
+  "Aucune entrée. Ajoutez le premier acte médical ci-dessous.":"لا يوجد سجلّ. أضف أول عمل طبي أدناه.",
+  "Aucune pesée enregistrée pour l'instant.":"لا يوجد وزن مسجّل حاليًا.",
+  "Pesée":"وزن","Enregistrer la pesée":"حفظ الوزن",
+  "Le poids le plus récent devient le poids actuel de l'animal.":"يصبح آخر وزن مسجّل هو الوزن الحالي للحيوان.",
+  "Supprimer cet animal":"حذف هذا الحيوان",
+  "Nouvel acte médical":"عمل طبي جديد","Modifier l'entrée":"تعديل السجلّ","Type d'acte":"نوع العمل",
+  "Intitulé":"التسمية","Détails / ordonnance":"تفاصيل / وصفة طبية","Date de rappel (optionnel)":"تاريخ التذكير (اختياري)",
+  "Nouveau conseil":"نصيحة جديدة","Conseil":"نصيحة","Envoyer le conseil":"إرسال النصيحة",
+  "Pour le client — le conseil apparaîtra dans ses messages.":"للزبون — ستظهر النصيحة في رسائله.",
+  "Nouvelle publication":"منشور جديد","Actualité / blog":"خبر / مدونة","Image de couverture (facultatif)":"صورة الغلاف (اختياري)",
+  "Confirmer le rendez-vous":"تأكيد الموعد","Motif de la visite":"سبب الزيارة",
+  "Consultation générale":"استشارة عامة","Contrôle / suivi":"مراقبة / متابعة","Rappel de vaccin":"تذكير بالتلقيح",
+  "Stérilisation":"تعقيم","Urgence":"حالة طارئة","Vaccination":"تلقيح","Vermifuge / antiparasitaire":"مضاد الديدان / الطفيليات",
+  "Ex : 15":"مثال: 15","Ex : 32":"مثال: 32","Ex : 2.5":"مثال: 2.5",
+  "Ex : Croquettes chat 2kg":"مثال: أكل جاف للقط 2 كغ","Ex : Vaccin CHPPiL / Rage":"مثال: تلقيح CHPPiL / داء الكلب",
+  "Ex : Alimentation après stérilisation":"مثال: التغذية بعد التعقيم","Ex : Bien nourrir son chaton":"مثال: تغذية جيّدة للهرّ الصغير",
+  "Ex : je passe récupérer demain matin":"مثال: سأمرّ لأخذه غدًا صباحًا",
+
 };
 const AR_TOKENS_LIST = [
   ["janvier","جانفي"],["février","فيفري"],["mars","مارس"],["avril","أفريل"],["mai","ماي"],["juin","جوان"],
@@ -1025,8 +1101,24 @@ const AR_TOKENS_LIST = [
   ["Dim","أحد"],["Lun","إثن"],["Mar","ثلا"],["Mer","أرب"],["Jeu","خمي"],["Ven","جمع"],["Sam","سبت"],
   ["jan","جانفي"],["fév","فيفري"],["mar","مارس"],["avr","أفريل"],["juil","جويلية"],["aoû","أوت"],["sep","سبتمبر"],["oct","أكتوبر"],["nov","نوفمبر"],["déc","ديسمبر"],
   ["Consultations","استشارات"],["Consultation","استشارة"],["Boutique","المتجر"],
-  ["Bonjour","مرحبًا"],
+  ["Bonjour,","مرحبًا،"],["Bonjour","مرحبًا"],
   ["DT","د.ت"],
+  /* ---- AJOUTS : mots insérés dans des phrases construites en JS ---- */
+  ["Ouvre aujourd'hui à","يفتح اليوم على الساعة"],["Ouvert aujourd'hui ·","مفتوح اليوم ·"],
+  ["Pause déjeuner · retour à","استراحة الغداء · العودة على الساعة"],
+  ["Ouvre demain à","يفتح غدًا على الساعة"],
+  ["Ouvre lundi à","يفتح الإثنين على الساعة"],["Ouvre mardi à","يفتح الثلاثاء على الساعة"],
+  ["Ouvre mercredi à","يفتح الأربعاء على الساعة"],["Ouvre jeudi à","يفتح الخميس على الساعة"],
+  ["Ouvre vendredi à","يفتح الجمعة على الساعة"],["Ouvre samedi à","يفتح السبت على الساعة"],
+  ["Ouvre dimanche à","يفتح الأحد على الساعة"],
+  ["Vétérinaire","طبيبة بيطرية"],["Bienvenue","مرحبًا"],["Carnet","دفتر"],
+  ["stock","المخزون"],["animaux","حيوانات"],["animal","حيوان"],
+  ["Le vétérinaire ajoutera ici les vaccins, consultations et ordonnances de","سيضيف الطبيب البيطري هنا التلاقيح والاستشارات والوصفات الخاصة بـ"],
+  ["ajouté au panier","أُضيف إلى السلة"],["Valider la commande","تأكيد الطلب"],
+  ["Nouvelle pesée","وزن جديد"],["Conseil pour","نصيحة لـ"],["Dossier","ملف"],
+  ["entrées","سجلات"],["entrée","سجلّ"],["kg","كغ"],
+  ["Chien","كلب"],["Chat","قط"],["Oiseau","طائر"],["Lapin","أرنب"],["Rongeur","قارض"],
+  ["Tortue","سلحفاة"],["Poisson","سمكة"],["Cheval","حصان"],
 ];
 let AR_DICT_REV=null, AR_TOKENS_REV=null;
 
@@ -1070,8 +1162,14 @@ const App = {
   },
   ensureSeed(){
     if(DB.get("settings",null)===null) DB.set("settings", DEFAULT_SETTINGS);
-    if(!DB.get("products",[]).length) DB.set("products", DEFAULT_PRODUCTS);
-    if(!DB.get("posts",[]).length) DB.set("posts", DEFAULT_POSTS);
+    // Retire les produits et publications de démonstration des anciennes versions
+    // (identifiants fixes p1…p8 et post1…post3). Ne touche à rien de ce que
+    // la vétérinaire a créé : ses identifiants sont générés avec un horodatage.
+    const DEMO_PROD=["p1","p2","p3","p4","p5","p6","p7","p8"], DEMO_POST=["post1","post2","post3"];
+    const prods=DB.get("products",[]), keptP=prods.filter(x=>DEMO_PROD.indexOf(x.id)<0);
+    if(keptP.length!==prods.length) DB.set("products", keptP);
+    const posts=DB.get("posts",[]), keptO=posts.filter(x=>DEMO_POST.indexOf(x.id)<0);
+    if(keptO.length!==posts.length) DB.set("posts", keptO);
     let users=DB.get("users",[]);
     if(!users.some(u=>u.role==="admin")){ users.unshift({...DEFAULT_ADMIN}); DB.set("users",users); }
   },
@@ -1325,20 +1423,41 @@ const App = {
       const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
       const sorted=tokPairs.map(p=>p[0]).sort((a,b)=>b.length-a.length).map(esc);
       let tokRe=null; try{ tokRe=new RegExp("(^|[^\\p{L}\\p{N}])("+sorted.join("|")+")(?![\\p{L}\\p{N}])","gu"); }catch(e){ tokRe=null; }
-      let preRe=null; try{ preRe=new RegExp("^([^\\p{L}\\p{N}]+\\s*)(.+)$","u"); }catch(e){ preRe=null; }
+      // emoji / puces / symboles décorant une phrase : on les met de côté, on traduit le coeur.
+      // La ponctuation finale (. ! ? … : ; , ) ] } ") fait partie de la phrase et reste attachée.
+      const AFFX="[^\\p{L}\\p{N}.!?…:;,)\\]}»\"']";
+      let preRe=null; try{ preRe=new RegExp("^("+AFFX+"*)(.*?)("+AFFX+"*)$","u"); }catch(e){ preRe=null; }
+      let cntRe=null; try{ cntRe=new RegExp("^(.+?)\\s*\\((\\d+)\\)$","u"); }catch(e){ cntRe=null; }
+      // phrases longues insérées dans une chaîne construite (ex. le nom d'un produit dans un toast).
+      // Limité aux clés d'au moins 12 caractères : assez spécifiques pour ne jamais couper un mot isolé.
+      if(this._phrReLang!==this.lang){
+        this._phrReLang=this.lang; this._phrRe=null;
+        try{
+          const longs=Object.keys(phraseMap).filter(k=>k.length>=12).sort((a,b)=>b.length-a.length).map(esc);
+          if(longs.length) this._phrRe=new RegExp("(^|[^\\p{L}\\p{N}])("+longs.join("|")+")(?![\\p{L}\\p{N}])","gu");
+        }catch(e){ this._phrRe=null; }
+      }
+      const phrRe=this._phrRe;
       const walk=document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
         acceptNode:(nd)=>{ const pn=nd.parentNode; if(!pn) return NodeFilter.FILTER_REJECT;
           const tag=pn.nodeName; if(tag==="SCRIPT"||tag==="STYLE"||tag==="TEXTAREA") return NodeFilter.FILTER_REJECT;
+          if(pn.closest && pn.closest('[data-i18n="off"]')) return NodeFilter.FILTER_REJECT;  // marque, noms propres
           return nd.nodeValue && nd.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; }
       });
       const nodes=[]; let nd; while(nd=walk.nextNode()) nodes.push(nd);
       nodes.forEach(node=>{
-        const v=node.nodeValue, key=v.trim();
+        let v=node.nodeValue; const key=v.trim();
         // 1) phrase exacte
         if(phraseMap[key]!=null){ node.nodeValue=v.replace(key,phraseMap[key]); return; }
-        // 2) préfixe emoji/symbole + phrase connue (ex : "📅 Agenda", "＋ Publier")
-        if(preRe){ const m=key.match(preRe); if(m && phraseMap[m[2].trim()]!=null){ node.nodeValue=v.replace(key, m[1]+phraseMap[m[2].trim()]); return; } }
-        // 3) jetons (mois, jours, DT, Bonjour) — avec limites de mots pour ne rien corrompre
+        // 2) emoji/symbole AVANT et/ou APRÈS une phrase connue
+        //    (ex : "📅 Agenda", "Se connecter 🐾", "· Accessoires ·")
+        if(preRe){ const m=key.match(preRe); const core=m?m[2].trim():"";
+          if(core && phraseMap[core]!=null){ node.nodeValue=v.replace(key, m[1]+phraseMap[core]+m[3]); return; } }
+        // 2b) libellé suivi d'un compteur, ex. "Animaux (3)"
+        if(cntRe){ const c=key.match(cntRe); if(c && phraseMap[c[1].trim()]!=null){ node.nodeValue=v.replace(key, phraseMap[c[1].trim()]+" ("+c[2]+")"); return; } }
+        // 3) phrases connues au milieu d'une chaîne construite (nom de produit, phrase + prénom…)
+        if(phrRe){ const out=v.replace(phrRe,(mm,pre,ph)=>pre+(phraseMap[ph]||ph)); if(out!==v){ node.nodeValue=out; v=out; } }
+        // 4) jetons (mois, jours, DT, Bonjour) — avec limites de mots pour ne rien corrompre
         if(tokRe){ const out=v.replace(tokRe,(mm,pre,tok)=>pre+(tokMap[tok]||tok)); if(out!==v) node.nodeValue=out; }
       });
       document.querySelectorAll("[placeholder]").forEach(el=>{ const k=(el.getAttribute("placeholder")||"").trim(); if(phraseMap[k]!=null) el.setAttribute("placeholder",phraseMap[k]); });
@@ -1477,7 +1596,7 @@ const App = {
       html+=`<div class="section-head mt"><div><div class="eyebrow">Le saviez-vous</div><h2 style="font-size:1.25rem">Astuces santé</h2></div></div>`;
       html+=`<div class="stagger">`+astuces.slice(0,4).map(p=>`
         <div class="astuce"><div class="ai">${p.emo||"💡"}</div>
-          <div><div class="at">${this.escape(p.titre)}</div><div class="as">${this.escape(p.contenu)}</div></div></div>`).join("")+`</div>`;
+          <div><div class="at" data-i18n="off" dir="auto">${this.escape(p.titre)}</div><div class="as" data-i18n="off" dir="auto">${this.escape(p.contenu)}</div></div></div>`).join("")+`</div>`;
     }
     // blog / actualités
     if(blogs.length){
@@ -1486,7 +1605,7 @@ const App = {
         <div class="post">
           <div class="cover">${p.image?`<img src="${p.image}" alt="">`:(p.emo||"📰")}</div>
           <div class="body"><div class="pt-top"><span class="badge b-rose">Actu</span><span class="dt">${this.fmtDate(this.dstr(new Date(p.createdAt)))}</span></div>
-            <h3>${this.escape(p.titre)}</h3><p>${this.escape(p.contenu)}</p></div>
+            <h3 data-i18n="off" dir="auto">${this.escape(p.titre)}</h3><p data-i18n="off" dir="auto">${this.escape(p.contenu)}</p></div>
         </div>`).join("")+`</div>`;
     }
     w.innerHTML=html;
@@ -1531,7 +1650,7 @@ const App = {
       <div class="pc-band"></div>
       <div class="pc-photo">${photo}</div>
       <div class="pc-head">
-        <div class="nm">${this.escape(p.nom)}</div>
+        <div class="nm" data-i18n="off" dir="auto">${this.escape(p.nom)}</div>
         <div class="meta"><span>${this.speciesEmo(p.espece)} ${this.speciesLabel(p.espece)}</span>${p.race?`<span>• ${this.escape(p.race)}</span>`:""}${p.sexe?`<span>• ${p.sexe==="M"?"♂ Mâle":"♀ Femelle"}</span>`:""}</div>
       </div>
       <div class="pc-stats">
@@ -1579,7 +1698,7 @@ const App = {
       body+=recs.map(r=>{
         const t=REC_TYPES.find(x=>x.id===r.type)||{emo:"🩺",label:"Note",color:"b-grey"};
         return `<div class="rec"><div class="r-ic ${t.color}">${t.emo}</div>
-          <div class="r-body"><div class="spread"><span class="r-title">${this.escape(r.titre||t.label)}</span><span class="badge ${t.color}">${t.label}</span></div>
+          <div class="r-body"><div class="spread"><span class="r-title"${r.titre?' data-i18n="off" dir="auto"':''}>${this.escape(r.titre||t.label)}</span><span class="badge ${t.color}">${t.label}</span></div>
           <div class="r-dt">${r.date?this.fmtDate(r.date):""}</div>
           ${r.details?`<div class="r-det">${this.escape(r.details)}</div>`:""}
           ${r.nextDate?`<div class="r-next">🔔 Rappel : ${this.fmtDate(r.nextDate)}</div>`:""}</div></div>`;
@@ -1760,8 +1879,8 @@ const App = {
       return `<div class="prod">
         <div class="p-img">${p.photo?`<img src="${p.photo}" alt="">`:(p.emo||"🛍️")}<span class="p-cat">${this.escape(p.cat||"")}</span></div>
         <div class="p-body">
-          <div class="p-nm">${this.escape(p.nom)}</div>
-          <div class="p-desc">${this.escape(p.desc||"")}</div>
+          <div class="p-nm" data-i18n="off" dir="auto">${this.escape(p.nom)}</div>
+          <div class="p-desc" data-i18n="off" dir="auto">${this.escape(p.desc||"")}</div>
           <div class="p-foot">
             <div class="p-price">${this.money(p.prix)}</div>
             ${out?`<span class="p-out">Rupture</span>`:`<button class="p-add" onclick="App.addToCart('${p.id}')" title="Ajouter au panier">＋</button>`}
@@ -1814,7 +1933,7 @@ const App = {
       return `
       <div class="list-row" style="cursor:default;margin-bottom:8px">
         <div class="lr-av">${l.emo||"🛍️"}</div>
-        <div class="lr-body"><div class="lr-t">${this.escape(l.nom)}</div>
+        <div class="lr-body"><div class="lr-t" data-i18n="off" dir="auto">${this.escape(l.nom)}</div>
           <div class="lr-s">${this.money(l.prix)} × ${l.qty} = <b>${this.money(l.prix*l.qty)}</b>${stockHint}</div></div>
         <div style="display:flex;align-items:center;gap:8px;flex:none">
           <button class="btn btn-soft btn-sm" onclick="App.changeQty('${l.id}',-1)">−</button>
@@ -1873,7 +1992,7 @@ const App = {
       list.map(o=>{ const st=ORDER_STATUS[o.status]||ORDER_STATUS.attente;
         return `<div class="order">
           <div class="o-top"><span class="o-id">Commande #${o.id.slice(-4).toUpperCase()}</span><span class="badge ${st.badge}">${st.label}</span></div>
-          <div class="o-items">${o.items.map(it=>`<div class="o-line"><span>${it.emo||"•"} ${this.escape(it.nom)} ×${it.qty}</span><span>${this.money(it.prix*it.qty)}</span></div>`).join("")}</div>
+          <div class="o-items">${o.items.map(it=>`<div class="o-line"><span><span data-i18n="off" dir="auto">${it.emo||"•"} ${this.escape(it.nom)}</span> ×${it.qty}</span><span>${this.money(it.prix*it.qty)}</span></div>`).join("")}</div>
           <div class="o-foot"><span class="lr-s">${this.fmtDateShort(this.dstr(new Date(o.createdAt)))}</span>
             <div style="display:flex;gap:8px;align-items:center">${(o.status==="attente"||o.status==="preparation")?`<button class="btn btn-danger btn-sm" onclick="App.cancelOrder('${o.id}')">Annuler</button>`:""}<button class="btn btn-soft btn-sm" onclick="App.printOrderReceipt('${o.id}')">🧾 Reçu</button><span class="o-total">${this.money(o.total)}</span></div></div>
         </div>`; }).join("");
@@ -2083,8 +2202,8 @@ const App = {
           </div>
           <div class="scratch-stage">
             <div class="scratch-content">
-              <div class="sc-title">${this.escape(a.titre)}</div>
-              <div class="sc-text">${this.escape(a.texte)}</div>
+              <div class="sc-title" data-i18n="off" dir="auto">${this.escape(a.titre)}</div>
+              <div class="sc-text" data-i18n="off" dir="auto">${this.escape(a.texte)}</div>
             </div>
             ${rev?"":`<canvas class="scratch-cover" aria-hidden="true"></canvas><div class="scratch-hint"><span class="sc-emoji">👆</span><span class="sc-label">Grattez pour révéler</span></div>`}
           </div>
@@ -2104,7 +2223,7 @@ const App = {
           const me=m.from==="client";
           const who=me?("Vous"+ (scope&&m===thread[0]?scope:"")):"Dr. Asma Gnaoui";
           return `<div class="msg-row ${me?"me":"them"}">
-            <div class="bubble"><span class="b-who">${who}</span>${this.escape(m.texte)}</div>
+            <div class="bubble"><span class="b-who">${who}</span><span data-i18n="off" dir="auto">${this.escape(m.texte)}</span></div>
             <div class="b-time">${this.ago(m.at)}</div>
           </div>`;
         }).join("");
@@ -2336,7 +2455,7 @@ const App = {
       <div class="card about-card mb">
         <div class="about-brand">
           <div class="mark"><img src="logo-mark.png" alt="Logo" onerror="this.parentNode.textContent='🐾'"></div>
-          <div><div class="nm">Animaux <span>d'abord</span></div><div class="tg">${this.escape(s.clinicName)} 🇹🇳</div></div>
+          <div><div class="nm" data-i18n="off">Animaux <span>d'abord</span></div><div class="tg">${this.escape(s.clinicName)} 🇹🇳</div></div>
         </div>
         <div class="about-row"><div class="ic">👩🏻‍⚕️</div><div><div class="lbl">Vétérinaire</div><div class="val">${this.escape(s.doctor)}</div></div></div>
         <div class="about-row"><div class="ic">📞</div><div><div class="lbl">Téléphone ${s.emergency24?"· 24h/24 · 7j/7":""}</div><a class="val" href="tel:+${telDigits}">${this.escape(tel)}</a></div></div>
@@ -2612,7 +2731,7 @@ const App = {
       html+=`<div class="stagger">`+posts.map(p=>`
         <div class="list-row" style="cursor:default">
           <div class="lr-av">${p.emo||(p.type==="astuce"?"💡":"📰")}</div>
-          <div class="lr-body"><div class="lr-t">${this.escape(p.titre)}</div>
+          <div class="lr-body"><div class="lr-t" data-i18n="off" dir="auto">${this.escape(p.titre)}</div>
             <div class="lr-s"><span class="badge ${p.type==="astuce"?"b-mango":"b-rose"}">${p.type==="astuce"?"Astuce":"Actu"}</span> ${this.fmtDateShort(this.dstr(new Date(p.createdAt)))}</div></div>
           <div style="display:flex;gap:6px;flex:none">
             <button class="btn btn-soft btn-sm" onclick="App.openPostForm('${p.id}')">✏️</button>
@@ -2795,7 +2914,7 @@ const App = {
         const low=(p.stock!=null&&+p.stock<=3);
         return `<div class="list-row" style="cursor:default">
           <div class="lr-av">${p.photo?`<img src="${p.photo}" alt="">`:(p.emo||"🛍️")}</div>
-          <div class="lr-body"><div class="lr-t">${this.escape(p.nom)}</div>
+          <div class="lr-body"><div class="lr-t" data-i18n="off" dir="auto">${this.escape(p.nom)}</div>
             <div class="lr-s"><b style="color:var(--rose-deep)">${this.money(p.prix)}</b> · ${this.escape(p.cat||"")} · <span style="color:${low?"var(--danger)":"var(--muted)"}">stock ${p.stock!=null?p.stock:"—"}</span></div></div>
           <div style="display:flex;gap:6px;flex:none">
             <button class="btn btn-soft btn-sm" onclick="App.openProdForm('${p.id}')">✏️</button>
@@ -2865,7 +2984,7 @@ const App = {
       const cli=DB.find("users",o.clientId);
       return `<div class="order">
         <div class="o-top"><span class="o-id">#${o.id.slice(-4).toUpperCase()} · ${this.escape(o.clientNom||"Client")}</span><span class="badge ${st.badge}">${st.label}</span></div>
-        <div class="o-items">${o.items.map(it=>`<div class="o-line"><span>${it.emo||"•"} ${this.escape(it.nom)} ×${it.qty}</span><span>${this.money(it.prix*it.qty)}</span></div>`).join("")}
+        <div class="o-items">${o.items.map(it=>`<div class="o-line"><span><span data-i18n="off" dir="auto">${it.emo||"•"} ${this.escape(it.nom)}</span> ×${it.qty}</span><span>${this.money(it.prix*it.qty)}</span></div>`).join("")}
           ${o.note?`<div class="lr-s" style="margin-top:4px">📝 « ${this.escape(o.note)} »</div>`:""}
           ${cli&&cli.tel?`<div class="lr-s" style="margin-top:4px">📞 <a href="tel:+${this.phoneDigits(cli.tel)}" style="color:var(--rose-deep);text-decoration:none">${this.escape(this.phoneFmt(cli.tel))}</a></div>`:""}
         </div>
@@ -3145,7 +3264,7 @@ const App = {
     } else {
       body+=recs.map(r=>{ const t=REC_TYPES.find(x=>x.id===r.type)||REC_TYPES[1];
         return `<div class="order" style="margin-bottom:10px">
-          <div class="o-top"><span class="o-id" style="font-size:1rem">${t.emo} ${this.escape(r.titre||t.label)}</span><span class="badge ${t.color}">${t.label}</span></div>
+          <div class="o-top"><span class="o-id" style="font-size:1rem">${t.emo} <span${r.titre?' data-i18n="off" dir="auto"':''}>${this.escape(r.titre||t.label)}</span></span><span class="badge ${t.color}">${t.label}</span></div>
           <div class="o-items"><div class="lr-s">📅 ${this.fmtDate(r.date)}${r.nextDate?` · 🔁 rappel le ${this.fmtDate(r.nextDate)}`:""}</div>
             ${r.details?`<div style="margin-top:5px;font-size:.9rem;white-space:pre-wrap">${this.escape(r.details)}</div>`:""}</div>
           <div class="o-foot" style="justify-content:flex-end;gap:6px">
@@ -3257,7 +3376,7 @@ const App = {
     const bubbles=thread.map(m=>{
       const me=m.from==="admin";   // « moi » = le vétérinaire côté admin
       return `<div class="msg-row ${me?"me":"them"}">
-        <div class="bubble"><span class="b-who">${me?"Vous":this.escape(q.clientNom||(cli?cli.nom:"Client"))}</span>${this.escape(m.texte)}</div>
+        <div class="bubble"><span class="b-who">${me?"Vous":this.escape(q.clientNom||(cli?cli.nom:"Client"))}</span><span data-i18n="off" dir="auto">${this.escape(m.texte)}</span></div>
         <div class="b-time">${this.ago(m.at)}</div>
       </div>`;
     }).join("");
@@ -3277,7 +3396,7 @@ const App = {
     const bubbles=thread.map(m=>{
       const me=m.from==="admin";
       return `<div class="msg-row ${me?"me":"them"}">
-        <div class="bubble"><span class="b-who">${me?"Vous":this.escape(q.clientNom||"Client")}</span>${this.escape(m.texte)}</div>
+        <div class="bubble"><span class="b-who">${me?"Vous":this.escape(q.clientNom||"Client")}</span><span data-i18n="off" dir="auto">${this.escape(m.texte)}</span></div>
         <div class="b-time">${this.ago(m.at)}</div>
       </div>`;
     }).join("");
@@ -3359,7 +3478,7 @@ const App = {
       </div>
 
       <button class="btn btn-primary btn-block btn-lg mb" onclick="App.saveSettings()">💾 Enregistrer les réglages</button>
-      <button class="btn btn-danger btn-block" onclick="App.resetData()">🗑️ Réinitialiser les données de démonstration</button>
+      <button class="btn btn-danger btn-block" onclick="App.resetData()">🗑️ Réinitialiser toutes les données</button>
       <div class="hint center mt" style="padding-bottom:20px">Les données sont synchronisées dans le cloud (Firebase) et disponibles sur tous les appareils. Sans réseau, l'app reste utilisable en local.</div>`;
   },
   toggleDayInputs(d){ const on=document.getElementById("h-open-"+d).checked; const t=document.getElementById("h-times-"+d); if(t) t.style.display=on?"block":"none"; },
@@ -3420,12 +3539,12 @@ const App = {
     window.open("https://wa.me/?text="+t,"_blank");
   },
   resetData(){
-    if(!confirm("Réinitialiser TOUTES les données (produits, RDV, commandes, patients…) et recharger la démo ? Cette action est irréversible.")) return;
+    if(!confirm("Réinitialiser TOUTES les données (produits, publications, RDV, commandes, patients…) ? Cette action est irréversible.")) return;
     // On supprime toutes les clés de l'app (préfixe "ad_") : collections, réglages, session et paniers.
     Object.keys(localStorage).slice().forEach(k=>{ if(k.indexOf("ad_")===0) localStorage.removeItem(k); });
     this.session=null; this.cart=[];
     this.toast("Données réinitialisées.","ok");
-    // init() → ensureSeed() régénère les données de démonstration au rechargement.
+    // init() repart d'une base vide : seuls les réglages du cabinet sont recréés.
     setTimeout(()=>location.reload(),600);
   },
   /* ---------- installation (PWA) ---------- */
