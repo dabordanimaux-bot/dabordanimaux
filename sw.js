@@ -8,7 +8,7 @@
      au réseau, JAMAIS interceptées → la synchro cloud temps réel fonctionne.
    Pense à incrémenter CACHE_VERSION à chaque mise à jour du site.
    ===================================================================== */
-const CACHE_VERSION = "animaux-dabord-v9";
+const CACHE_VERSION = "animaux-dabord-v10";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -78,4 +78,65 @@ self.addEventListener("fetch", (event) => {
       return cached || network;
     })
   );
+});
+
+/* =====================================================================
+   NOTIFICATIONS PUSH (Firebase Cloud Messaging)
+   ---------------------------------------------------------------------
+   Ce service worker sert AUSSI de récepteur push. Il est transmis à
+   getToken({ serviceWorkerRegistration }) depuis la page : on n'utilise
+   donc PAS le fichier « firebase-messaging-sw.js » par défaut de Firebase,
+   qui doit obligatoirement vivre à la racine du domaine — impossible sur
+   GitHub Pages quand le site est dans un sous-dossier.
+
+   Le serveur envoie des messages « data-only » : c'est ce code qui décide
+   du titre, du texte, de l'icône et de l'action au clic.
+   ===================================================================== */
+const PUSH_ICON  = "./icon-192.png";
+const PUSH_BADGE = "./icon-192.png";
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try { payload = event.data ? event.data.json() : {}; }
+  catch (e) { try { payload = { data: { body: event.data.text() } }; } catch (_) {} }
+
+  const d = payload.data || {};
+  const n = payload.notification || {};   // filet de sécurité si un message « notification » est envoyé
+  const title = d.title || n.title || "Animaux d'abord";
+  const body  = d.body  || n.body  || "";
+  const kind  = d.kind  || "";
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body:  body,
+      icon:  PUSH_ICON,
+      badge: PUSH_BADGE,
+      tag:   d.tag || ("ad-" + (d.id || kind || Date.now())),
+      renotify: true,
+      dir:  "auto",
+      lang: d.lang || "fr",
+      vibrate: [80, 40, 80],
+      requireInteraction: d.urgent === "1",
+      data: { url: d.url || "./index.html", kind: kind, id: d.id || "" }
+    })
+  );
+});
+
+// Clic sur la notification : on ouvre l'app (ou on remet au premier plan
+// l'onglet déjà ouvert) et on demande à l'app d'aller sur le bon écran.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const info = event.notification.data || {};
+  const target = new URL(info.url || "./index.html", self.location.href).href;
+
+  event.waitUntil((async () => {
+    const wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const c of wins) {
+      if (c.url.indexOf(self.registration.scope) === 0) {
+        try { c.postMessage({ type: "notif-click", kind: info.kind || "", id: info.id || "" }); } catch (e) {}
+        return c.focus();
+      }
+    }
+    return self.clients.openWindow(target);
+  })());
 });
