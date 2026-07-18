@@ -1256,6 +1256,8 @@ const App = {
     this.route();
   },
   logout(){
+    // ce téléphone ne doit plus recevoir les notifications du compte quitté
+    try{ window.Push && window.Push.unlink(); }catch(e){}
     this.session=null; DB.set("session",null); this.cart=[];
     document.getElementById("cart-fab").style.display="none";
     ["log-id","log-pass","reg-name","reg-phone","reg-pass"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
@@ -1266,14 +1268,14 @@ const App = {
     const u=this.currentUser();
     document.getElementById("client-hello").textContent="Bonjour, "+(u.nom?u.nom.split(" ")[0]:"");
     this.showTab("tab-home","client-nav");
-    this.refreshInstall(); this.renderAll();
+    this.refreshInstall(); this.renderAll(); this.syncPushToken();
   },
   openAdmin(){
     this.show("app-admin");
     const u=this.currentUser();
     document.getElementById("admin-hello").textContent=u.nom||"Docteur";
     this.showTab("atab-home","admin-nav");
-    this.refreshInstall(); this.renderAll();
+    this.refreshInstall(); this.renderAll(); this.syncPushToken();
   },
 
   /* ---------- écrans / onglets ---------- */
@@ -1480,6 +1482,17 @@ const App = {
     const u=this.currentUser();
     if(u && (target==="admin"?u.role==="admin":target===u.id)) this.ringBell();
   },
+  // Variante « une seule fois » : l'identifiant est calculé à partir de la clé
+  // (ex. "rdv_j1_r175…"). Le serveur de rappels écrit exactement le même id,
+  // donc les deux écritures fusionnent dans Firestore : jamais de doublon.
+  notifyOnce(key, target, kind, title, body){
+    const id = "n_" + key;
+    if(DB.get("notifs",[]).some(n=>String(n.id)===id)) return false;
+    DB.push("notifs",{id,target,kind,title,body,ts:Date.now(),lu:false});
+    const u=this.currentUser();
+    if(u && (target==="admin"?u.role==="admin":target===u.id)) this.ringBell();
+    return true;
+  },
   myNotifs(){
     const u=this.currentUser(); if(!u) return [];
     const tg = u.role==="admin" ? "admin" : u.id;
@@ -1551,6 +1564,113 @@ const App = {
   },
 
   /* =====================================================================
+     NOTIFICATIONS PUSH (téléphone) — pilotage de l'objet window.Push
+     ---------------------------------------------------------------------
+     window.Push est défini dans le module Firebase en bas de page.
+     Ici on ne gère que l'interface : carte d'activation, autorisation,
+     état, et réception d'un message quand l'app est au premier plan.
+     ===================================================================== */
+  pushState(){
+    const P = window.Push;
+    if(!P || !P.supported){
+      const ios = /iP(hone|ad|od)/.test(navigator.userAgent);
+      const installed = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+      if(ios && !installed) return "ios-install";   // iPhone : il faut installer l'app d'abord
+      return "unsupported";
+    }
+    // on relit l'autorisation réelle : l'utilisateur a pu la changer dans le navigateur
+    try{ P.permission = Notification.permission; }catch(e){}
+    return P.permission;                             // "default" | "granted" | "denied"
+  },
+  pushCardHTML(){
+    const st = this.pushState();
+    if(st === "granted") return "";                  // tout va bien : on n'encombre pas l'écran
+    if(st === "unsupported") return "";              // navigateur incapable : inutile d'inquiéter
+    if(st === "ios-install"){
+      return `<div class="card mb" style="border-color:var(--rose-soft);background:var(--rose-tint)">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:26px;line-height:1">🔔</div>
+          <div style="flex:1">
+            <div style="font-family:var(--display);font-weight:800;margin-bottom:3px">Recevez vos rappels sur l'iPhone</div>
+            <div class="hint">Appuyez sur <b>Partager</b> ⬆️ puis <b>« Sur l'écran d'accueil »</b>. Rouvrez ensuite l'app depuis son icône pour activer les notifications.</div>
+          </div>
+        </div></div>`;
+    }
+    if(st === "denied"){
+      return `<div class="card mb">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:26px;line-height:1">🔕</div>
+          <div style="flex:1">
+            <div style="font-family:var(--display);font-weight:800;margin-bottom:3px">Notifications bloquées</div>
+            <div class="hint">Vous avez refusé les notifications pour ce site. Autorisez-les dans les réglages du navigateur (🔒 à côté de l'adresse → Notifications → Autoriser), puis revenez ici.</div>
+          </div>
+        </div></div>`;
+    }
+    return `<div class="card mb" style="border-color:var(--rose-soft)">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="font-size:26px;line-height:1">🔔</div>
+        <div style="flex:1">
+          <div style="font-family:var(--display);font-weight:800;margin-bottom:3px">Ne manquez plus un rappel</div>
+          <div class="hint" style="margin-bottom:10px">Recevez sur votre téléphone les rappels de vaccin et de rendez-vous, même quand l'application est fermée.</div>
+          <button class="btn btn-primary btn-sm" onclick="App.enablePush()">Activer les notifications</button>
+        </div>
+      </div></div>`;
+  },
+  // Carte détaillée affichée dans les Réglages du docteur.
+  pushSettingsHTML(){
+    const st = this.pushState();
+    const line = {
+      "granted":    ['<span class="badge b-ok">Activées ✓</span>', "Ce téléphone / cette tablette recevra les alertes du cabinet."],
+      "default":    ['<span class="badge b-warn">Désactivées</span>', "Activez pour être prévenue des nouveaux rendez-vous et des rappels du lendemain."],
+      "denied":     ['<span class="badge b-danger">Bloquées</span>', "Réautorisez les notifications dans les réglages du navigateur (🔒 → Notifications)."],
+      "ios-install":['<span class="badge b-warn">À installer</span>', "Sur iPhone/iPad : Partager ⬆️ → « Sur l'écran d'accueil », puis rouvrir l'app depuis l'icône."],
+      "unsupported":['<span class="badge b-grey">Indisponible</span>', "Ce navigateur ne gère pas les notifications. Essayez Chrome ou Edge."]
+    }[st] || ['<span class="badge b-grey">—</span>', ""];
+    const btn = st === "granted"
+      ? `<button class="btn btn-ghost btn-sm" onclick="App.disablePush()">Désactiver sur cet appareil</button>`
+      : (st === "default" ? `<button class="btn btn-primary btn-sm" onclick="App.enablePush()">Activer</button>` : "");
+    return `<div class="card mb">
+      <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Alertes</div><h2 style="font-size:1.2rem">Notifications sur le téléphone</h2></div>${line[0]}</div>
+      <div class="hint" style="margin-bottom:${btn?"12px":"0"}">${line[1]}</div>
+      ${btn}
+      <div class="hint" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
+        À activer <b>sur chaque appareil</b> (téléphone du cabinet, tablette…). Les rappels de la veille et du jour même partent automatiquement, même application fermée.</div>
+    </div>`;
+  },
+  async enablePush(){
+    const P = window.Push;
+    if(!P || !P.supported){ this.toast("Notifications indisponibles sur cet appareil.","err"); return; }
+    try{
+      await P.register();
+      this.toast("Notifications activées ✓","ok");
+      this.notifyOnce("welcome_"+(this.currentUser()||{}).id+"_"+Date.now().toString(36),
+        this.isAdmin()?"admin":(this.currentUser()||{}).id, "rdv",
+        "🔔 Notifications activées", "Vous serez prévenu sur ce téléphone, même app fermée.");
+    }catch(e){
+      const m = String(e && e.message || e);
+      if(m === "denied") this.toast("Vous avez refusé les notifications.","err");
+      else this.toast("Activation impossible. Vérifiez la connexion.","err");
+    }
+    this.renderAll();
+  },
+  async disablePush(){
+    if(!confirm("Ne plus recevoir de notifications sur cet appareil ?")) return;
+    try{ await window.Push.disable(); }catch(e){}
+    this.toast("Notifications désactivées sur cet appareil.","ok");
+    this.renderAll();
+  },
+  // Rattache le jeton de cet appareil au compte connecté (appelé à l'ouverture).
+  syncPushToken(){
+    try{ if(window.Push && window.Push.permission === "granted") window.Push.register().catch(()=>{}); }catch(e){}
+  },
+  // Message reçu alors que l'application est déjà ouverte : la notification
+  // système n'est pas affichée par le navigateur, on anime donc la cloche.
+  onPushForeground(d){
+    try{ this.ringBell(); }catch(e){}
+    if(d && d.title) this.toast(d.title, "ok");
+  },
+
+  /* =====================================================================
      CLIENT — ACCUEIL
      ===================================================================== */
   renderHomeClient(){
@@ -1571,6 +1691,9 @@ const App = {
           <button class="btn btn-ghost" onclick="App.showTab('tab-pets','client-nav')">🐾 Mes animaux</button>
         </div>
       </div>`;
+
+    // invitation à activer les notifications push (masquée si déjà autorisées)
+    html+=this.pushCardHTML();
 
     // urgence 24/7
     if(s.emergency24){
@@ -1788,7 +1911,7 @@ const App = {
   },
   tick(){ // rafraîchissement léger toutes les 30 s (statut ouvert/fermé, cloche…)
     if(!this.currentUser()) return;
-    this.checkRdvReminders();   // rappels automatiques la veille des RDV
+    this.checkReminders();      // rappels automatiques : RDV + vaccins, J-1 et jour J
     this.renderBell();
     const u=this.currentUser();
     if(u.role==="admin"){ this.renderHomeAdmin(); this.renderAbout("a"); }
@@ -2518,16 +2641,61 @@ const App = {
     });
     return list.sort((x,y)=>x.r.nextDate.localeCompare(y.r.nextDate));
   },
-  // Rappel automatique au client la veille d'un rendez-vous confirmé.
-  checkRdvReminders(){
-    const tomorrow=this.dstr(new Date(Date.now()+864e5));
+  /* ---------------------------------------------------------------
+     RAPPELS AUTOMATIQUES — rendez-vous et vaccins, la veille (J-1)
+     et le jour même (J-0), pour le client ET pour le cabinet.
+     -----------------------------------------------------------------
+     Cette fonction alimente la cloche 🔔 quand l'app est ouverte.
+     Les mêmes rappels sont envoyés en notification push (téléphone,
+     app fermée) par le script scripts/envoyer-rappels.mjs, qui utilise
+     des identifiants identiques : aucun doublon possible.
+     --------------------------------------------------------------- */
+  checkReminders(){
+    const today    = this.todayStr();
+    const tomorrow = this.dstr(new Date(Date.now()+864e5));
+    const clinic   = this.settings().clinicName || "le cabinet";
+
+    // --- Rendez-vous confirmés → le client ---
     DB.get("rdv",[]).forEach(r=>{
-      if(r.status==="confirme" && r.date===tomorrow && !r.reminded){
-        DB.update("rdv", r.id, {reminded:true});
-        this.notify(r.clientId,"rdv","Rappel de rendez-vous ⏰",`Demain à ${r.time} — ${this.settings().clinicName||"le cabinet"}`);
-      }
+      if(r.status!=="confirme" || !r.clientId) return;
+      if(r.date===tomorrow)
+        this.notifyOnce("rdv_j1_"+r.id, r.clientId, "rdv",
+          "⏰ Rendez-vous demain", `Demain à ${r.time} — ${clinic}`);
+      if(r.date===today)
+        this.notifyOnce("rdv_j0_"+r.id, r.clientId, "rdv",
+          "📅 Rendez-vous aujourd'hui", `Aujourd'hui à ${r.time} — ${clinic}`);
+    });
+
+    // --- Rappels de vaccin / vermifuge → le propriétaire ---
+    DB.get("records",[]).forEach(rec=>{
+      if(!rec.nextDate) return;
+      const when = rec.nextDate===tomorrow ? "j1" : (rec.nextDate===today ? "j0" : null);
+      if(!when) return;
+      const a = DB.find("animals", rec.animalId); if(!a || !a.ownerId) return;
+      const vax = rec.type==="vaccin";
+      const emo = vax ? "💉" : "🪱";
+      const titre = when==="j1"
+        ? `${emo} Rappel demain pour ${a.nom}`
+        : `${emo} C'est aujourd'hui pour ${a.nom}`;
+      this.notifyOnce(`vax_${when}_${rec.id}`, a.ownerId, vax?"vax":"record", titre,
+        `${rec.titre||"Rappel de soin"} — prenez rendez-vous au ${clinic}.`);
+    });
+
+    // --- Récapitulatif pour le cabinet (une seule alerte par journée) ---
+    [["j1", tomorrow, "Demain"], ["j0", today, "Aujourd'hui"]].forEach(pair=>{
+      const tag=pair[0], d=pair[1], label=pair[2];
+      const rdvs = DB.get("rdv",[]).filter(r=>r.date===d && (r.status==="confirme"||r.status==="attente"));
+      const vaxs = DB.get("records",[]).filter(r=>r.nextDate===d);
+      if(!rdvs.length && !vaxs.length) return;
+      const parts=[];
+      if(rdvs.length) parts.push(`${rdvs.length} rendez-vous`);
+      if(vaxs.length) parts.push(`${vaxs.length} rappel${vaxs.length>1?"s":""} de vaccin`);
+      this.notifyOnce(`adm_${tag}_${d}`, "admin", "rdv",
+        `📋 ${label} au cabinet`, parts.join(" · "));
     });
   },
+  // Ancien nom conservé pour compatibilité.
+  checkRdvReminders(){ this.checkReminders(); },
   // Export des recettes de la caisse en CSV (ouvrable dans Excel).
   exportCaisse(){
     const cons=DB.get("rdv",[]).filter(r=>r.status==="termine" && +r.prix>0).map(r=>({ts:r.paidAt||this.parseD(r.date).getTime(), type:"Consultation", client:r.clientNom||"Client", desc:r.motif||"Consultation", montant:+r.prix}));
@@ -3459,6 +3627,8 @@ const App = {
         ${dayRows}
       </div>
 
+      ${this.pushSettingsHTML()}
+
       <div class="card mb">
         <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Partage</div><h2 style="font-size:1.2rem">Lien de l'application</h2></div></div>
         <div class="field" style="margin-bottom:4px"><label>Lien public de l'app</label><input class="input" id="se-url" value="${this.escape(s.appUrl||"")}" placeholder="https://votre-nom.github.io/animaux-dabord/"></div>
@@ -3671,6 +3841,14 @@ document.addEventListener("DOMContentLoaded", function(){
         console.warn("Service worker non enregistré :", err);
       });
     });
+    // Clic sur une notification système : le service worker nous prévient,
+    // on ouvre alors le bon onglet dans l'application.
+    navigator.serviceWorker.addEventListener("message", function(e){
+      var d = e.data || {};
+      if(d.type === "notif-click"){
+        try{ App.markAllRead(); App.onNotifClick(d.kind || ""); }catch(err){}
+      }
+    });
   }
 });
 </script>
@@ -3685,6 +3863,8 @@ document.addEventListener("DOMContentLoaded", function(){
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, onSnapshot }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getMessaging, getToken, deleteToken, onMessage, isSupported as messagingSupported }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
   // --- Configuration du projet Firebase (cabinet Animaux d'abord) ---
   const firebaseConfig = {
@@ -3708,8 +3888,119 @@ document.addEventListener("DOMContentLoaded", function(){
     read(key, def){ try{ const r=localStorage.getItem("ad_"+key); return r==null?def:JSON.parse(r); }catch(e){ return def; } }
   };
 
-  let db=null, resolveReady;
+  let db=null, fbApp=null, resolveReady;
   const readyPromise = new Promise(res=>{ resolveReady=res; });
+
+  /* =====================================================================
+     NOTIFICATIONS PUSH — Firebase Cloud Messaging (Web Push)
+     ---------------------------------------------------------------------
+     • Le jeton (token) identifie UN appareil. Il est rangé dans la
+       collection Firestore « pushTokens », un document par appareil.
+     • Cette collection n'est volontairement PAS dans COLLECTIONS : elle ne
+       doit pas être recopiée dans le localStorage de tous les téléphones.
+     • Le service worker utilisé est le sw.js de l'application (et non le
+       firebase-messaging-sw.js par défaut, qui exigerait la racine du
+       domaine — incompatible avec GitHub Pages en sous-dossier).
+     ===================================================================== */
+
+  // ▼▼▼ À REMPLACER ▼▼▼  Console Firebase → Paramètres du projet →
+  // Cloud Messaging → Configuration Web → Certificats push web → Générer
+  const VAPID_KEY = "BMSAkodJLLK80up5v3BiD7S8G6v1O3WmNg8xmJH1Vb3Ej2iUG_pC3Wqx3aQd_93rZKRXFDYcxyPQAFEonoj0L4k";
+
+  const TOKENS_COLL = "pushTokens";
+
+  // Identifiant stable de l'appareil (survit à la déconnexion).
+  function deviceId(){
+    let id = null;
+    try{ id = localStorage.getItem("ad_deviceId"); }catch(e){}
+    if(!id){
+      id = "dev_" + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+      try{ localStorage.setItem("ad_deviceId", id); }catch(e){}
+    }
+    return id;
+  }
+
+  const Push = {
+    supported: false,
+    permission: (typeof Notification !== "undefined") ? Notification.permission : "unsupported",
+    token: null,
+    _msg: null,
+
+    async init(){
+      try{
+        this.supported = ("serviceWorker" in navigator) && ("PushManager" in window)
+                          && (typeof Notification !== "undefined") && await messagingSupported();
+      }catch(e){ this.supported = false; }
+      if(!this.supported || !fbApp) return;
+      try{ this._msg = getMessaging(fbApp); }catch(e){ this.supported = false; return; }
+
+      // Message reçu alors que l'app est au premier plan : le navigateur
+      // n'affiche rien, c'est l'app qui anime la cloche.
+      try{
+        onMessage(this._msg, (payload)=>{
+          const d = (payload && payload.data) || {};
+          try{ window.App && App.onPushForeground && App.onPushForeground(d); }catch(e){}
+        });
+      }catch(e){}
+
+      // Autorisation déjà donnée : on rafraîchit le jeton en silence
+      // (il peut changer après une mise à jour du navigateur).
+      if(this.permission === "granted") this.register().catch(()=>{});
+    },
+
+    // Demande l'autorisation, récupère le jeton et l'enregistre.
+    async register(){
+      if(!this.supported) throw new Error("unsupported");
+      const perm = await Notification.requestPermission();
+      this.permission = perm;
+      if(perm !== "granted") throw new Error(perm);
+
+      const reg = await navigator.serviceWorker.ready;   // notre sw.js
+      if(!this._msg) this._msg = getMessaging(fbApp);
+      const token = await getToken(this._msg, { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+      if(!token) throw new Error("no-token");
+      this.token = token;
+      await this.save(token);
+      return token;
+    },
+
+    // Écrit / met à jour le document de cet appareil.
+    async save(token){
+      if(!db) return;
+      const u = (window.App && App.currentUser) ? App.currentUser() : null;
+      let lang = "fr"; try{ lang = localStorage.getItem("ad_lang") || "fr"; }catch(e){}
+      const id = deviceId();
+      try{
+        await setDoc(doc(db, TOKENS_COLL, id), {
+          id, token,
+          userId: u ? u.id   : null,
+          role:   u ? u.role : null,
+          nom:    u ? (u.nom || "") : "",
+          lang,
+          agent: (navigator.userAgent || "").slice(0,150),
+          updatedAt: Date.now()
+        }, { merge:true });
+      }catch(e){ console.warn("pushTokens", e); }
+    },
+
+    // Déconnexion : l'appareil garde son jeton mais n'est plus rattaché
+    // au compte — il ne recevra plus les notifications de l'ancien utilisateur.
+    async unlink(){
+      if(!db) return;
+      try{
+        await setDoc(doc(db, TOKENS_COLL, deviceId()),
+          { userId:null, role:null, nom:"", updatedAt:Date.now() }, { merge:true });
+      }catch(e){}
+    },
+
+    // Désactivation complète sur cet appareil.
+    async disable(){
+      try{ if(this._msg) await deleteToken(this._msg); }catch(e){}
+      this.token = null;
+      try{ if(db) await deleteDoc(doc(db, TOKENS_COLL, deviceId())); }catch(e){}
+    }
+  };
+  window.Push = Push;
 
   // Objet global consommé par la couche DB du script principal.
   const Cloud = {
@@ -3790,9 +4081,11 @@ document.addEventListener("DOMContentLoaded", function(){
 
   // Initialisation (asynchrone). En cas d'échec, l'app bascule en local.
   try{
-    const app = initializeApp(firebaseConfig);
+    fbApp = initializeApp(firebaseConfig);
+    const app = fbApp;
     db = getFirestore(app);
     Cloud.enabled = true;
+    Push.init();                       // notifications push (voir plus bas)
     // Analytics (optionnel, non bloquant) : ignoré s'il n'est pas supporté.
     import("https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js")
       .then(m=> m.isSupported().then(ok=>{ if(ok) m.getAnalytics(app); }).catch(()=>{}))
