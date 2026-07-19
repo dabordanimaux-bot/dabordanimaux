@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Animaux d'abord · Cabinet Vétérinaire de Manouba</title>
-<meta name="description" content="Suivi santé de votre animal, rendez-vous, boutique et conseils du Dr. Asma Gnaoui — Cabinet Vétérinaire de Manouba." />
+<title>Animaux d'abord · Le Cabinet Vétérinaire de Manouba</title>
+<meta name="description" content="Suivi santé de votre animal, rendez-vous, boutique et conseils du Dr. Asma Gnaoui — Le Cabinet Vétérinaire de Manouba." />
 <link rel="icon" type="image/png" href="icon-192.png" />
 
 <!-- PWA : installable sur l'écran d'accueil -->
@@ -16,7 +16,7 @@
 <link rel="apple-touch-icon" href="icon-180.png" />
 
 <!-- =====================================================================
-  ANIMAUX D'ABORD — Application du Cabinet Vétérinaire de Manouba 🇹🇳
+  ANIMAUX D'ABORD — Application du Le Cabinet Vétérinaire de Manouba 🇹🇳
   Dr. Asma Gnaoui | Médecin Vétérinaire
   Tout dans un seul fichier (HTML + CSS + JS).
   Données : localStorage (lecture instantanée) synchronisé avec Firebase
@@ -605,7 +605,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
       <button class="lang-btn lang-btn-auth" id="lang-btn-auth" onclick="App.toggleLang()" title="اللغة / Langue">العربية</button>
       <div class="auth-logo"><img src="logo-mark.png" alt="Animaux d'abord" /></div>
       <h1>Animaux d'abord</h1>
-      <div class="sub">Cabinet Vétérinaire de Manouba 🇹🇳</div>
+      <div class="sub">Le Cabinet Vétérinaire de Manouba 🇹🇳</div>
       <div class="doc">👩🏻‍⚕️ Dr. Asma Gnaoui · Vétérinaire</div>
       <img class="auth-pet auth-dog" src="pet-dog.png" alt="" aria-hidden="true" />
       <img class="auth-pet auth-cat" src="pet-cat.png" alt="" aria-hidden="true" />
@@ -894,11 +894,11 @@ const RDV_STATUS = {
 const DEFAULT_ADMIN = { id:"u_admin", role:"admin", username:"admin", password:"admin", nom:"Dr. Asma Gnaoui", tel:"22024232", createdAt:0 };
 
 const DEFAULT_SETTINGS = {
-  clinicName:"Cabinet Vétérinaire de Manouba",
+  clinicName:"Le Cabinet Vétérinaire de Manouba",
   doctor:"Dr. Asma Gnaoui",
   phone:"22024232",
   address:"R444+46P, نهج ابن ابي ضياف 27, Manouba, Manouba",
-  mapQuery:"Cabinet Vétérinaire de Manouba, نهج ابن ابي ضياف, Manouba",
+  mapQuery:"Le Cabinet Vétérinaire de Manouba, نهج ابن ابي ضياف, Manouba",
   landmark:"Juste à côté du lycée Ibn Abi Dhiaf",
   emergency24:true,
   slotMin:30,
@@ -1027,7 +1027,7 @@ const AR_DICT = {
   "Nouveau ? Créez un compte pour suivre la santé de votre animal.":"جديد؟ أنشئ حسابًا لمتابعة صحة حيوانك.",
   "Nom complet":"الاسم الكامل","Numéro de téléphone":"رقم الهاتف","Créer mon compte":"إنشاء حسابي",
   "Ex : Hamdi Rahmeni":"مثال: حمدي الرحماني","Ex : 95 063 068":"مثال: 95 063 068",
-  "Cabinet Vétérinaire de Manouba":"العيادة البيطرية بمنوبة",
+  "Le Cabinet Vétérinaire de Manouba":"العيادة البيطرية بمنوبة",
   "Compte créé, bienvenue !":"تم إنشاء الحساب، مرحبًا!","Ce numéro a déjà un compte.":"هذا الرقم له حساب بالفعل.",
   "Identifiant ou mot de passe incorrect.":"المعرّف أو كلمة المرور غير صحيحة.",
 
@@ -1745,7 +1745,7 @@ const App = {
     const blogs=posts.filter(p=>p.type==="blog");
 
     let html=`<div class="hero-card">
-        <div class="h-eyebrow">Cabinet Vétérinaire de Manouba</div>
+        <div class="h-eyebrow">Le Cabinet Vétérinaire de Manouba</div>
         <h2>Prenez soin de ${pets.length?"vos compagnons":"votre compagnon"} 🐾</h2>
         <p>Suivi santé, rendez-vous et conseils du Dr. Asma Gnaoui, en un seul endroit.</p>
         <div class="h-actions">
@@ -2289,7 +2289,7 @@ const App = {
     const petOpts = pets.length
       ? `<div class="field"><label>Animal concerné</label><select id="bk-animal"><option value="">— Sélectionner —</option>${pets.map(p=>`<option value="${p.id}">${this.speciesEmo(p.espece)} ${this.escape(p.nom)}</option>`).join("")}</select></div>`
       : `<div class="hint mb">Astuce : ajoutez vos animaux dans l'onglet « Mes animaux » pour les associer à un rendez-vous.</div>`;
-    const body=`<div class="status-banner is-open" style="margin-bottom:14px"><div class="dot"></div><div><div class="st-main">${this.fmtDate(this._rdvSel)} à ${time}</div><div class="st-sub">Cabinet Vétérinaire de Manouba</div></div></div>
+    const body=`<div class="status-banner is-open" style="margin-bottom:14px"><div class="dot"></div><div><div class="st-main">${this.fmtDate(this._rdvSel)} à ${time}</div><div class="st-sub">Le Cabinet Vétérinaire de Manouba</div></div></div>
       ${petOpts}
       <div class="field"><label>Motif de la visite</label>
         <select id="bk-motif">
