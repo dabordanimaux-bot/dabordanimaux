@@ -1642,6 +1642,7 @@ const App = {
     if(!P || !P.supported){ this.toast("Notifications indisponibles sur cet appareil.","err"); return; }
     try{
       await P.register();
+      await P.relink();          // rattachement immediat au compte connecte
       this.toast("Notifications activées ✓","ok");
       this.notifyOnce("welcome_"+(this.currentUser()||{}).id+"_"+Date.now().toString(36),
         this.isAdmin()?"admin":(this.currentUser()||{}).id, "rdv",
@@ -1661,7 +1662,14 @@ const App = {
   },
   // Rattache le jeton de cet appareil au compte connecté (appelé à l'ouverture).
   syncPushToken(){
-    try{ if(window.Push && window.Push.permission === "granted") window.Push.register().catch(()=>{}); }catch(e){}
+    try{
+      const P = window.Push;
+      if(!P || P.permission !== "granted") return;
+      // register() rafraichit le jeton, relink() garantit le rattachement au
+      // compte meme si l'ecriture de init() arrive en retard.
+      P.register().then(()=>P.relink()).catch(()=>{ P.relink().catch(()=>{}); });
+      setTimeout(()=>{ try{ P.relink(); }catch(e){} }, 4000);
+    }catch(e){}
   },
   // Message reçu alors que l'application est déjà ouverte : la notification
   // système n'est pas affichée par le navigateur, on anime donc la cloche.
@@ -3970,17 +3978,30 @@ document.addEventListener("DOMContentLoaded", function(){
       const u = (window.App && App.currentUser) ? App.currentUser() : null;
       let lang = "fr"; try{ lang = localStorage.getItem("ad_lang") || "fr"; }catch(e){}
       const id = deviceId();
+      const data = {
+        id, token, lang,
+        agent: (navigator.userAgent || "").slice(0,150),
+        updatedAt: Date.now()
+      };
+      // Le rattachement n'est ecrit QUE si un compte est reellement connecte.
+      // Sinon on laisse la valeur precedente intacte : sans cette precaution,
+      // l'appel automatique de init() au chargement de la page effacerait le
+      // lien etabli a la connexion (course entre les deux ecritures).
+      if(u){ data.userId = u.id; data.role = u.role || null; data.nom = u.nom || ""; }
+      try{ await setDoc(doc(db, TOKENS_COLL, id), data, { merge:true }); }
+      catch(e){ console.warn("pushTokens", e); }
+    },
+
+    // Rattache cet appareil au compte connecte (sans retoucher au jeton).
+    async relink(){
+      if(!db) return;
+      const u = (window.App && App.currentUser) ? App.currentUser() : null;
+      if(!u) return;
       try{
-        await setDoc(doc(db, TOKENS_COLL, id), {
-          id, token,
-          userId: u ? u.id   : null,
-          role:   u ? u.role : null,
-          nom:    u ? (u.nom || "") : "",
-          lang,
-          agent: (navigator.userAgent || "").slice(0,150),
-          updatedAt: Date.now()
-        }, { merge:true });
-      }catch(e){ console.warn("pushTokens", e); }
+        await setDoc(doc(db, TOKENS_COLL, deviceId()),
+          { userId:u.id, role:u.role || null, nom:u.nom || "", updatedAt:Date.now() },
+          { merge:true });
+      }catch(e){ console.warn("relink", e); }
     },
 
     // Déconnexion : l'appareil garde son jeton mais n'est plus rattaché
