@@ -955,6 +955,22 @@ const AR_DICT = {
   "Ajouter":"إضافة","Enregistrer":"حفظ","Supprimer":"حذف","Annuler":"إلغاء","Modifier":"تعديل","Confirmer":"تأكيد",
   "Refuser":"رفض","Fermer":"إغلاق","Publier":"نشر","Connexion":"تسجيل الدخول","Créer un compte":"إنشاء حساب",
   "Se connecter":"دخول","S'inscrire":"تسجيل","Se déconnecter":"تسجيل الخروج","Notifications":"الإشعارات",
+  /* --- Notifications push --- */
+  "Ne manquez plus un rappel":"لا تفوّت أي تذكير",
+  "Recevez sur votre téléphone les rappels de vaccin et de rendez-vous, même quand l'application est fermée.":"استقبل على هاتفك تذكيرات التلقيح والمواعيد، حتى عندما يكون التطبيق مغلقًا.",
+  "Activer les notifications":"تفعيل الإشعارات",
+  "Notifications activées ✓":"تمّ تفعيل الإشعارات ✓",
+  "Notifications pas encore reliées à ce compte.":"الإشعارات غير مرتبطة بعد بهذا الحساب.",
+  "Relier":"ربط",
+  "Téléphone relié ✓":"تمّ ربط الهاتف ✓",
+  "Recevez vos rappels sur l'iPhone":"استقبل تذكيراتك على الآيفون",
+  "Notifications bloquées":"الإشعارات محجوبة",
+  "Notifications indisponibles sur cet appareil.":"الإشعارات غير متاحة على هذا الجهاز.",
+  "Vous avez refusé les notifications.":"لقد رفضت الإشعارات.",
+  "Notifications désactivées sur cet appareil.":"تمّ تعطيل الإشعارات على هذا الجهاز.",
+  "Module en cours de chargement, réessayez dans 5 secondes.":"جاري التحميل، أعد المحاولة بعد 5 ثوان.",
+  "🔔 Notifications activées":"🔔 تمّ تفعيل الإشعارات",
+  "Vous serez prévenu sur ce téléphone, même app fermée.":"سيتم إعلامك على هذا الهاتف، حتى والتطبيق مغلق.",
   "Marquer terminé":"وضع علامة منتهي","Voir l'agenda":"عرض الأجندة","Copier le lien":"نسخ الرابط",
   "Réinitialiser toutes les données":"إعادة تعيين كل البيانات","Enregistrer les réglages":"حفظ الإعدادات",
   "Ajouter au carnet":"إضافة إلى الدفتر","Envoyer un conseil":"إرسال نصيحة","Retour au dossier":"العودة إلى الملف",
@@ -2702,9 +2718,12 @@ const App = {
     try{
       const P = window.Push;
       if(!P || P.permission !== "granted") return;
-      if(!this.currentUser()) return;
+      const u = this.currentUser();
+      if(!u) return;
+      // Deja rattache au bon compte : aucune ecriture inutile.
+      if(P.linkedTo && String(P.linkedTo) === String(u.id)) return;
       const now = Date.now();
-      if(this._lastRelink && now - this._lastRelink < 180000) return;
+      if(this._lastRelink && now - this._lastRelink < 60000) return;
       this._lastRelink = now;
       P.relink().catch(()=>{});
     }catch(e){}
