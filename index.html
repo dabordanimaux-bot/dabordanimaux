@@ -1661,13 +1661,18 @@ const App = {
     this.renderAll();
   },
   // Rattache le jeton de cet appareil au compte connecté (appelé à l'ouverture).
-  syncPushToken(){
+  syncPushToken(essais){
     try{
       const P = window.Push;
-      if(!P || P.permission !== "granted") return;
-      // register() rafraichit le jeton, relink() garantit le rattachement au
-      // compte meme si l'ecriture de init() arrive en retard.
-      P.register().then(()=>P.relink()).catch(()=>{ P.relink().catch(()=>{}); });
+      // Le module Firebase est charge APRES ce script : window.Push peut ne pas
+      // exister encore au moment de l'ouverture. On repasse jusqu'a 10 s.
+      if(!P){
+        const n = (essais|0);
+        if(n < 20) setTimeout(()=>this.syncPushToken(n+1), 500);
+        return;
+      }
+      if(P.permission !== "granted") return;
+      P.register().then(()=>P.relink()).catch(()=>{ try{P.relink();}catch(e){} });
       setTimeout(()=>{ try{ P.relink(); }catch(e){} }, 4000);
     }catch(e){}
   },
@@ -1919,7 +1924,7 @@ const App = {
   },
   tick(){ // rafraîchissement léger toutes les 30 s (statut ouvert/fermé, cloche…)
     if(!this.currentUser()) return;
-    this.checkReminders();      // rappels automatiques : RDV + vaccins, J-1 et jour J
+    this.keepPushLinked(); this.checkReminders();      // rappels automatiques : RDV + vaccins, J-1 et jour J
     this.renderBell();
     const u=this.currentUser();
     if(u.role==="admin"){ this.renderHomeAdmin(); this.renderAbout("a"); }
@@ -2658,6 +2663,19 @@ const App = {
      app fermée) par le script scripts/envoyer-rappels.mjs, qui utilise
      des identifiants identiques : aucun doublon possible.
      --------------------------------------------------------------- */
+  // Filet de securite : si l'appareil est autorise mais pas encore rattache au
+  // compte, on refait le lien periodiquement. Corrige tout demarrage rate.
+  keepPushLinked(){
+    try{
+      const P = window.Push;
+      if(!P || P.permission !== "granted") return;
+      if(!this.currentUser()) return;
+      const now = Date.now();
+      if(this._lastRelink && now - this._lastRelink < 180000) return;
+      this._lastRelink = now;
+      P.relink().catch(()=>{});
+    }catch(e){}
+  },
   checkReminders(){
     const today    = this.todayStr();
     const tomorrow = this.dstr(new Date(Date.now()+864e5));
@@ -3953,7 +3971,10 @@ document.addEventListener("DOMContentLoaded", function(){
 
       // Autorisation déjà donnée : on rafraîchit le jeton en silence
       // (il peut changer après une mise à jour du navigateur).
-      if(this.permission === "granted") this.register().catch(()=>{});
+      if(this.permission === "granted"){
+        this.register().then(()=>this.relink()).catch(()=>{});
+        setTimeout(()=>{ this.relink().catch(()=>{}); }, 3000);
+      }
     },
 
     // Demande l'autorisation, récupère le jeton et l'enregistre.
