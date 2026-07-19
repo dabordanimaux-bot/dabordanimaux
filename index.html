@@ -815,6 +815,11 @@ const LOCAL_KEYS  = ["session"];   // propre à l'appareil (jamais synchronisé)
    Tant que c'est false, l'app fonctionne 100% en local (mode hors-ligne). */
 let CLOUD_ON = false;
 
+// Les declarations const/let de haut niveau ne deviennent PAS des proprietes
+// de window. Le module Firebase en bas de page a besoin de cet objet, on le
+// publie donc explicitement.
+try{ window.App = App; }catch(e){}
+
 const DB = {
   clone(v){ return v==null ? v : JSON.parse(JSON.stringify(v)); },
   _k(key){ return "ad_"+key; },
@@ -3963,6 +3968,15 @@ document.addEventListener("DOMContentLoaded", function(){
 
   const TOKENS_COLL = "pushTokens";
 
+  // Acces a l objet App du script principal. Il est declare avec const, donc
+  // il vit dans la portee lexicale globale et non sur l objet window : les
+  // deux chemins sont testes pour ne dependre d aucun ordre de chargement.
+  const appRef = () => {
+    try{ if(typeof App !== "undefined" && App) return App; }catch(e){}
+    try{ if(window.App) return window.App; }catch(e){}
+    return null;
+  };
+
   // Identifiant stable de l'appareil (survit à la déconnexion).
   function deviceId(){
     let id = null;
@@ -3993,7 +4007,7 @@ document.addEventListener("DOMContentLoaded", function(){
       try{
         onMessage(this._msg, (payload)=>{
           const d = (payload && payload.data) || {};
-          try{ window.App && App.onPushForeground && App.onPushForeground(d); }catch(e){}
+          try{ const A = appRef(); A && A.onPushForeground && A.onPushForeground(d); }catch(e){}
         });
       }catch(e){}
 
@@ -4024,7 +4038,8 @@ document.addEventListener("DOMContentLoaded", function(){
     // Écrit / met à jour le document de cet appareil.
     async save(token){
       if(!db) return;
-      const u = (window.App && App.currentUser) ? App.currentUser() : null;
+      const A = appRef();
+      const u = (A && A.currentUser) ? A.currentUser() : null;
       let lang = "fr"; try{ lang = localStorage.getItem("ad_lang") || "fr"; }catch(e){}
       const id = deviceId();
       const data = {
@@ -4048,7 +4063,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
     async relink(){
       if(!db) throw new Error("firestore-non-initialise");
-      const u = (window.App && App.currentUser) ? App.currentUser() : null;
+      const A = appRef();
+      const u = (A && A.currentUser) ? A.currentUser() : null;
       if(!u) throw new Error("aucun-compte-connecte");
       await setDoc(doc(db, TOKENS_COLL, deviceId()),
         { userId:u.id, role:u.role || null, nom:u.nom || "", updatedAt:Date.now() },
