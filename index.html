@@ -1588,36 +1588,26 @@ const App = {
     const P = window.Push;
     const u = this.currentUser();
     if(!u) return "";
-    const lie = !!(P && P.linkedTo && String(P.linkedTo) === String(u.id));
-    if(lie){
-      return `<div class="card mb" style="border-color:var(--rose-soft)">
-        <div style="display:flex;gap:10px;align-items:center">
-          <div style="font-size:20px;line-height:1">🔔</div>
-          <div style="flex:1"><span class="hint">Notifications actives sur ce téléphone.</span></div>
-          <span class="badge b-ok">OK</span>
-        </div></div>`;
-    }
-    return `<div class="card mb" style="border-color:var(--rose-soft);background:var(--rose-tint)">
-      <div style="display:flex;gap:10px;align-items:flex-start">
-        <div style="font-size:20px;line-height:1">🔔</div>
-        <div style="flex:1">
-          <div style="font-family:var(--display);font-weight:800;margin-bottom:3px">Terminer l'activation</div>
-          <div class="hint" style="margin-bottom:10px">Ce téléphone est autorisé mais pas encore relié à votre compte.</div>
-          <button class="btn btn-primary btn-sm" onclick="App.repairPush()">Relier ce téléphone</button>
-        </div>
-        <span class="badge b-warn">À finir</span>
-      </div></div>`;
+    if(P && P.linkedTo && String(P.linkedTo) === String(u.id)) return "";   // rien a signaler
+    return `<div class="hint" style="display:flex;align-items:center;gap:8px;margin:-2px 0 12px">
+      <span>🔔</span>
+      <span style="flex:1">Notifications pas encore reliées à ce compte.</span>
+      <button class="btn btn-ghost btn-sm" onclick="App.repairPush()">Relier</button>
+    </div>`;
   },
   async repairPush(){
     const P = window.Push;
-    if(!P){ this.toast("Chargement en cours, réessayez dans 5 secondes.","err"); return; }
+    if(!P){ this.toast("Module en cours de chargement, réessayez dans 5 secondes.","err"); return; }
     try{
       if(P.permission === "granted" && !P.token) await P.register();
       await P.relink();
-      const u = this.currentUser();
-      if(P.linkedTo && u && String(P.linkedTo) === String(u.id)) this.toast("Téléphone relié ✓","ok");
-      else this.toast("Échec du lien. Vérifiez la connexion internet.","err");
-    }catch(e){ this.toast("Échec du lien. Vérifiez la connexion internet.","err"); }
+      this.toast("Téléphone relié ✓","ok");
+    }catch(e){
+      // On affiche la cause exacte : sans elle, impossible de diagnostiquer.
+      const code = (e && (e.code || e.message)) || "inconnue";
+      this.toast("Échec : " + code, "err");
+      try{ console.error("repairPush", e); }catch(_){}
+    }
     this.renderAll();
   },
   pushCardHTML(){
@@ -1710,7 +1700,7 @@ const App = {
         return;
       }
       if(P.permission !== "granted") return;
-      P.register().then(()=>P.relink()).catch(()=>{ try{P.relink();}catch(e){} });
+      P.register().then(()=>P.relink()).catch(()=>{ P.relink().catch(()=>{}); });
       setTimeout(()=>{ try{ P.relink(); }catch(e){} }, 4000);
     }catch(e){}
   },
@@ -4057,15 +4047,14 @@ document.addEventListener("DOMContentLoaded", function(){
     linkedTo: null,           // id du compte auquel cet appareil est rattache
 
     async relink(){
-      if(!db) return;
+      if(!db) throw new Error("firestore-non-initialise");
       const u = (window.App && App.currentUser) ? App.currentUser() : null;
-      if(!u) return;
-      try{
-        await setDoc(doc(db, TOKENS_COLL, deviceId()),
-          { userId:u.id, role:u.role || null, nom:u.nom || "", updatedAt:Date.now() },
-          { merge:true });
-        this.linkedTo = u.id;      // confirme : l'ecriture a reussi
-      }catch(e){ this.linkedTo = null; console.warn("relink", e); }
+      if(!u) throw new Error("aucun-compte-connecte");
+      await setDoc(doc(db, TOKENS_COLL, deviceId()),
+        { userId:u.id, role:u.role || null, nom:u.nom || "", updatedAt:Date.now() },
+        { merge:true });
+      this.linkedTo = u.id;      // confirme : l'ecriture a reussi
+      return u.id;
     },
 
     // Déconnexion : l'appareil garde son jeton mais n'est plus rattaché
