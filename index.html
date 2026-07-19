@@ -1582,9 +1582,47 @@ const App = {
     try{ P.permission = Notification.permission; }catch(e){}
     return P.permission;                             // "default" | "granted" | "denied"
   },
+  // Petite carte de controle : indique si CE telephone est bien rattache au
+  // compte connecte, et permet de refaire le lien a la main si besoin.
+  pushLinkCardHTML(){
+    const P = window.Push;
+    const u = this.currentUser();
+    if(!u) return "";
+    const lie = !!(P && P.linkedTo && String(P.linkedTo) === String(u.id));
+    if(lie){
+      return `<div class="card mb" style="border-color:var(--rose-soft)">
+        <div style="display:flex;gap:10px;align-items:center">
+          <div style="font-size:20px;line-height:1">🔔</div>
+          <div style="flex:1"><span class="hint">Notifications actives sur ce téléphone.</span></div>
+          <span class="badge b-ok">OK</span>
+        </div></div>`;
+    }
+    return `<div class="card mb" style="border-color:var(--rose-soft);background:var(--rose-tint)">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="font-size:20px;line-height:1">🔔</div>
+        <div style="flex:1">
+          <div style="font-family:var(--display);font-weight:800;margin-bottom:3px">Terminer l'activation</div>
+          <div class="hint" style="margin-bottom:10px">Ce téléphone est autorisé mais pas encore relié à votre compte.</div>
+          <button class="btn btn-primary btn-sm" onclick="App.repairPush()">Relier ce téléphone</button>
+        </div>
+        <span class="badge b-warn">À finir</span>
+      </div></div>`;
+  },
+  async repairPush(){
+    const P = window.Push;
+    if(!P){ this.toast("Chargement en cours, réessayez dans 5 secondes.","err"); return; }
+    try{
+      if(P.permission === "granted" && !P.token) await P.register();
+      await P.relink();
+      const u = this.currentUser();
+      if(P.linkedTo && u && String(P.linkedTo) === String(u.id)) this.toast("Téléphone relié ✓","ok");
+      else this.toast("Échec du lien. Vérifiez la connexion internet.","err");
+    }catch(e){ this.toast("Échec du lien. Vérifiez la connexion internet.","err"); }
+    this.renderAll();
+  },
   pushCardHTML(){
     const st = this.pushState();
-    if(st === "granted") return "";                  // tout va bien : on n'encombre pas l'écran
+    if(st === "granted") return this.pushLinkCardHTML();   // etat du rattachement
     if(st === "unsupported") return "";              // navigateur incapable : inutile d'inquiéter
     if(st === "ios-install"){
       return `<div class="card mb" style="border-color:var(--rose-soft);background:var(--rose-tint)">
@@ -4009,11 +4047,15 @@ document.addEventListener("DOMContentLoaded", function(){
       // l'appel automatique de init() au chargement de la page effacerait le
       // lien etabli a la connexion (course entre les deux ecritures).
       if(u){ data.userId = u.id; data.role = u.role || null; data.nom = u.nom || ""; }
-      try{ await setDoc(doc(db, TOKENS_COLL, id), data, { merge:true }); }
-      catch(e){ console.warn("pushTokens", e); }
+      try{
+        await setDoc(doc(db, TOKENS_COLL, id), data, { merge:true });
+        if(u) this.linkedTo = u.id;
+      }catch(e){ console.warn("pushTokens", e); }
     },
 
     // Rattache cet appareil au compte connecte (sans retoucher au jeton).
+    linkedTo: null,           // id du compte auquel cet appareil est rattache
+
     async relink(){
       if(!db) return;
       const u = (window.App && App.currentUser) ? App.currentUser() : null;
@@ -4022,7 +4064,8 @@ document.addEventListener("DOMContentLoaded", function(){
         await setDoc(doc(db, TOKENS_COLL, deviceId()),
           { userId:u.id, role:u.role || null, nom:u.nom || "", updatedAt:Date.now() },
           { merge:true });
-      }catch(e){ console.warn("relink", e); }
+        this.linkedTo = u.id;      // confirme : l'ecriture a reussi
+      }catch(e){ this.linkedTo = null; console.warn("relink", e); }
     },
 
     // Déconnexion : l'appareil garde son jeton mais n'est plus rattaché
