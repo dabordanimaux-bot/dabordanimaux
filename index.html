@@ -26,7 +26,9 @@
   notifs (+ settings). Sans réseau, l'app reste 100% fonctionnelle en local.
   Hébergement : déposez tous les fichiers du dossier sur GitHub puis activez
   GitHub Pages.
-  Compte admin par défaut :  identifiant = admin   /   mot de passe = admin
+  Sécurité : l'authentification passe par Firebase Auth (mots de passe hachés,
+  jamais stockés dans la base). Le compte administrateur se crée via l'inscription,
+  puis son champ « role » est passé à « admin » dans la console Firebase.
   ===================================================================== -->
 
 <!-- QR code (mis en cache hors-ligne par le service worker) -->
@@ -891,7 +893,10 @@ const RDV_STATUS = {
   annule:{label:"Annulé",badge:"b-grey"},
 };
 
-const DEFAULT_ADMIN = { id:"u_admin", role:"admin", username:"admin", password:"admin", nom:"Dr. Asma Gnaoui", tel:"22024232", createdAt:0 };
+// Le compte administrateur n'est plus défini en dur ici (finies les identifiants
+// « admin / admin » visibles dans le code). L'admin se crée via l'inscription,
+// puis son champ « role » est passé à « admin » dans la console Firebase.
+const DEFAULT_ADMIN = { id:"u_admin", role:"admin", nom:"Dr. Asma Gnaoui", tel:"22024232", createdAt:0 };
 
 const DEFAULT_SETTINGS = {
   clinicName:"Le Cabinet Vétérinaire de Manouba",
@@ -1153,28 +1158,65 @@ const App = {
   async init(){
     this.spawnPaws();
     this.showBoot(true);
-    this.session = DB.get("session", null);   // session : locale à l'appareil
 
-    // Hydratation depuis le cloud (si Firebase est disponible), sinon 100% local.
     if(window.Cloud && window.Cloud.enabled){
+      // Firebase disponible : on attend son initialisation puis on écoute
+      // l'état de connexion. C'est désormais Firebase Auth (et non plus le
+      // localStorage) qui décide si un utilisateur est connecté, et qui l'est.
       try{
-        await window.Cloud.ready;              // attend l'initialisation de Firebase
-        await window.Cloud.pullAll();          // cloud → localStorage (données partagées)
-        CLOUD_ON = true;                        // active la synchro des écritures
-        this.ensureSeed();                      // sème les données de démo seulement si vide
-        window.Cloud.watchAll((key)=>this._onCloudChange(key)); // écoute temps réel
+        await window.Cloud.ready;
+        window.Cloud.onAuth((user)=>this._onAuthChanged(user));
       }catch(e){
         console.warn("Firebase indisponible → mode local hors-ligne.", e);
-        CLOUD_ON = false;
-        this.ensureSeed();
+        this._localFallback();
       }
+      // Filet de sécurité : si l'état de connexion n'arrive jamais (réseau
+      // coupé), on quitte l'écran de démarrage au bout de 5 secondes.
+      setTimeout(()=>{ if(!this._authReady){ this.showBoot(false); this.route(); } }, 5000);
     } else {
-      this.ensureSeed();                        // pas de Firebase chargé → local seul
+      this._localFallback();
     }
 
-    // petit délai pour l'animation de démarrage
-    setTimeout(()=>{ this.showBoot(false); this.route(); }, 650);
     this.ticker = setInterval(()=>this.tick(), 30000);
+  },
+
+  // Mode 100% local (Firebase non chargé) — utile en développement hors-ligne.
+  _localFallback(){
+    this.session = DB.get("session", null);
+    this.ensureSeed();
+    setTimeout(()=>{ this.showBoot(false); this.route(); }, 650);
+  },
+
+  // Appelé par Firebase Auth à chaque connexion / déconnexion.
+  async _onAuthChanged(user){
+    this._authReady = true;
+    if(user){
+      this.session = { userId: user.uid };
+      try{ await window.Cloud.pullAll(); }catch(e){ console.warn("pullAll", e); }
+      CLOUD_ON = true;                       // les écritures se synchronisent maintenant
+      // Première connexion / inscription : on crée le profil s'il n'existe pas
+      // encore. Aucun mot de passe n'y est stocké — Firebase Auth s'en charge.
+      if(!DB.find("users", user.uid)){
+        const p = this._pendingReg || {};
+        await window.Cloud.saveUser({
+          id: user.uid, role: "client",
+          tel: p.tel || this.telFromEmail(user.email),
+          nom: p.nom || "",
+          createdAt: Date.now()
+        });
+      }
+      this._pendingReg = null;
+      this.ensureSeed();
+      if(!this._watching){ window.Cloud.watchAll((key)=>this._onCloudChange(key)); this._watching = true; }
+      this.loadCart();
+    } else {
+      this.session = null;
+      CLOUD_ON = false;
+      this.cart = [];
+      try{ const f=document.getElementById("cart-fab"); if(f) f.style.display="none"; }catch(e){}
+    }
+    this.showBoot(false);
+    this.route();
   },
   // Appelé quand des données changent dans le cloud (ex. depuis un autre appareil).
   _onCloudChange(key){
@@ -1183,16 +1225,20 @@ const App = {
   },
   ensureSeed(){
     if(DB.get("settings",null)===null) DB.set("settings", DEFAULT_SETTINGS);
-    // Retire les produits et publications de démonstration des anciennes versions
-    // (identifiants fixes p1…p8 et post1…post3). Ne touche à rien de ce que
-    // la vétérinaire a créé : ses identifiants sont générés avec un horodatage.
-    const DEMO_PROD=["p1","p2","p3","p4","p5","p6","p7","p8"], DEMO_POST=["post1","post2","post3"];
-    const prods=DB.get("products",[]), keptP=prods.filter(x=>DEMO_PROD.indexOf(x.id)<0);
-    if(keptP.length!==prods.length) DB.set("products", keptP);
-    const posts=DB.get("posts",[]), keptO=posts.filter(x=>DEMO_POST.indexOf(x.id)<0);
-    if(keptO.length!==posts.length) DB.set("posts", keptO);
-    let users=DB.get("users",[]);
-    if(!users.some(u=>u.role==="admin")){ users.unshift({...DEFAULT_ADMIN}); DB.set("users",users); }
+    // Nettoyage des produits / publications de démonstration des anciennes
+    // versions (p1…p8, post1…post3). Réservé à l'admin : lui seul a le droit
+    // d'écrire dans ces collections avec les nouvelles règles de sécurité.
+    if(this.isAdmin && this.isAdmin()){
+      const DEMO_PROD=["p1","p2","p3","p4","p5","p6","p7","p8"], DEMO_POST=["post1","post2","post3"];
+      const prods=DB.get("products",[]), keptP=prods.filter(x=>DEMO_PROD.indexOf(x.id)<0);
+      if(keptP.length!==prods.length) DB.set("products", keptP);
+      const posts=DB.get("posts",[]), keptO=posts.filter(x=>DEMO_POST.indexOf(x.id)<0);
+      if(keptO.length!==posts.length) DB.set("posts", keptO);
+    }
+    // Le compte administrateur n'est plus créé automatiquement (finies les
+    // identifiants « admin / admin »). Il se crée via l'inscription, puis son
+    // rôle est passé à « admin » dans la console Firebase (Firestore → users
+    // → champ role). Aucun mot de passe n'est jamais stocké dans la base.
   },
   showBoot(on){ const b=document.getElementById("boot"); if(b) b.classList.toggle("show",!!on); },
   spawnPaws(){
@@ -1222,29 +1268,52 @@ const App = {
   // pour que "95063068", "+21695063068", "216 95 063 068" soient identiques.
   phoneKey(s){ const d=(s||"").replace(/\D/g,""); return d.replace(/^216/,""); },
 
+  // Convertit un identifiant (numéro de téléphone, ou "admin") en e-mail interne
+  // utilisé par Firebase Auth. L'utilisateur ne voit JAMAIS cet e-mail : il tape
+  // toujours son numéro. Le domaine @dabordanimaux.app n'a pas besoin d'exister
+  // (aucun e-mail n'est envoyé) — c'est seulement un format accepté par Firebase.
+  credEmail(idOrPhone){
+    const raw=(idOrPhone||"").trim().toLowerCase();
+    if(raw==="admin") return "admin@dabordanimaux.app";
+    const key=this.phoneKey(idOrPhone);
+    return (key||raw)+"@dabordanimaux.app";
+  },
+  // Retrouve le numéro à partir de l'e-mail interne (pour l'affichage).
+  telFromEmail(email){
+    const s=(email||"").split("@")[0];
+    return (s==="admin")?"":s;
+  },
+  // Traduit les codes d'erreur Firebase Auth en messages clairs pour l'utilisateur.
+  authError(err){
+    const c=(err&&err.code)||"";
+    if(c.indexOf("email-already-in-use")>=0) return "Ce numéro a déjà un compte. Essayez de vous connecter.";
+    if(c.indexOf("invalid-credential")>=0 || c.indexOf("wrong-password")>=0 || c.indexOf("user-not-found")>=0)
+      return "Identifiant ou mot de passe incorrect.";
+    if(c.indexOf("weak-password")>=0)       return "Mot de passe trop faible (min. 6 caractères).";
+    if(c.indexOf("invalid-email")>=0)       return "Numéro de téléphone invalide.";
+    if(c.indexOf("too-many-requests")>=0)   return "Trop de tentatives. Réessayez dans quelques minutes.";
+    if(c.indexOf("network")>=0)             return "Problème de connexion Internet.";
+    return "Une erreur s'est produite. Réessayez.";
+  },
+
   switchAuth(mode){
     this.authMode=mode;
     document.querySelectorAll("#auth-tabs button").forEach(b=>b.classList.toggle("on",b.dataset.auth===mode));
     document.getElementById("form-login").style.display = mode==="login"?"":"none";
     document.getElementById("form-register").style.display = mode==="register"?"":"none";
   },
-  login(){
+  async login(){
     const id=this.normPhone(document.getElementById("log-id").value);
     const pass=document.getElementById("log-pass").value;
     if(!id||!pass) return this.toast("Remplissez tous les champs.","err");
-    const key=this.phoneKey(id);   // numéro canonique (tolère +216 et espaces)
-    const u=DB.get("users",[]).find(x=>{
-      if(x.password!==pass) return false;
-      if(x.username===id) return true;                        // identifiant exact (ex : "admin")
-      if(key && this.phoneKey(x.tel)===key) return true;      // même numéro de téléphone
-      if(key && this.phoneKey(x.username)===key) return true;
-      return false;
-    });
-    if(!u) return this.toast("Identifiant ou mot de passe incorrect.","err");
-    this.session={userId:u.id}; DB.set("session",this.session);
-    this.loadCart();
-    this.toast("Bienvenue "+(u.nom?u.nom.split(" ")[0]:"")+" 🐾","ok");
-    this.route();
+    if(!(window.Cloud && window.Cloud.enabled))
+      return this.toast("Connexion Internet requise pour se connecter.","err");
+    try{
+      await window.Cloud.signIn(this.credEmail(id), pass);
+      // La suite (chargement des données + navigation) est gérée par _onAuthChanged.
+    }catch(err){
+      this.toast(this.authError(err),"err");
+    }
   },
   // Vérifie la robustesse d'un mot de passe.
   // Renvoie un message d'erreur (string) si une règle n'est pas respectée, sinon null.
@@ -1258,31 +1327,35 @@ const App = {
     if(!/[^A-Za-z0-9]/.test(pass)) return "Mot de passe : au moins un symbole (ex : ! ? @ # …).";
     return null;
   },
-  register(){
+  async register(){
     const nom=(document.getElementById("reg-name").value||"").trim();
     const tel=this.normPhone(document.getElementById("reg-phone").value);
     const pass=document.getElementById("reg-pass").value;
     if(!nom||!tel||!pass) return this.toast("Remplissez tous les champs.","err");
+    if(!this.phoneKey(tel)) return this.toast("Numéro de téléphone invalide.","err");
     const pwIssue=this.passwordIssue(pass);            // contrôle de robustesse du mot de passe
     if(pwIssue) return this.toast(pwIssue,"err");
-    const users=DB.get("users",[]);
-    const key=this.phoneKey(tel);
-    if(users.some(x=> x.username===tel || (key && this.phoneKey(x.tel)===key)))
-      return this.toast("Ce numéro a déjà un compte.","err");
-    const u={id:"u"+Date.now(),role:"client",username:tel,tel,password:pass,nom,createdAt:Date.now()};
-    users.push(u); DB.set("users",users);
-    this.session={userId:u.id}; DB.set("session",this.session);
-    this.loadCart();
-    this.toast("Compte créé, bienvenue ! 🐾","ok");
-    this.route();
+    if(!(window.Cloud && window.Cloud.enabled))
+      return this.toast("Connexion Internet requise pour créer un compte.","err");
+    // On mémorise le nom + téléphone : _onAuthChanged créera le profil juste après.
+    this._pendingReg = { tel, nom };
+    try{
+      await window.Cloud.signUp(this.credEmail(tel), pass);
+      this.toast("Compte créé, bienvenue ! 🐾","ok");
+      // La navigation est gérée par _onAuthChanged.
+    }catch(err){
+      this._pendingReg = null;
+      this.toast(this.authError(err),"err");
+    }
   },
-  logout(){
+  async logout(){
     // ce téléphone ne doit plus recevoir les notifications du compte quitté
-    try{ window.Push && window.Push.unlink(); }catch(e){}
-    this.session=null; DB.set("session",null); this.cart=[];
-    document.getElementById("cart-fab").style.display="none";
-    ["log-id","log-pass","reg-name","reg-phone","reg-pass"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
-    this.show("screen-auth"); this.switchAuth("login");
+    try{ if(window.Push && window.Push.unlink) await window.Push.unlink(); }catch(e){}
+    try{ localStorage.removeItem("ad_session"); }catch(e){}
+    try{ if(window.Cloud && window.Cloud.signOut) await window.Cloud.signOut(); }catch(e){}
+    // Rechargement : on repart d'un état propre (écoutes cloud, panier, session).
+    // _onAuthChanged(null) affichera alors l'écran de connexion.
+    location.reload();
   },
   openClient(){
     this.show("app-client");
@@ -3445,8 +3518,7 @@ const App = {
     const body=`
       <div class="field"><label>Nom complet</label><input class="input" id="ce-nom" value="${this.escape(c.nom||"")}"></div>
       <div class="field"><label>Numéro de téléphone</label><input class="input" id="ce-tel" type="tel" inputmode="numeric" value="${this.escape(c.tel||"")}"></div>
-      <div class="field"><label>Réinitialiser le mot de passe (facultatif)</label><input class="input" id="ce-pass" placeholder="Laisser vide pour ne pas changer"></div>
-      <div class="hint">Le client se connecte avec son numéro de téléphone.</div>`;
+      <div class="hint">Vous pouvez corriger le nom affiché. Le mot de passe est géré de façon sécurisée par le client lui-même ; il se connecte avec le numéro utilisé lors de son inscription.</div>`;
     const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveClient()">Enregistrer</button>`;
     this.openSheet("Modifier le compte client", body, foot);
   },
@@ -3454,15 +3526,13 @@ const App = {
     const id=this._clientEdit; if(!id) return;
     const nom=(document.getElementById("ce-nom").value||"").trim();
     const tel=this.normPhone(document.getElementById("ce-tel").value);
-    const pass=(document.getElementById("ce-pass").value||"").trim();
     if(!nom||!tel){ this.toast("Nom et téléphone requis.","err"); return; }
     const key=this.phoneKey(tel);
     if(DB.get("users",[]).some(x=> x.id!==id && key && this.phoneKey(x.tel)===key)){
       this.toast("Ce numéro est déjà utilisé par un autre compte.","err"); return;
     }
-    const patch={nom, tel, username:tel};
-    if(pass) patch.password=pass;
-    DB.update("users",id,patch);
+    // On met à jour uniquement les informations d'affichage (jamais de mot de passe).
+    DB.update("users",id,{nom, tel});
     this.closeSheet(); this.toast("Compte mis à jour ✓","ok"); this.renderAll();
   },
   deleteClient(clientId){
@@ -3745,20 +3815,30 @@ const App = {
     this.toast("Réglages enregistrés ✓","ok"); this.renderAll();
   },
   // Permet à l'administrateur connecté de changer son propre mot de passe.
-  changeAdminPassword(){
+  async changeAdminPassword(){
     const u=this.currentUser();
     if(!u || u.role!=="admin"){ this.toast("Action réservée à l'administrateur.","err"); return; }
     const g=id=>{ const e=document.getElementById(id); return e?e.value:""; };
     const oldP=g("se-pass-old"), newP=g("se-pass-new"), confP=g("se-pass-conf");
     if(!oldP||!newP||!confP){ this.toast("Remplissez tous les champs.","err"); return; }
-    if(oldP!==u.password){ this.toast("Mot de passe actuel incorrect.","err"); return; }
     const issue=this.passwordIssue(newP);            // mêmes règles que l'inscription
     if(issue){ this.toast(issue,"err"); return; }
     if(newP!==confP){ this.toast("La confirmation ne correspond pas.","err"); return; }
     if(newP===oldP){ this.toast("Le nouveau mot de passe doit être différent de l'ancien.","err"); return; }
-    DB.update("users", u.id, {password:newP});
-    ["se-pass-old","se-pass-new","se-pass-conf"].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=""; });
-    this.toast("Mot de passe modifié ✓","ok");
+    if(!(window.Cloud && window.Cloud.changePassword)){ this.toast("Connexion Internet requise.","err"); return; }
+    try{
+      // Firebase re-vérifie l'ancien mot de passe puis applique le nouveau (haché).
+      await window.Cloud.changePassword(oldP, newP);
+      ["se-pass-old","se-pass-new","se-pass-conf"].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=""; });
+      this.toast("Mot de passe modifié ✓","ok");
+    }catch(err){
+      const c=(err&&err.code)||"";
+      if(c.indexOf("wrong-password")>=0 || c.indexOf("invalid-credential")>=0)
+        this.toast("Mot de passe actuel incorrect.","err");
+      else if(c.indexOf("requires-recent-login")>=0)
+        this.toast("Reconnectez-vous puis réessayez.","err");
+      else this.toast(this.authError(err),"err");
+    }
   },
   // Génère un QR code (via la librairie qrcode-generator) dans un conteneur.
   renderQR(containerId, text){
@@ -3943,6 +4023,10 @@ document.addEventListener("DOMContentLoaded", function(){
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import { getMessaging, getToken, deleteToken, onMessage, isSupported as messagingSupported }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+  import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
+           signInWithEmailAndPassword, signOut,
+           EmailAuthProvider, reauthenticateWithCredential, updatePassword }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   // --- Configuration du projet Firebase (cabinet Animaux d'abord) ---
   const firebaseConfig = {
@@ -3966,7 +4050,7 @@ document.addEventListener("DOMContentLoaded", function(){
     read(key, def){ try{ const r=localStorage.getItem("ad_"+key); return r==null?def:JSON.parse(r); }catch(e){ return def; } }
   };
 
-  let db=null, fbApp=null, resolveReady;
+  let db=null, fbApp=null, auth=null, resolveReady;
   const readyPromise = new Promise(res=>{ resolveReady=res; });
 
   /* =====================================================================
@@ -4188,11 +4272,35 @@ document.addEventListener("DOMContentLoaded", function(){
   };
   window.Cloud = Cloud;
 
+  /* --- Authentification (Firebase Auth) exposée au script principal --- */
+  // onAuth reçoit une fonction rappelée à chaque changement d'état (connexion/déconnexion).
+  Cloud.onAuth   = (cb)          => onAuthStateChanged(auth, cb);
+  Cloud.signUp   = (email, pass) => createUserWithEmailAndPassword(auth, email, pass);
+  Cloud.signIn   = (email, pass) => signInWithEmailAndPassword(auth, email, pass);
+  Cloud.signOut  = ()            => signOut(auth);
+  Cloud.uid      = ()            => (auth && auth.currentUser) ? auth.currentUser.uid : null;
+  // Écrit / met à jour un seul profil utilisateur (jamais de mot de passe ici).
+  Cloud.saveUser = async (prof)  => {
+    const arr = LS.read("users", []).filter(x => x && x.id !== prof.id);
+    arr.push(prof); LS.write("users", arr);
+    try{ await setDoc(doc(db, "users", String(prof.id)), prof, { merge:true }); }
+    catch(e){ console.warn("saveUser", e); }
+  };
+  // Changement de mot de passe : re-vérifie l'ancien puis applique le nouveau.
+  Cloud.changePassword = async (oldPass, newPass) => {
+    const user = auth && auth.currentUser;
+    if(!user) throw new Error("aucun-compte");
+    const cred = EmailAuthProvider.credential(user.email, oldPass);
+    await reauthenticateWithCredential(user, cred);   // échoue si l'ancien mot de passe est faux
+    await updatePassword(user, newPass);
+  };
+
   // Initialisation (asynchrone). En cas d'échec, l'app bascule en local.
   try{
     fbApp = initializeApp(firebaseConfig);
     const app = fbApp;
     db = getFirestore(app);
+    auth = getAuth(app);               // Authentification sécurisée (mots de passe hachés par Firebase)
     Cloud.enabled = true;
     Push.init();                       // notifications push (voir plus bas)
     // Analytics (optionnel, non bloquant) : ignoré s'il n'est pas supporté.
