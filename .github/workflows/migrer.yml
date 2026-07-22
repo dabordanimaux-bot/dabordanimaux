@@ -1,0 +1,29 @@
+name: Migrer les clients (une seule fois)
+
+# Déclenchement MANUEL uniquement (bouton "Run workflow" dans l'onglet Actions).
+# Ce n'est pas automatique : ça ne tourne que quand tu cliques.
+on:
+  workflow_dispatch:
+
+jobs:
+  migrer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Installer firebase-admin
+        run: npm install firebase-admin
+
+      - name: Lancer la migration
+        run: node scripts/migrer-clients.mjs
+        env:
+          # Utilise le même secret que le script des rappels.
+          # Vérifie que ce nom correspond bien à ton secret dans
+          # Settings -> Secrets and variables -> Actions.
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
