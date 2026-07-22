@@ -1192,31 +1192,76 @@ const App = {
     this._authReady = true;
     if(user){
       this.session = { userId: user.uid };
-      try{ await window.Cloud.pullAll(); }catch(e){ console.warn("pullAll", e); }
-      CLOUD_ON = true;                       // les écritures se synchronisent maintenant
-      // Première connexion / inscription : on crée le profil s'il n'existe pas
-      // encore. Aucun mot de passe n'y est stocké — Firebase Auth s'en charge.
-      if(!DB.find("users", user.uid)){
+
+      // 1) On lit d'abord SON PROPRE profil. Il donne le rôle, donc l'étendue
+      //    des données que l'on a le droit de charger (tout, ou seulement les
+      //    siennes). Cette lecture précède volontairement toutes les autres.
+      let prof = null;
+      try{ prof = await window.Cloud.getMyProfile(user.uid); }
+      catch(e){ console.warn("lecture du profil", e); }
+
+      // Première connexion / inscription : le profil n'existe pas encore.
+      // Aucun mot de passe n'y est stocké — Firebase Auth s'en charge.
+      if(!prof){
         const p = this._pendingReg || {};
-        await window.Cloud.saveUser({
-          id: user.uid, role: "client",
-          tel: p.tel || this.telFromEmail(user.email),
-          nom: p.nom || "",
-          createdAt: Date.now()
-        });
+        prof = { id:user.uid, role:"client",
+                 tel: p.tel || this.telFromEmail(user.email),
+                 nom: p.nom || "", createdAt: Date.now() };
+        try{ await window.Cloud.saveUser(prof); }catch(e){ console.warn("saveUser", e); }
       }
       this._pendingReg = null;
+
+      // 2) Étendue des lectures, puis chargement.
+      window.Cloud.setScope({ uid:user.uid, admin: prof.role === "admin" });
+      try{ await window.Cloud.pullAll(); }catch(e){ console.warn("pullAll", e); }
+
+      // Filet : si la synchro n'a pas encore ramené le profil, on le pose en
+      // local (écriture locale seule, pour ne pas relancer d'écriture cloud).
+      if(!DB.find("users", user.uid)){
+        const arr = DB.get("users", []); arr.push(prof); DB._raw("users", arr);
+      }
+
+      CLOUD_ON = true;                       // les écritures se synchronisent maintenant
       this.ensureSeed();
+      this._repairRecordOwners();            // met à jour les anciens carnets (admin)
       if(!this._watching){ window.Cloud.watchAll((key)=>this._onCloudChange(key)); this._watching = true; }
       this.loadCart();
     } else {
       this.session = null;
       CLOUD_ON = false;
       this.cart = [];
+      try{ window.Cloud && window.Cloud.setScope && window.Cloud.setScope({uid:null, admin:false}); }catch(e){}
       try{ const f=document.getElementById("cart-fab"); if(f) f.style.display="none"; }catch(e){}
     }
     this.showBoot(false);
     this.route();
+  },
+
+  /* ---------------------------------------------------------------------
+     Mise à niveau des anciens carnets de santé.
+     ---------------------------------------------------------------------
+     Les carnets créés avant cette version n'étaient reliés qu'à l'animal
+     (animalId). Pour que chaque client puisse lire les siens — et seulement
+     les siens — chaque carnet doit aussi porter l'identifiant du
+     propriétaire. Seule l'administratrice voit tous les carnets, c'est donc
+     elle qui effectue cette mise à niveau, une seule fois, à sa connexion.
+     --------------------------------------------------------------------- */
+  _repairRecordOwners(){
+    if(!this.isAdmin()) return;
+    const recs = DB.get("records", []);
+    if(!recs.length) return;
+    const animals = DB.get("animals", []);
+    let corriges = 0;
+    const maj = recs.map(r=>{
+      if(!r || r.ownerId) return r;
+      const a = animals.find(x=> x && String(x.id)===String(r.animalId));
+      if(a && a.ownerId){ corriges++; return Object.assign({}, r, { ownerId: a.ownerId }); }
+      return r;
+    });
+    if(corriges){
+      DB.set("records", maj);
+      console.log("Carnets mis à niveau : " + corriges);
+    }
   },
   // Appelé quand des données changent dans le cloud (ex. depuis un autre appareil).
   _onCloudChange(key){
@@ -1224,7 +1269,9 @@ const App = {
     this.renderAll();   // renderAll est protégé : ne fait rien si personne n'est connecté
   },
   ensureSeed(){
-    if(DB.get("settings",null)===null) DB.set("settings", DEFAULT_SETTINGS);
+    // Les réglages du cabinet appartiennent à l'administratrice : elle seule
+    // a le droit de les écrire (les autres se contentent de les lire).
+    if(DB.get("settings",null)===null && (!CLOUD_ON || this.isAdmin())) DB.set("settings", DEFAULT_SETTINGS);
     // Nettoyage des produits / publications de démonstration des anciennes
     // versions (p1…p8, post1…post3). Réservé à l'admin : lui seul a le droit
     // d'écrire dans ces collections avec les nouvelles règles de sécurité.
@@ -2747,6 +2794,17 @@ const App = {
             <div class="hint" style="margin-top:10px">Scannez ou partagez ce code pour ouvrir l'application. 🐾</div>
           </div>
         </div>
+      </div>
+
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Développement</div><h2 style="font-size:1.2rem">Conception &amp; réalisation</h2></div></div>
+        <div class="about-row"><div class="ic">💻</div><div><div class="lbl">Développeur</div><div class="val" data-i18n="off">Hamdi Rahmeni</div></div></div>
+        <div class="about-row"><div class="ic">📞</div><div><div class="lbl">Téléphone</div><a class="val" href="tel:+21695063068" data-i18n="off">95 063 068</a></div></div>
+        <div class="about-row"><div class="ic">✉️</div><div><div class="lbl">E-mail</div><a class="val" style="word-break:break-all" href="mailto:rahmenihamdi@gmail.com" data-i18n="off">rahmenihamdi@gmail.com</a></div></div>
+        <div class="hint" style="text-align:center;padding:14px 18px 4px;line-height:1.6" data-i18n="off">
+          © ${new Date().getFullYear()} Hamdi Rahmeni — Tous droits réservés.<br>
+          Application développée pour ${this.escape(s.clinicName)}.
+        </div>
       </div>`;
     this.renderQR("qr-"+role, this.appUrl());   // QR code de partage
   },
@@ -2833,6 +2891,9 @@ const App = {
     });
 
     // --- Récapitulatif pour le cabinet (une seule alerte par journée) ---
+    // Réservé à l'appareil de la vétérinaire : elle seule dispose de la
+    // totalité des rendez-vous et des rappels, donc du bon décompte.
+    if(!this.isAdmin()) return;
     [["j1", tomorrow, "Demain"], ["j0", today, "Aujourd'hui"]].forEach(pair=>{
       const tag=pair[0], d=pair[1], label=pair[2];
       const rdvs = DB.get("rdv",[]).filter(r=>r.date===d && (r.status==="confirme"||r.status==="attente"));
@@ -3622,7 +3683,10 @@ const App = {
     const a=DB.find("animals",this._recAnimal);
     if(this._recEdit){ DB.update("records",this._recEdit,data); this.toast("Carnet mis à jour ✓","ok"); }
     else {
-      DB.push("records",Object.assign({id:this.uid("rec"),animalId:this._recAnimal,createdAt:Date.now()},data));
+      // ownerId : indispensable pour que le client puisse lire SON carnet
+      // (et uniquement le sien) avec les règles de sécurité.
+      DB.push("records",Object.assign({id:this.uid("rec"),animalId:this._recAnimal,
+        ownerId:(a&&a.ownerId)||null,createdAt:Date.now()},data));
       const t=REC_TYPES.find(x=>x.id===type)||{};
       if(a){ const kind = type==="vaccin"?"vax":"record";
         this.notify(a.ownerId,kind,`${t.emo||"🩺"} ${a.nom} · ${t.label||"Carnet"}`,`${titre}${nextV?" — rappel le "+this.fmtDate(nextV):""}`); }
@@ -4019,7 +4083,7 @@ document.addEventListener("DOMContentLoaded", function(){
      ===================================================================== -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, onSnapshot }
+  import { getFirestore, collection, doc, getDocs, getDoc, setDoc, deleteDoc, onSnapshot, query, where }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import { getMessaging, getToken, deleteToken, onMessage, isSupported as messagingSupported }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
@@ -4195,10 +4259,50 @@ document.addEventListener("DOMContentLoaded", function(){
   };
   window.Push = Push;
 
+  /* =====================================================================
+     REQUÊTES FILTRÉES PAR PROPRIÉTAIRE
+     ---------------------------------------------------------------------
+     Chaque collection indique dans quel champ se trouve l'identifiant du
+     propriétaire. Un client ne demande que les documents qui lui
+     appartiennent : c'est exactement ce que les règles de sécurité
+     autorisent. Les collections publiques (boutique, publications) ne sont
+     pas filtrées. L'administratrice n'est jamais filtrée.
+     ===================================================================== */
+  const CHAMP_PROPRIETAIRE = {
+    animals:   "ownerId",
+    records:   "ownerId",
+    orders:    "clientId",
+    rdv:       "clientId",
+    questions: "clientId",
+    advices:   "clientId",
+    notifs:    "target",
+    // products, posts : contenu public, aucun filtre
+  };
+
+  function scopedQuery(coll, sc){
+    const c = collection(db, coll);
+    if(!sc || sc.admin || !sc.uid) return c;          // admin : tout
+    const champ = CHAMP_PROPRIETAIRE[coll];
+    return champ ? query(c, where(champ, "==", sc.uid)) : c;
+  }
+
   // Objet global consommé par la couche DB du script principal.
   const Cloud = {
     enabled: false,          // devient true si l'initialisation réussit
     ready: readyPromise,     // résolue quand Firestore est prêt
+
+    /* -------------------------------------------------------------------
+       ÉTENDUE DES DONNÉES (scope)
+       -------------------------------------------------------------------
+       • La vétérinaire (admin) voit tout.
+       • Un client ne charge QUE ses propres documents. C'est indispensable :
+         les règles de sécurité refusent une lecture de collection entière,
+         donc chaque requête doit être filtrée sur son identifiant.
+       Le champ qui porte le propriétaire change selon la collection, d'où
+       le tableau ci-dessous.
+       ------------------------------------------------------------------- */
+    scope: { uid:null, admin:false },
+    setScope(s){ this.scope = { uid:(s&&s.uid)||null, admin:!!(s&&s.admin) }; },
 
     // Écrit / met à jour un document (fusion) dans une collection.
     pushDoc(coll, item){
@@ -4228,17 +4332,27 @@ document.addEventListener("DOMContentLoaded", function(){
     // Récupère TOUT le cloud vers le localStorage (au démarrage).
     async pullAll(){
       if(!db) return;
+      const sc = this.scope;
       // Collections
       await Promise.all(COLLECTIONS.map(async (coll)=>{
         try{
-          const snap = await getDocs(collection(db, coll));
+          // Cas particulier : un client ne lit que SON document dans "users"
+          // (lecture d'un document précis, et non de la collection entière).
+          if(coll==="users" && !sc.admin){
+            if(!sc.uid) return;
+            const d = await getDoc(doc(db, "users", sc.uid));
+            LS.write("users", d.exists() ? [d.data()] : []);
+            return;
+          }
+          const snap = await getDocs(scopedQuery(coll, sc));
           const arr=[]; snap.forEach(d=> arr.push(d.data()));
-          // On n'écrase le local que si le cloud contient des données,
-          // pour ne pas effacer une éventuelle amorce locale de tout premier lancement.
-          if(arr.length) LS.write(coll, arr);
+          // Pour un client, la réponse fait autorité (même vide).
+          // Pour l'admin, on garde l'ancienne prudence : on n'écrase pas
+          // le local avec un résultat vide (tout premier lancement).
+          if(arr.length || !sc.admin) LS.write(coll, arr);
         }catch(e){ console.warn("pullAll "+coll, e); }
       }));
-      // Documents de configuration
+      // Documents de configuration (lecture publique)
       await Promise.all(CONFIG_KEYS.map(async (name)=>{
         try{
           const snap = await getDocs(collection(db, CFG_DOC));
@@ -4251,8 +4365,20 @@ document.addEventListener("DOMContentLoaded", function(){
     // collection ou la config change réellement (comparaison JSON anti-boucle).
     watchAll(onChange){
       if(!db) return;
+      const sc = this.scope;
       COLLECTIONS.forEach(coll=>{
-        onSnapshot(collection(db, coll), (snap)=>{
+        // Client : son seul document dans "users".
+        if(coll==="users" && !sc.admin){
+          if(!sc.uid) return;
+          onSnapshot(doc(db, "users", sc.uid), (d)=>{
+            const arr = d.exists() ? [d.data()] : [];
+            const before = JSON.stringify(LS.read("users", []));
+            const after  = JSON.stringify(arr);
+            if(before!==after){ LS.write("users", arr); try{ onChange && onChange("users"); }catch(e){} }
+          }, (e)=>console.warn("watch users", e));
+          return;
+        }
+        onSnapshot(scopedQuery(coll, sc), (snap)=>{
           const arr=[]; snap.forEach(d=> arr.push(d.data()));
           const before = JSON.stringify(LS.read(coll, []));
           const after  = JSON.stringify(arr);
@@ -4279,6 +4405,13 @@ document.addEventListener("DOMContentLoaded", function(){
   Cloud.signIn   = (email, pass) => signInWithEmailAndPassword(auth, email, pass);
   Cloud.signOut  = ()            => signOut(auth);
   Cloud.uid      = ()            => (auth && auth.currentUser) ? auth.currentUser.uid : null;
+  // Lit UNIQUEMENT son propre profil. C'est la première lecture faite après
+  // la connexion : elle donne le rôle, donc l'étendue des données à charger.
+  Cloud.getMyProfile = async (uid) => {
+    if(!db || !uid) return null;
+    const d = await getDoc(doc(db, "users", String(uid)));
+    return d.exists() ? d.data() : null;
+  };
   // Écrit / met à jour un seul profil utilisateur (jamais de mot de passe ici).
   Cloud.saveUser = async (prof)  => {
     const arr = LS.read("users", []).filter(x => x && x.id !== prof.id);
