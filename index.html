@@ -896,7 +896,8 @@ const RDV_STATUS = {
 // Le compte administrateur n'est plus défini en dur ici (finies les identifiants
 // « admin / admin » visibles dans le code). L'admin se crée via l'inscription,
 // puis son champ « role » est passé à « admin » dans la console Firebase.
-const DEFAULT_ADMIN = { id:"u_admin", role:"admin", nom:"Dr. Asma Gnaoui", tel:"22024232", createdAt:0 };
+// (L'ancienne constante DEFAULT_ADMIN a été retirée : elle n'était plus
+//  utilisée nulle part et exposait un nom et un numéro dans le code public.)
 
 const DEFAULT_SETTINGS = {
   clinicName:"Le Cabinet Vétérinaire de Manouba",
@@ -1196,13 +1197,23 @@ const App = {
       // 1) On lit d'abord SON PROPRE profil. Il donne le rôle, donc l'étendue
       //    des données que l'on a le droit de charger (tout, ou seulement les
       //    siennes). Cette lecture précède volontairement toutes les autres.
-      let prof = null;
-      try{ prof = await window.Cloud.getMyProfile(user.uid); }
-      catch(e){ console.warn("lecture du profil", e); }
+      // IMPORTANT : il faut distinguer deux situations que l'ancien code
+      // confondait — « le profil n'existe pas » (compte neuf) et « je n'ai
+      // pas RÉUSSI à lire le profil » (réseau coupé, quota Firestore
+      // atteint, règles de sécurité). Les confondre faisait recréer un
+      // profil « client » par-dessus le compte administrateur.
+      // On réessaie donc plusieurs fois avant de conclure quoi que ce soit.
+      let prof = null, lectureOK = false;
+      for(const attente of [0, 1200, 3000]){
+        if(attente) await new Promise(r=>setTimeout(r, attente));
+        try{ prof = await window.Cloud.getMyProfile(user.uid); lectureOK = true; break; }
+        catch(e){ console.warn("lecture du profil (tentative)", e); }
+      }
 
-      // Première connexion / inscription : le profil n'existe pas encore.
-      // Aucun mot de passe n'y est stocké — Firebase Auth s'en charge.
-      if(!prof){
+      // Compte réellement neuf : la lecture a abouti ET elle dit clairement
+      // qu'aucun profil n'existe. Aucun mot de passe n'y est stocké —
+      // Firebase Auth s'en charge.
+      if(lectureOK && !prof){
         const p = this._pendingReg || {};
         prof = { id:user.uid, role:"client",
                  tel: p.tel || this.telFromEmail(user.email),
@@ -1210,6 +1221,21 @@ const App = {
         try{ await window.Cloud.saveUser(prof); }catch(e){ console.warn("saveUser", e); }
       }
       this._pendingReg = null;
+
+      // Lecture impossible : on n'invente RIEN. On se rabat sur la copie
+      // locale, qui porte le bon rôle. Si cet appareil n'en a pas (première
+      // utilisation), on ne peut pas travailler : on prévient et on revient
+      // à l'écran de connexion, sans jamais écrire dans le cloud.
+      if(!prof){
+        prof = DB.find("users", user.uid);
+        if(!prof){
+          this.toast("Connexion instable : profil illisible. Réessayez.","err");
+          try{ await window.Cloud.signOut(); }catch(e){}
+          this.showBoot(false);
+          return;
+        }
+        this.toast("Mode hors-ligne : données locales.","warn");
+      }
 
       // 2) Étendue des lectures, puis chargement.
       window.Cloud.setScope({ uid:user.uid, admin: prof.role === "admin" });
@@ -4307,7 +4333,14 @@ document.addEventListener("DOMContentLoaded", function(){
     // Écrit / met à jour un document (fusion) dans une collection.
     pushDoc(coll, item){
       if(!db || !item || !item.id) return;
-      setDoc(doc(db, coll, String(item.id)), item, { merge:true })
+      let data = item;
+      // Le rôle ne se décide JAMAIS depuis l'application : il est posé à la
+      // main dans la console Firebase. On le retire de toute écriture pour
+      // qu'un cache périmé ne puisse pas l'écraser — et pour que les règles
+      // de sécurité (qui exigent un rôle inchangé) ne refusent pas
+      // l'écriture entière du nom ou du téléphone.
+      if(coll === "users"){ data = Object.assign({}, item); delete data.role; }
+      setDoc(doc(db, coll, String(item.id)), data, { merge:true })
         .catch(e=>console.warn("pushDoc", coll, e));
     },
     // Supprime un document.
