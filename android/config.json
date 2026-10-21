@@ -1,1 +1,8 @@
-
+{
+  "packageId": "tn.dabordanimaux.app",
+  "appName": "Animaux d'abord",
+  "launcherName": "Animaux d'abord",
+  "siteUrl": "",
+  "versionNameBase": "1.0",
+  "playAppSigningSha256": ""
+}
