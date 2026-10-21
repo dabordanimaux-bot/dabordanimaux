@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Politique de confidentialité · Animaux d'abord</title>
+<meta name="description" content="Politique de confidentialité de l'application Animaux d'abord — Le Cabinet Vétérinaire de Manouba (Dr. Asma Gnaoui)." />
+<meta name="theme-color" content="#FF3E7F" />
+<link rel="icon" type="image/png" href="icon-192.png" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
+:root{
+  --cream:#FFF6F1; --surface:#FFFFFF; --rose:#FF3E7F; --rose-deep:#E11D63; --rose-tint:#FFF0F5;
+  --ink:#3B2430; --ink-2:#6B4E5B; --muted:#A38B96; --line:#F4DDE4;
+  --grad:linear-gradient(135deg,#FF3E7F 0%,#FF6B57 55%,#FF8A3C 100%);
+  --display:'Baloo 2',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);color:var(--ink);background:var(--cream);line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 56px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0;text-decoration:none;color:inherit}
+.brand img{width:44px;height:44px;border-radius:50%;flex:none;box-shadow:0 6px 16px rgba(255,62,127,.35)}
+.brand b{font-family:var(--display);font-size:1.15rem;line-height:1.1;display:block}
+.brand small{display:block;color:var(--muted);font-weight:700;font-size:.75rem;line-height:1.3;margin-top:2px}
+.lang{display:flex;gap:6px;flex:none}
+.lang button{font:inherit;font-weight:800;font-size:.8rem;border:1px solid var(--line);background:#fff;color:var(--rose-deep);border-radius:11px;padding:7px 11px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--grad);color:#fff;border-color:transparent}
+h1{font-family:var(--display);font-size:1.75rem;line-height:1.2;margin:4px 0 6px}
+.updated{color:var(--muted);font-weight:700;font-size:.85rem;margin-bottom:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 18px 8px;margin-bottom:14px;box-shadow:0 4px 14px rgba(226,59,78,.07)}
+h2{font-family:var(--display);font-size:1.18rem;color:var(--rose-deep);margin-bottom:8px;line-height:1.25}
+p,li{font-size:.97rem;color:var(--ink-2);margin-bottom:10px}
+ul{padding-inline-start:20px;margin-bottom:6px}
+strong{color:var(--ink)}
+a{color:var(--rose-deep);font-weight:800}
+.back{display:inline-block;margin-top:8px;background:var(--grad);color:#fff;text-decoration:none;font-weight:800;border-radius:14px;padding:12px 18px}
+[data-lang]{display:none}
+html[lang="fr"] [data-lang="fr"], html[lang="ar"] [data-lang="ar"]{display:block}
+html[lang="ar"] body{font-family:'Nunito',Tahoma,'Segoe UI',system-ui,sans-serif}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="index.html"><img src="icon-192.png" alt="" /><span><b>Animaux d'abord</b><small>Le Cabinet Vétérinaire de Manouba</small></span></a>
+    <div class="lang" role="group" aria-label="Langue">
+      <button type="button" data-set="fr" aria-pressed="true">FR</button>
+      <button type="button" data-set="ar" aria-pressed="false">العربية</button>
+    </div>
+  </div>
+
+  <!-- ============================ FRANÇAIS ============================ -->
+  <main data-lang="fr">
+    <h1>Politique de confidentialité</h1>
+    <div class="updated">Dernière mise à jour : 21 octobre 2026</div>
+
+    <section class="card">
+      <h2>1. Qui sommes-nous ?</h2>
+      <p>L'application <strong>Animaux d'abord</strong> (site web et application Android) est éditée pour <strong>Le Cabinet Vétérinaire de Manouba — Dr. Asma Gnaoui</strong>, nahj Ibn Abi Dhiaf 27, Manouba, Tunisie (juste à côté du lycée Ibn Abi Dhiaf). Le cabinet est responsable du traitement de vos données.</p>
+      <p>Contact : <a href="tel:+21622024232">+216 22 024 232</a> (téléphone et <a href="https://wa.me/21622024232">WhatsApp</a>).</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Les données que nous collectons</h2>
+      <ul>
+        <li><strong>Votre compte :</strong> nom, numéro de téléphone et mot de passe. Le mot de passe est géré par Firebase Authentication (Google) : il est stocké sous forme chiffrée et le cabinet ne peut jamais le voir.</li>
+        <li><strong>Vos animaux :</strong> nom, espèce, race, sexe, date de naissance, poids, stérilisation, notes et photos que vous ajoutez.</li>
+        <li><strong>Le carnet de santé :</strong> vaccins, consultations, ordonnances, analyses, pesées et rappels saisis par la vétérinaire.</li>
+        <li><strong>Vos échanges avec le cabinet :</strong> rendez-vous, commandes de la boutique, questions, messages et conseils.</li>
+        <li><strong>Les notifications :</strong> si vous les autorisez, un identifiant technique de notification propre à votre appareil, votre langue et le type d'appareil / de navigateur.</li>
+        <li><strong>Des statistiques d'utilisation :</strong> Google Analytics pour Firebase mesure l'utilisation de l'application (écrans ouverts, type d'appareil, pays approximatif, identifiant d'instance de l'application). Ces mesures ne contiennent ni votre nom ni votre numéro.</li>
+        <li><strong>Sur votre téléphone :</strong> une copie de vos données est gardée dans la mémoire de l'application pour qu'elle fonctionne hors connexion.</li>
+      </ul>
+      <p>L'application ne demande ni votre position, ni l'accès à vos contacts, ni de paiement en ligne. Les photos ne sont envoyées que lorsque vous les choisissez vous-même.</p>
+    </section>
+
+    <section class="card">
+      <h2>3. Pourquoi nous les utilisons</h2>
+      <ul>
+        <li>créer et sécuriser votre compte ;</li>
+        <li>tenir le carnet de santé de vos animaux et vous le montrer ;</li>
+        <li>gérer vos rendez-vous, vos commandes et vos questions ;</li>
+        <li>vous envoyer des rappels (vaccins, rendez-vous) et les réponses de la vétérinaire ;</li>
+        <li>corriger les problèmes et améliorer l'application.</li>
+      </ul>
+      <p>Nous n'utilisons pas vos données pour de la publicité et nous ne les vendons jamais.</p>
+    </section>
+
+    <section class="card">
+      <h2>4. Avec qui elles sont partagées</h2>
+      <p>Seuls vous et l'équipe du cabinet avez accès à votre dossier. Chaque client ne voit que ses propres données. Pour faire fonctionner l'application, nous utilisons des prestataires techniques :</p>
+      <ul>
+        <li><strong>Google Firebase</strong> (Authentication, Cloud Firestore, Cloud Messaging, Analytics) : hébergement des données, connexion, notifications et statistiques. Les serveurs de Google peuvent être situés hors de Tunisie.</li>
+        <li><strong>GitHub</strong> : hébergement des pages de l'application.</li>
+      </ul>
+      <p>Les boutons « WhatsApp » et « Google Maps » ouvrent ces services, qui appliquent leur propre politique de confidentialité.</p>
+    </section>
+
+    <section class="card">
+      <h2>5. Sécurité</h2>
+      <p>Toutes les communications sont chiffrées (HTTPS). L'accès aux données est contrôlé par des règles de sécurité : un client ne peut lire que ses propres documents. Le rôle d'administrateur n'est attribué qu'au cabinet.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Durée de conservation</h2>
+      <p>Vos données sont conservées tant que votre compte existe. Quand vous supprimez votre compte, votre profil, vos animaux, leurs carnets de santé, vos rendez-vous, commandes, messages, notifications et identifiants de notification sont effacés. Les traces techniques d'envoi des rappels sont effacées automatiquement après 60 jours.</p>
+    </section>
+
+    <section class="card">
+      <h2>7. Vos droits</h2>
+      <p>Conformément à la loi organique n° 2004-63 du 27 juillet 2004 relative à la protection des données à caractère personnel, vous pouvez demander l'accès à vos données, leur correction ou leur suppression, et vous opposer à leur traitement. Contactez le cabinet au <a href="tel:+21622024232">+216 22 024 232</a>.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. Supprimer votre compte</h2>
+      <p>Dans l'application : <strong>À propos → Mon compte → Supprimer mon compte</strong>, puis confirmez avec votre mot de passe. Vous pouvez aussi faire la demande sans l'application : voir la page <a href="suppression-compte.html">Suppression de compte</a>.</p>
+    </section>
+
+    <section class="card">
+      <h2>9. Enfants</h2>
+      <p>L'application s'adresse aux propriétaires d'animaux et n'est pas destinée aux enfants.</p>
+    </section>
+
+    <section class="card">
+      <h2>10. Modifications</h2>
+      <p>Cette politique peut être mise à jour. La date de la dernière mise à jour figure en haut de cette page.</p>
+    </section>
+
+    <a class="back" href="index.html">← Retour à l'application</a>
+  </main>
+
+  <!-- ============================ العربية ============================ -->
+  <main data-lang="ar" dir="rtl" lang="ar">
+    <h1>سياسة الخصوصية</h1>
+    <div class="updated">آخر تحديث: 21 أكتوبر 2026</div>
+
+    <section class="card">
+      <h2>1. من نحن؟</h2>
+      <p>تطبيق <strong>Animaux d'abord</strong> (الموقع وتطبيق أندرويد) خاصّ بـ<strong>العيادة البيطرية بمنوبة — <span dir="ltr">Dr. Asma Gnaoui</span></strong>، نهج ابن أبي الضياف 27، منوبة، تونس (بجانب معهد ابن أبي الضياف). العيادة هي المسؤولة عن معالجة بياناتك.</p>
+      <p>للتواصل: <a href="tel:+21622024232" dir="ltr">+216 22 024 232</a> (هاتف و<a href="https://wa.me/21622024232">واتساب</a>).</p>
+    </section>
+
+    <section class="card">
+      <h2>2. البيانات التي نجمعها</h2>
+      <ul>
+        <li><strong>حسابك:</strong> الاسم ورقم الهاتف وكلمة المرور. تُدار كلمة المرور عبر Firebase Authentication (Google) وتُخزَّن مشفّرة، ولا يمكن للعيادة الاطلاع عليها أبدًا.</li>
+        <li><strong>حيواناتك:</strong> الاسم والنوع والسلالة والجنس وتاريخ الولادة والوزن والتعقيم والملاحظات والصور التي تضيفها.</li>
+        <li><strong>دفتر الصحة:</strong> التلاقيح والاستشارات والوصفات والتحاليل والأوزان والتذكيرات التي تسجّلها الطبيبة.</li>
+        <li><strong>تواصلك مع العيادة:</strong> المواعيد وطلبات المتجر والأسئلة والرسائل والنصائح.</li>
+        <li><strong>الإشعارات:</strong> إذا سمحت بها، معرّف تقني للإشعارات خاص بجهازك، ولغتك، ونوع الجهاز / المتصفح.</li>
+        <li><strong>إحصائيات الاستخدام:</strong> يقيس Google Analytics for Firebase استخدام التطبيق (الشاشات المفتوحة، نوع الجهاز، البلد التقريبي، معرّف نسخة التطبيق). لا تحتوي هذه الإحصائيات على اسمك أو رقمك.</li>
+        <li><strong>على هاتفك:</strong> تُحفظ نسخة من بياناتك في ذاكرة التطبيق ليعمل دون اتصال.</li>
+      </ul>
+      <p>لا يطلب التطبيق موقعك ولا جهات اتصالك ولا أي دفع عبر الإنترنت. لا تُرسل الصور إلا عندما تختارها بنفسك.</p>
+    </section>
+
+    <section class="card">
+      <h2>3. لماذا نستعملها</h2>
+      <ul>
+        <li>إنشاء حسابك وتأمينه؛</li>
+        <li>مسك دفتر صحة حيواناتك وعرضه عليك؛</li>
+        <li>إدارة مواعيدك وطلباتك وأسئلتك؛</li>
+        <li>إرسال التذكيرات (التلاقيح، المواعيد) وردود الطبيبة؛</li>
+        <li>إصلاح الأعطال وتحسين التطبيق.</li>
+      </ul>
+      <p>لا نستعمل بياناتك للإشهار ولا نبيعها أبدًا.</p>
+    </section>
+
+    <section class="card">
+      <h2>4. مع من نشاركها</h2>
+      <p>أنت وفريق العيادة فقط تطّلعون على ملفك، ولا يرى كل زبون إلا بياناته. لتشغيل التطبيق نستعين بمزوّدين تقنيين:</p>
+      <ul>
+        <li><strong>Google Firebase</strong> (Authentication، Cloud Firestore، Cloud Messaging، Analytics): استضافة البيانات والدخول والإشعارات والإحصائيات. قد تكون خوادم Google خارج تونس.</li>
+        <li><strong>GitHub</strong>: استضافة صفحات التطبيق.</li>
+      </ul>
+      <p>زرّا «واتساب» و«خرائط Google» يفتحان هذه الخدمات التي تطبّق سياسة الخصوصية الخاصة بها.</p>
+    </section>
+
+    <section class="card">
+      <h2>5. الأمان</h2>
+      <p>كل الاتصالات مشفّرة (HTTPS). يخضع الوصول إلى البيانات لقواعد أمان: لا يستطيع الزبون قراءة إلا وثائقه. دور المشرف مخصّص للعيادة فقط.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. مدة الحفظ</h2>
+      <p>تُحفظ بياناتك ما دام حسابك موجودًا. عند حذف حسابك تُحذف بيانات ملفك وحيواناتك ودفاتر صحتها ومواعيدك وطلباتك ورسائلك وإشعاراتك ومعرّفات الإشعارات. تُحذف السجلات التقنية لإرسال التذكيرات تلقائيًا بعد 60 يومًا.</p>
+    </section>
+
+    <section class="card">
+      <h2>7. حقوقك</h2>
+      <p>طبقًا للقانون الأساسي عدد 63 لسنة 2004 المؤرخ في 27 جويلية 2004 المتعلق بحماية المعطيات الشخصية، يمكنك طلب الاطلاع على بياناتك أو تصحيحها أو حذفها، والاعتراض على معالجتها. اتصل بالعيادة على <a href="tel:+21622024232" dir="ltr">+216 22 024 232</a>.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. حذف حسابك</h2>
+      <p>داخل التطبيق: <strong>من نحن ← حسابي ← حذف حسابي</strong>، ثم أكّد بكلمة المرور. يمكنك أيضًا تقديم الطلب دون التطبيق: انظر صفحة <a href="suppression-compte.html">حذف الحساب</a>.</p>
+    </section>
+
+    <section class="card">
+      <h2>9. الأطفال</h2>
+      <p>التطبيق موجّه لأصحاب الحيوانات وليس موجّهًا للأطفال.</p>
+    </section>
+
+    <section class="card">
+      <h2>10. التعديلات</h2>
+      <p>قد يتم تحديث هذه السياسة. يظهر تاريخ آخر تحديث في أعلى هذه الصفحة.</p>
+    </section>
+
+    <a class="back" href="index.html">→ العودة إلى التطبيق</a>
+  </main>
+</div>
+<script>
+(function(){
+  var root=document.documentElement;
+  function set(l){
+    root.lang=l; root.dir=(l==="ar")?"rtl":"ltr";
+    document.querySelectorAll(".lang button").forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-set")===l ? "true" : "false"); });
+  }
+  var l="fr"; try{ l=localStorage.getItem("ad_lang")||"fr"; }catch(e){}
+  try{ var q=new URLSearchParams(location.search).get("lang"); if(q==="ar"||q==="fr") l=q; }catch(e){}
+  set(l==="ar"?"ar":"fr");
+  document.querySelectorAll(".lang button").forEach(function(b){
+    b.addEventListener("click", function(){ set(b.getAttribute("data-set")); });
+  });
+})();
+</script>
+</body>
+</html>

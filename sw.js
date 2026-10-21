@@ -8,7 +8,7 @@
      au réseau, JAMAIS interceptées → la synchro cloud temps réel fonctionne.
    Pense à incrémenter CACHE_VERSION à chaque mise à jour du site.
    ===================================================================== */
-const CACHE_VERSION = "animaux-dabord-v16";
+const CACHE_VERSION = "animaux-dabord-v17";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -17,6 +17,7 @@ const APP_SHELL = [
   "./icon-512.png",
   "./icon-180.png",
   "./icon-maskable-512.png",
+  "./icon-monochrome-512.png",
   "./logo-mark.png",
   "./pet-dog.png",
   "./pet-cat.png"
@@ -93,7 +94,7 @@ self.addEventListener("fetch", (event) => {
    du titre, du texte, de l'icône et de l'action au clic.
    ===================================================================== */
 const PUSH_ICON  = "./icon-192.png";
-const PUSH_BADGE = "./icon-192.png";
+const PUSH_BADGE = "./icon-monochrome-512.png";   // petite icône blanche de la barre d'état
 
 self.addEventListener("push", (event) => {
   let payload = {};

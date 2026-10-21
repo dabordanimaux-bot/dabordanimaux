@@ -562,6 +562,8 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .empty .ic{font-size:46px;margin-bottom:10px;display:block;opacity:.7}
 .empty .et{font-family:var(--display);font-weight:700;color:var(--ink-2);font-size:1.05rem;margin-bottom:4px}
 .hint{font-size:.84rem;color:var(--muted);font-weight:600}
+.legal-link{color:var(--rose-deep);font-weight:800;text-decoration:underline;text-underline-offset:2px}
+.legal-foot{margin:14px 0 6px}
 .center{text-align:center}.mt{margin-top:14px}.mt-s{margin-top:8px}.mb{margin-bottom:14px}
 .divider{height:1px;background:var(--line);margin:16px 0}
 .spread{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -636,7 +638,9 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
           <input class="input" id="reg-pass" type="password" placeholder="Choisissez un mot de passe" autocomplete="new-password" />
           <div class="hint" style="margin-top:6px">Au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un symbole.</div></div>
         <button class="btn btn-primary btn-block btn-lg" onclick="App.register()">Créer mon compte 🐾</button>
+        <p class="hint center mt">En créant un compte, vous acceptez notre <a class="legal-link" href="confidentialite.html">politique de confidentialité</a>.</p>
       </div>
+      <p class="hint center legal-foot"><a class="legal-link" href="confidentialite.html">Politique de confidentialité</a> · <a class="legal-link" href="suppression-compte.html">Suppression de compte</a></p>
     </div>
   </section>
 
@@ -1118,6 +1122,25 @@ const AR_DICT = {
   "Ex : Croquettes chat 2kg":"مثال: أكل جاف للقط 2 كغ","Ex : Vaccin CHPPiL / Rage":"مثال: تلقيح CHPPiL / داء الكلب",
   "Ex : Alimentation après stérilisation":"مثال: التغذية بعد التعقيم","Ex : Bien nourrir son chaton":"مثال: تغذية جيّدة للهرّ الصغير",
   "Ex : je passe récupérer demain matin":"مثال: سأمرّ لأخذه غدًا صباحًا",
+  /* ---- Google Play : confidentialité et suppression de compte ---- */
+  "Confidentialité":"الخصوصية","Informations légales":"معلومات قانونية",
+  "Politique de confidentialité":"سياسة الخصوصية","politique de confidentialité":"سياستنا للخصوصية",
+  "Suppression de compte":"حذف الحساب","Page « Suppression de compte »":"صفحة «حذف الحساب»",
+  "En créant un compte, vous acceptez notre":"بإنشائك حسابًا، فإنك توافق على",
+  "Supprimer mon compte":"حذف حسابي",
+  "Mon compte":"حسابي",
+  "Supprime définitivement votre compte et toutes vos données.":"يحذف حسابك وجميع بياناتك نهائيًا.",
+  "Cette action est définitive.":"هذا الإجراء نهائي.",
+  "Pour confirmer, saisissez votre mot de passe.":"للتأكيد، أدخل كلمة المرور.",
+  "Votre mot de passe":"كلمة المرور الخاصة بك",
+  "Supprimer définitivement mon compte":"حذف حسابي نهائيًا",
+  "Suppression en cours…":"جارٍ الحذف…",
+  "Saisissez votre mot de passe.":"أدخل كلمة المرور.",
+  "Connexion Internet requise.":"يلزم الاتصال بالإنترنت.",
+  "Votre compte a été supprimé.":"تم حذف حسابك.",
+  "Compte client supprimé":"تم حذف حساب زبون",
+  "Seront effacés : votre compte, vos animaux et leurs carnets de santé, vos rendez-vous, commandes, messages et notifications.":"سيتم حذف: حسابك، حيواناتك ودفاتر صحتها، مواعيدك، طلباتك، رسائلك وإشعاراتك.",
+  "Supprimer définitivement votre compte et toutes vos données ?":"حذف حسابك وجميع بياناتك نهائيًا؟",
 
 };
 const AR_TOKENS_LIST = [
@@ -1430,6 +1453,41 @@ const App = {
     // _onAuthChanged(null) affichera alors l'écran de connexion.
     location.reload();
   },
+  /* ---------- Suppression du compte par le client (exigence Google Play) ---------- */
+  openDeleteAccount(){
+    const u=this.currentUser(); if(!u || u.role==="admin") return;
+    const body=`
+      <div class="vax-alert" style="margin:0 0 12px"><span class="vic">⚠️</span> Cette action est définitive.</div>
+      <p style="margin:0 0 10px;font-weight:600;color:var(--ink-2)">Seront effacés : votre compte, vos animaux et leurs carnets de santé, vos rendez-vous, commandes, messages et notifications.</p>
+      <div class="field"><label>Mot de passe</label>
+        <input class="input" id="del-pass" type="password" placeholder="Votre mot de passe" autocomplete="current-password"></div>
+      <div class="hint">Pour confirmer, saisissez votre mot de passe.</div>`;
+    const foot=`<button class="btn btn-danger btn-block btn-lg" id="del-go" onclick="App.deleteMyAccount()">Supprimer définitivement mon compte</button>`;
+    this.openSheet("Supprimer mon compte", body, foot);
+  },
+  async deleteMyAccount(){
+    const u=this.currentUser(); if(!u || u.role==="admin") return;
+    const pass=(document.getElementById("del-pass")||{}).value||"";
+    if(!pass) return this.toast("Saisissez votre mot de passe.","err");
+    if(!(window.Cloud && window.Cloud.enabled && window.Cloud.deleteMyAccount))
+      return this.toast("Connexion Internet requise.","err");
+    const q="Supprimer définitivement votre compte et toutes vos données ?";
+    if(!confirm(this.lang==="ar" && AR_DICT[q] ? AR_DICT[q] : q)) return;
+    const btn=document.getElementById("del-go");
+    if(btn){ btn.disabled=true; btn.textContent="Suppression en cours…"; }
+    try{
+      await window.Cloud.deleteMyAccount(pass, { nom:u.nom||"", tel:u.tel||"" });
+    }catch(err){
+      if(btn){ btn.disabled=false; btn.textContent="Supprimer définitivement mon compte"; }
+      return this.toast(this.authError(err),"err");
+    }
+    // Nettoyage local (on garde seulement la langue choisie et l'identifiant d'appareil).
+    try{ Object.keys(localStorage).slice().forEach(k=>{ if(k.indexOf("ad_")===0 && k!=="ad_lang" && k!=="ad_deviceId") localStorage.removeItem(k); }); }catch(e){}
+    this.session=null; this.cart=[];
+    this.closeSheet();
+    this.toast("Votre compte a été supprimé.","ok");
+    setTimeout(()=>location.reload(),1500);
+  },
   openClient(){
     this.show("app-client");
     const u=this.currentUser();
@@ -1705,7 +1763,7 @@ const App = {
     DB.set("notifs", DB.get("notifs",[]).filter(n=>n.target!==tg));
     this.renderNotifsPanel(); this.renderBell();
   },
-  notifIcon(k){ return ({rdv:"📅",rdv_ok:"✅",rdv_no:"❌",order:"📦",order_up:"📦",question:"💬",answer:"💬",advice:"💡",record:"🩺",vax:"💉",stock:"⚠️"}[k])||"🔔"; },
+  notifIcon(k){ return ({rdv:"📅",rdv_ok:"✅",rdv_no:"❌",order:"📦",order_up:"📦",question:"💬",answer:"💬",advice:"💡",record:"🩺",vax:"💉",stock:"⚠️",account_del:"🗑️"}[k])||"🔔"; },
   renderNotifsPanel(){
     const w=document.getElementById("notif-list"); if(!w) return;
     const list=this.myNotifs();
@@ -1728,6 +1786,7 @@ const App = {
     else if(kind==="question") go("atab-msg","admin-nav");
     else if(kind==="answer"||kind==="advice") go("tab-msg","client-nav");
     else if(kind==="record"||kind==="vax") go("tab-pets","client-nav");
+    else if(kind==="account_del") go("atab-patients","admin-nav");
   },
 
   /* =====================================================================
@@ -2820,6 +2879,13 @@ const App = {
             <div class="hint" style="margin-top:10px">Scannez ou partagez ce code pour ouvrir l'application. 🐾</div>
           </div>
         </div>
+      </div>
+
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Confidentialité</div><h2 style="font-size:1.2rem">${role==="c"?"Mon compte":"Informations légales"}</h2></div></div>
+        <a class="btn btn-ghost btn-block" style="text-decoration:none;margin-bottom:8px" href="confidentialite.html">🔒 Politique de confidentialité</a>
+        ${role==="c"?`<button class="btn btn-danger btn-block" onclick="App.openDeleteAccount()">🗑️ Supprimer mon compte</button>
+        <div class="hint" style="margin-top:8px">Supprime définitivement votre compte et toutes vos données.</div>`:`<a class="btn btn-ghost btn-block" style="text-decoration:none" href="suppression-compte.html">🗑️ Page « Suppression de compte »</a>`}
       </div>`;
     this.renderQR("qr-"+role, this.appUrl());   // QR code de partage
   },
@@ -4104,7 +4170,7 @@ document.addEventListener("DOMContentLoaded", function(){
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
   import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
            signInWithEmailAndPassword, signOut,
-           EmailAuthProvider, reauthenticateWithCredential, updatePassword }
+           EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   // --- Configuration du projet Firebase (cabinet Animaux d'abord) ---
@@ -4448,6 +4514,68 @@ document.addEventListener("DOMContentLoaded", function(){
     const cred = EmailAuthProvider.credential(user.email, oldPass);
     await reauthenticateWithCredential(user, cred);   // échoue si l'ancien mot de passe est faux
     await updatePassword(user, newPass);
+  };
+
+  /* -------------------------------------------------------------------
+     SUPPRESSION DU COMPTE PAR LE CLIENT LUI-MÊME  (exigence Google Play)
+     -------------------------------------------------------------------
+     1. Le mot de passe est re-vérifié (Firebase l'exige avant une suppression).
+     2. Tous les documents du client sont effacés (animaux, carnets, RDV,
+        commandes, questions, conseils, notifications, jetons push).
+     3. Le cabinet reçoit une notification « compte supprimé » (écrite
+        avant l'effacement du profil).
+     4. Le profil « users » n'est effacé que si TOUT le reste a pu l'être :
+        si les règles de sécurité ont refusé une suppression, le profil reste
+        et la notification demande au cabinet de terminer depuis
+        Patients → client → Supprimer (suppression en cascade existante).
+     5. Le compte de connexion Firebase Auth est supprimé.
+     ------------------------------------------------------------------- */
+  Cloud.deleteMyAccount = async (pass, info) => {
+    const user = auth && auth.currentUser;
+    if(!user || !db) throw new Error("aucun-compte");
+    const cred = EmailAuthProvider.credential(user.email, pass);
+    await reauthenticateWithCredential(user, cred);    // échoue si le mot de passe est faux
+    const uid = user.uid;
+    let echecs = 0;
+
+    for(const coll of Object.keys(CHAMP_PROPRIETAIRE)){
+      try{
+        const snap = await getDocs(query(collection(db, coll), where(CHAMP_PROPRIETAIRE[coll], "==", uid)));
+        const res = await Promise.allSettled(snap.docs.map(d => deleteDoc(d.ref)));
+        echecs += res.filter(r => r.status === "rejected").length;
+      }catch(e){ echecs++; console.warn("suppression " + coll, e); }
+    }
+
+    // Jetons push : cet appareil, puis les autres appareils rattachés au compte.
+    try{ await Push.disable(); }catch(e){}
+    try{
+      const snap = await getDocs(query(collection(db, TOKENS_COLL), where("userId", "==", uid)));
+      await Promise.allSettled(snap.docs.map(d => deleteDoc(d.ref)));
+    }catch(e){ /* lecture refusée par les règles : sans conséquence */ }
+
+    // Prévenir le cabinet AVANT d'effacer le profil (au cas où les règles de
+    // sécurité exigent un profil existant pour écrire). Même format que App.notify.
+    try{
+      const nid = "n_del_" + uid;
+      const qui = ((info && info.nom) || "Un client") + ((info && info.tel) ? " · " + info.tel : "");
+      await setDoc(doc(db, "notifs", nid), {
+        id: nid, target: "admin", kind: "account_del",
+        title: "Compte client supprimé",
+        body: echecs
+          ? qui + " — à terminer : Patients → ce client → Supprimer le compte."
+          : qui + " — compte et données effacés.",
+        ts: Date.now(), lu: false
+      });
+    }catch(e){ console.warn("notif suppression", e); }
+
+    // Profil : effacé seulement si tout le reste l'a été (sinon le cabinet termine).
+    if(!echecs){
+      try{ await deleteDoc(doc(db, "users", String(uid))); }
+      catch(e){ echecs++; console.warn("suppression users", e); }
+    }
+
+    await deleteUser(user);                             // compte de connexion
+    return { echecs };
   };
 
   // Initialisation (asynchrone). En cas d'échec, l'app bascule en local.
