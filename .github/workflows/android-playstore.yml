@@ -1,0 +1,128 @@
+# =====================================================================
+#  ANIMAUX D'ABORD — Construire l'application Android pour Google Play
+#  ---------------------------------------------------------------------
+#  Produit, sans rien installer sur votre ordinateur :
+#    • animaux-dabord-X.Y.Z.aab  → le fichier à envoyer sur le Play Store
+#    • animaux-dabord-X.Y.Z-test.apk → pour tester sur votre téléphone
+#    • assetlinks.json            → à publier sur <compte>.github.io/.well-known/
+#
+#  Lancement : onglet Actions → « Android — app Play Store » → Run workflow.
+#  Résultat  : en bas de la page de l'exécution, rubrique « Artifacts ».
+#
+#  À faire UNE SEULE FOIS : Settings → Secrets and variables → Actions →
+#  New repository secret, deux secrets (fournis avec la clé de signature) :
+#     ANDROID_KEYSTORE_BASE64    (contenu du fichier upload-keystore.base64.txt)
+#     ANDROID_KEYSTORE_PASSWORD  (le mot de passe de la clé)
+#
+#  Le numéro de version augmente tout seul à chaque exécution : chaque
+#  nouveau .aab peut donc être envoyé sur le Play Store comme mise à jour.
+# =====================================================================
+name: Android — app Play Store
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-playstore
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+    steps:
+      - name: Vérifier les secrets de signature
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ]; then
+            echo "::error::Secrets manquants : ajoutez ANDROID_KEYSTORE_BASE64 et ANDROID_KEYSTORE_PASSWORD (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installer Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Installer le générateur (Bubblewrap)
+        working-directory: android
+        run: npm install --no-audit --no-fund
+
+      - name: Générer le projet Android depuis le site en ligne
+        working-directory: android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: node generer-projet.mjs
+
+      - name: Compiler (.aab et .apk)
+        working-directory: android/build-android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace bundleRelease assembleRelease
+
+      - name: Signer et préparer les fichiers
+        working-directory: android/build-android
+        run: |
+          set -e
+          source ../build-info.env
+          mkdir -p "$GITHUB_WORKSPACE/sortie"
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > upload.keystore
+
+          # 1) .aab pour le Play Store (signé avec la clé d'importation)
+          jarsigner -keystore upload.keystore -storetype PKCS12 \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -sigalg SHA256withRSA -digestalg SHA-256 \
+            -signedjar "$GITHUB_WORKSPACE/sortie/animaux-dabord-$APP_VERSION_NAME.aab" \
+            app/build/outputs/bundle/release/app-release.aab upload
+          jarsigner -verify "$GITHUB_WORKSPACE/sortie/animaux-dabord-$APP_VERSION_NAME.aab" | tail -1
+
+          # 2) .apk de test (installation directe sur un téléphone)
+          BT="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          "$BT/zipalign" -p -f 4 app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
+          "$BT/apksigner" sign --ks upload.keystore --ks-type PKCS12 \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD --ks-key-alias upload \
+            --out "$GITHUB_WORKSPACE/sortie/animaux-dabord-$APP_VERSION_NAME-test.apk" aligned.apk
+
+          # 3) assetlinks.json (empreinte de la clé d'importation + celle de Google Play si renseignée)
+          SHA_UPLOAD="$(keytool -list -v -keystore upload.keystore -storetype PKCS12 -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias upload | sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p')"
+          SHA_PLAY="$(node -e "console.log(require('../config.json').playAppSigningSha256||'')")"
+          node -e '
+            const [pkg, a, b] = process.argv.slice(1);
+            const fps = [a, b].map(s => (s||"").trim().toUpperCase()).filter(Boolean);
+            const out = [{ relation: ["delegate_permission/common.handle_all_urls"],
+              target: { namespace: "android_app", package_name: pkg, sha256_cert_fingerprints: [...new Set(fps)] } }];
+            require("fs").writeFileSync(process.env.GITHUB_WORKSPACE + "/sortie/assetlinks.json", JSON.stringify(out, null, 2) + "\n");
+          ' "$APP_PACKAGE" "$SHA_UPLOAD" "$SHA_PLAY"
+          rm -f upload.keystore aligned.apk
+
+          {
+            echo "## ✅ Animaux d'abord $APP_VERSION_NAME (code $APP_VERSION_CODE)"
+            echo ""
+            echo "- Package : \`$APP_PACKAGE\`"
+            echo "- Site ouvert par l'app : https://$APP_HOST$APP_START"
+            echo "- Empreinte SHA-256 (clé d'importation) : \`$SHA_UPLOAD\`"
+            echo ""
+            echo "Téléchargez l'archive **app-play-store** ci-dessous (rubrique Artifacts)."
+          } >> "$GITHUB_STEP_SUMMARY"
+          ls -la "$GITHUB_WORKSPACE/sortie"
+
+      - name: Mettre les fichiers à disposition
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-play-store
+          path: sortie/
+          retention-days: 30
