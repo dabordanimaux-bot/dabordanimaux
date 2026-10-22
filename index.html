@@ -116,6 +116,9 @@ html.rtl .iv-next{right:auto;left:14px}
 html.rtl .switch{direction:ltr}
 html.rtl input,html.rtl textarea,html.rtl select{text-align:right}
 html.rtl input[type=date],html.rtl input[type=number]{direction:ltr;text-align:right}
+/* numéros et e-mails : toujours lus de gauche à droite (sinon « 95 111 222 » s'affiche « 222 111 95 ») */
+html.rtl input[type=tel],html.rtl input[type=email],html.rtl #log-id,html.rtl #fp-id{direction:ltr;text-align:right}
+html.rtl input[type=tel]:placeholder-shown,html.rtl input[type=email]:placeholder-shown,html.rtl #log-id:placeholder-shown,html.rtl #fp-id:placeholder-shown{direction:rtl}
 html.rtl .pp-x{right:auto;left:2px}
 html.rtl .bell-badge{right:auto;left:-4px}
 .icon-btn:hover{border-color:var(--rose);transform:translateY(-1px)}
@@ -567,6 +570,12 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .hint{font-size:.84rem;color:var(--muted);font-weight:600}
 .legal-link{color:var(--rose-deep);font-weight:800;text-decoration:underline;text-underline-offset:2px}
 .legal-foot{margin:14px 0 6px}
+.forgot-row{display:flex;justify-content:flex-end;margin-top:6px}
+.forgot-link{background:none;border:0;padding:4px 0;font:inherit;font-size:.86rem;font-weight:800;color:var(--rose-deep);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.mail-box{background:var(--rose-tint);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;margin:0 0 10px}
+.mail-box .mb-l{font-size:.75rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.mail-box .mb-v{font-weight:800;color:var(--ink);word-break:break-all;margin-top:2px}
+.mail-box.warn{background:var(--warn-soft);border-color:#F2CFA3}
 .center{text-align:center}.mt{margin-top:14px}.mt-s{margin-top:8px}.mb{margin-bottom:14px}
 .divider{height:1px;background:var(--line);margin:16px 0}
 .spread{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -624,10 +633,11 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
       </div>
 
       <div class="card" id="form-login">
-        <div class="field"><label>Téléphone ou identifiant</label>
-          <input class="input" id="log-id" placeholder="Votre numéro, ex : 95 063 068" autocomplete="username" /></div>
+        <div class="field"><label>Téléphone ou e-mail</label>
+          <input class="input" id="log-id" placeholder="Ex : 95 063 068 ou nom@gmail.com" autocomplete="username" autocapitalize="none" spellcheck="false" /></div>
         <div class="field"><label>Mot de passe</label>
-          <input class="input" id="log-pass" type="password" placeholder="••••••" autocomplete="current-password" /></div>
+          <input class="input" id="log-pass" type="password" placeholder="••••••" autocomplete="current-password" />
+          <div class="forgot-row"><button type="button" class="forgot-link" onclick="App.openForgot()">Mot de passe oublié ?</button></div></div>
         <button class="btn btn-primary btn-block btn-lg" onclick="App.login()">Se connecter 🐾</button>
         <p class="hint center mt">Nouveau ? Créez un compte pour suivre la santé de votre animal.</p>
       </div>
@@ -637,6 +647,9 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
           <input class="input" id="reg-name" placeholder="Ex : Hamdi Rahmeni" /></div>
         <div class="field"><label>Numéro de téléphone</label>
           <input class="input" id="reg-phone" type="tel" inputmode="numeric" placeholder="Ex : 95 063 068" autocomplete="tel" /></div>
+        <div class="field"><label>Adresse e-mail</label>
+          <input class="input" id="reg-email" type="email" inputmode="email" placeholder="Ex : nom@gmail.com" autocomplete="email" autocapitalize="none" spellcheck="false" />
+          <div class="hint" style="margin-top:6px">Pour vous connecter et récupérer votre mot de passe si vous l'oubliez.</div></div>
         <div class="field"><label>Mot de passe</label>
           <input class="input" id="reg-pass" type="password" placeholder="Choisissez un mot de passe" autocomplete="new-password" />
           <div class="hint" style="margin-top:6px">Au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un symbole.</div></div>
@@ -1145,6 +1158,55 @@ const AR_DICT = {
   "Compte client supprimé":"تم حذف حساب زبون",
   "Seront effacés : votre compte, vos animaux et leurs carnets de santé, vos rendez-vous, commandes, messages et notifications.":"سيتم حذف: حسابك، حيواناتك ودفاتر صحتها، مواعيدك، طلباتك، رسائلك وإشعاراتك.",
   "Supprimer définitivement votre compte et toutes vos données ?":"حذف حسابك وجميع بياناتك نهائيًا؟",
+  /* ---- E-mail de connexion et mot de passe oublié ---- */
+  "Téléphone ou e-mail":"الهاتف أو البريد الإلكتروني",
+  "Ex : 95 063 068 ou nom@gmail.com":"مثال: 95 063 068 أو nom@gmail.com",
+  "Ex : nom@gmail.com":"مثال: nom@gmail.com",
+  "Adresse e-mail":"البريد الإلكتروني",
+  "Nouvelle adresse e-mail":"البريد الإلكتروني الجديد",
+  "Pour vous connecter et récupérer votre mot de passe si vous l'oubliez.":"لتسجيل الدخول واسترجاع كلمة المرور إذا نسيتها.",
+  "Mot de passe oublié ?":"نسيت كلمة المرور؟",
+  "Mot de passe oublié":"نسيت كلمة المرور",
+  "Nous vous envoyons un lien par e-mail pour choisir un nouveau mot de passe.":"سنرسل لك رابطًا عبر البريد الإلكتروني لاختيار كلمة مرور جديدة.",
+  "E-mail ou numéro de téléphone":"البريد الإلكتروني أو رقم الهاتف",
+  "Envoyer le lien":"إرسال الرابط",
+  "Envoi en cours…":"جارٍ الإرسال…",
+  "Saisissez votre e-mail ou votre numéro.":"أدخل بريدك الإلكتروني أو رقمك.",
+  "Saisissez l'adresse e-mail de votre compte.":"أدخل البريد الإلكتروني لحسابك.",
+  "Aucune adresse e-mail n'est liée à ce compte.":"لا يوجد بريد إلكتروني مرتبط بهذا الحساب.",
+  "Contactez le cabinet : il vous aidera à retrouver l'accès à votre compte.":"اتصل بالعيادة: ستساعدك على استرجاع الوصول إلى حسابك.",
+  "E-mail envoyé":"تم إرسال البريد",
+  "Si un compte existe, un lien a été envoyé à :":"إذا كان هناك حساب، فقد أُرسل رابط إلى:",
+  "Ouvrez l'e-mail, touchez le lien et choisissez un nouveau mot de passe. Pensez à regarder dans les spams.":"افتح البريد، اضغط على الرابط واختر كلمة مرور جديدة. تحقّق أيضًا من البريد غير المرغوب فيه.",
+  "Retour à la connexion":"العودة إلى تسجيل الدخول",
+  "Adresse e-mail invalide.":"البريد الإلكتروني غير صالح.",
+  "Cette adresse e-mail a déjà un compte. Connectez-vous ou utilisez « Mot de passe oublié ».":"هذا البريد الإلكتروني له حساب بالفعل. سجّل الدخول أو استعمل «نسيت كلمة المرور».",
+  "Ce numéro a déjà un compte. Connectez-vous ou utilisez « Mot de passe oublié ».":"هذا الرقم له حساب بالفعل. سجّل الدخول أو استعمل «نسيت كلمة المرور».",
+  "Cette adresse e-mail est déjà utilisée par un autre compte.":"هذا البريد الإلكتروني مستعمل في حساب آخر.",
+  "C'est déjà votre adresse actuelle.":"هذا هو بريدك الحالي.",
+  "Mot de passe actuel incorrect.":"كلمة المرور الحالية غير صحيحة.",
+  "Reconnectez-vous puis réessayez.":"أعد تسجيل الدخول ثم حاول مجددًا.",
+  "Ajouter mon e-mail":"إضافة بريدي الإلكتروني",
+  "Modifier mon e-mail":"تعديل بريدي الإلكتروني",
+  "E-mail actuel":"البريد الحالي",
+  "E-mail de connexion":"بريد تسجيل الدخول",
+  "Aucune adresse e-mail":"لا يوجد بريد إلكتروني",
+  "Ajoutez-en une pour pouvoir récupérer votre mot de passe.":"أضف بريدًا لتتمكّن من استرجاع كلمة المرور.",
+  "Ajoutez votre adresse e-mail : vous pourrez vous connecter avec elle et récupérer votre mot de passe si vous l'oubliez.":"أضف بريدك الإلكتروني: ستتمكّن من تسجيل الدخول به واسترجاع كلمة المرور إذا نسيتها.",
+  "Un e-mail de confirmation vous sera envoyé. L'adresse est enregistrée dès que vous touchez le lien qu'il contient.":"ستصلك رسالة تأكيد. يُسجَّل البريد بمجرد الضغط على الرابط الموجود فيها.",
+  "Ensuite, connectez-vous avec cette adresse e-mail (l'identifiant « admin » ne fonctionnera plus).":"بعد ذلك، سجّل الدخول بهذا البريد (المعرّف «admin» لن يعمل بعد الآن).",
+  "Envoyer la confirmation":"إرسال التأكيد",
+  "E-mail de confirmation envoyé":"تم إرسال بريد التأكيد",
+  "Ouvrez votre boîte :":"افتح بريدك:",
+  "Touchez le lien pour valider votre adresse (pensez aux spams). Vous pourrez ensuite vous connecter avec votre numéro ou avec cette adresse.":"اضغط على الرابط لتأكيد بريدك (تحقّق من البريد غير المرغوب فيه). بعدها يمكنك تسجيل الدخول برقمك أو بهذا البريد.",
+  "Fermer":"إغلاق",
+  "Votre adresse e-mail":"بريدك الإلكتروني",
+  "Sécurisez votre compte":"أمِّن حسابك",
+  "Ajoutez votre adresse e-mail : si vous oubliez votre mot de passe, vous pourrez le réinitialiser vous-même.":"أضف بريدك الإلكتروني: إذا نسيت كلمة المرور، يمكنك إعادة تعيينها بنفسك.",
+  "Plus tard":"لاحقًا",
+  "E-mail administrateur":"بريد المسؤول",
+  "Avec une vraie adresse e-mail, vous pourrez utiliser « Mot de passe oublié » sur l'écran de connexion.":"مع بريد إلكتروني حقيقي، يمكنك استعمال «نسيت كلمة المرور» في شاشة تسجيل الدخول.",
+  "Vous pouvez corriger le nom affiché. Le mot de passe est géré de façon sécurisée par le client lui-même ; il se connecte avec son numéro d'inscription ou son adresse e-mail.":"يمكنك تصحيح الاسم المعروض. كلمة المرور يديرها الزبون بنفسه بشكل آمن؛ يسجّل الدخول برقم التسجيل أو ببريده الإلكتروني.",
 
 };
 const AR_TOKENS_LIST = [
@@ -1241,13 +1303,14 @@ const App = {
       // qu'aucun profil n'existe. Aucun mot de passe n'y est stocké —
       // Firebase Auth s'en charge.
       if(lectureOK && !prof){
-        const p = this._pendingReg || {};
+        const p = this._pendingRegFor(user.email);
         prof = { id:user.uid, role:"client",
                  tel: p.tel || this.telFromEmail(user.email),
                  nom: p.nom || "", createdAt: Date.now() };
         try{ await window.Cloud.saveUser(prof); }catch(e){ console.warn("saveUser", e); }
       }
       this._pendingReg = null;
+      try{ localStorage.removeItem("ad_pendingReg"); }catch(e){}
 
       // Lecture impossible : on n'invente RIEN. On se rabat sur la copie
       // locale, qui porte le bon rôle. Si cet appareil n'en a pas (première
@@ -1267,6 +1330,8 @@ const App = {
       // 2) Étendue des lectures, puis chargement.
       window.Cloud.setScope({ uid:user.uid, admin: prof.role === "admin" });
       try{ await window.Cloud.pullAll(); }catch(e){ console.warn("pullAll", e); }
+      // E-mail de connexion + annuaire « téléphone → e-mail » (sans bloquer l'ouverture).
+      if(lectureOK) this._syncLoginMail(prof, user);
 
       // Filet : si la synchro n'a pas encore ramené le profil, on le pose en
       // local (écriture locale seule, pour ne pas relancer d'écriture cloud).
@@ -1378,22 +1443,82 @@ const App = {
     const key=this.phoneKey(idOrPhone);
     return (key||raw)+"@dabordanimaux.app";
   },
-  // Retrouve le numéro à partir de l'e-mail interne (pour l'affichage).
+  // Retrouve le numéro à partir de l'e-mail interne (anciens comptes uniquement).
   telFromEmail(email){
+    if(!this.isInternalMail(email)) return "";
     const s=(email||"").split("@")[0];
     return (s==="admin")?"":s;
+  },
+  // Les comptes créés avant l'ajout de l'e-mail utilisent une adresse interne
+  // (numéro@dabordanimaux.app) qui ne reçoit aucun courrier.
+  isInternalMail(email){ return /@dabordanimaux\.app$/i.test(String(email||"").trim()); },
+  isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(s||"").trim()); },
+  // Masque une adresse pour l'affichage : jassem@gmail.com -> ja•••@gmail.com
+  maskEmail(email){
+    const e=String(email||""), i=e.indexOf("@"); if(i<1) return e;
+    const u=e.slice(0,i); return u.slice(0, Math.min(2, u.length))+"•••"+e.slice(i);
+  },
+  // Inscription en cours : mémorisée aussi sur l'appareil, au cas où la page
+  // se recharge entre la création du compte et celle du profil.
+  _pendingRegFor(email){
+    if(this._pendingReg) return this._pendingReg;
+    try{
+      const p=JSON.parse(localStorage.getItem("ad_pendingReg")||"null");
+      if(p && p.email && email && p.email===String(email).toLowerCase()) return p;
+    }catch(e){}
+    return {};
   },
   // Traduit les codes d'erreur Firebase Auth en messages clairs pour l'utilisateur.
   authError(err){
     const c=(err&&err.code)||"";
-    if(c.indexOf("email-already-in-use")>=0) return "Ce numéro a déjà un compte. Essayez de vous connecter.";
-    if(c.indexOf("invalid-credential")>=0 || c.indexOf("wrong-password")>=0 || c.indexOf("user-not-found")>=0)
+    if(c.indexOf("email-already-in-use")>=0) return "Cette adresse e-mail a déjà un compte. Connectez-vous ou utilisez « Mot de passe oublié ».";
+    if(c.indexOf("invalid-credential")>=0 || c.indexOf("wrong-password")>=0 || c.indexOf("user-not-found")>=0 || c.indexOf("invalid-login")>=0)
       return "Identifiant ou mot de passe incorrect.";
     if(c.indexOf("weak-password")>=0)       return "Mot de passe trop faible (min. 6 caractères).";
-    if(c.indexOf("invalid-email")>=0)       return "Numéro de téléphone invalide.";
+    if(c.indexOf("invalid-email")>=0)       return "Adresse e-mail invalide.";
+    if(c.indexOf("requires-recent-login")>=0) return "Reconnectez-vous puis réessayez.";
     if(c.indexOf("too-many-requests")>=0)   return "Trop de tentatives. Réessayez dans quelques minutes.";
     if(c.indexOf("network")>=0)             return "Problème de connexion Internet.";
     return "Une erreur s'est produite. Réessayez.";
+  },
+  _isCredError(err){
+    const c=(err&&err.code)||"";
+    return /invalid-credential|wrong-password|user-not-found|invalid-login|invalid-email/.test(c);
+  },
+  // Adresses à essayer pour un identifiant saisi : e-mail tel quel, « admin »,
+  // ou numéro de téléphone (annuaire téléphone → e-mail, puis adresse interne
+  // des anciens comptes).
+  async _loginCandidates(raw){
+    const v=(raw||"").trim();
+    if(v.indexOf("@")>=0) return [v.toLowerCase()];
+    if(v.toLowerCase()==="admin") return [this.credEmail("admin")];
+    const key=this.phoneKey(v);
+    const list=[];
+    if(key){
+      const ent = window.Cloud.lookupPhone ? await window.Cloud.lookupPhone(key) : null;
+      if(ent && ent.email) list.push(String(ent.email).toLowerCase());
+      if(ent && ent.pending) list.push(String(ent.pending).toLowerCase());
+    }
+    const ancien=this.credEmail(v);
+    if(list.indexOf(ancien)<0) list.push(ancien);
+    return list;
+  },
+  // Après chaque connexion : garde à jour l'e-mail du profil et l'annuaire
+  // « téléphone → e-mail » qui permet de se connecter avec son numéro.
+  async _syncLoginMail(prof, user){
+    try{
+      if(!window.Cloud || !user) return;
+      const mail=(user.email||"").toLowerCase();
+      if(prof.role==="client"){
+        const key=this.phoneKey(prof.tel);
+        if(key && window.Cloud.syncLoginIndex) await window.Cloud.syncLoginIndex(key);
+        if(mail && !this.isInternalMail(mail) && prof.email!==mail && window.Cloud.saveUserField)
+          await window.Cloud.saveUserField(user.uid, { email: mail });
+        if(this.isInternalMail(mail)) setTimeout(()=>this._nudgeAddEmail(), 1800);
+      } else if(prof.role==="admin"){
+        if(window.Cloud.backfillLoginIndex) window.Cloud.backfillLoginIndex(DB.get("users",[]), this);
+      }
+    }catch(e){ console.warn("syncLoginMail", e); }
   },
 
   switchAuth(mode){
@@ -1403,17 +1528,157 @@ const App = {
     document.getElementById("form-register").style.display = mode==="register"?"":"none";
   },
   async login(){
-    const id=this.normPhone(document.getElementById("log-id").value);
+    const id=(document.getElementById("log-id").value||"").trim();
     const pass=document.getElementById("log-pass").value;
     if(!id||!pass) return this.toast("Remplissez tous les champs.","err");
     if(!(window.Cloud && window.Cloud.enabled))
       return this.toast("Connexion Internet requise pour se connecter.","err");
+    if(this._loggingIn) return;
+    this._loggingIn=true;
     try{
-      await window.Cloud.signIn(this.credEmail(id), pass);
+      // Téléphone ou e-mail : on essaie, dans l'ordre, les adresses possibles.
+      const essais=await this._loginCandidates(id.indexOf("@")>=0 ? id : this.normPhone(id));
+      let derniere=null;
+      for(const mail of essais){
+        try{ await window.Cloud.signIn(mail, pass); derniere=null; break; }
+        catch(err){ derniere=err; if(!this._isCredError(err)) break; }
+      }
+      if(derniere) throw derniere;
       // La suite (chargement des données + navigation) est gérée par _onAuthChanged.
     }catch(err){
-      this.toast(this.authError(err),"err");
+      const c=(err&&err.code)||"";
+      this.toast(c.indexOf("invalid-email")>=0 ? "Identifiant ou mot de passe incorrect." : this.authError(err),"err");
+    }finally{ this._loggingIn=false; }
+  },
+
+  /* ---------- Mot de passe oublié ---------- */
+  openForgot(){
+    const pre=(document.getElementById("log-id").value||"").trim();
+    const body=`
+      <p style="margin:0 0 12px;font-weight:600;color:var(--ink-2)">Nous vous envoyons un lien par e-mail pour choisir un nouveau mot de passe.</p>
+      <div class="field"><label>E-mail ou numéro de téléphone</label>
+        <input class="input" id="fp-id" value="${this.escape(pre)}" placeholder="Ex : 95 063 068 ou nom@gmail.com" autocapitalize="none" spellcheck="false" autocomplete="username"></div>
+      <div id="fp-res"></div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" id="fp-go" onclick="App.sendReset()">📧 Envoyer le lien</button>`;
+    this.openSheet("Mot de passe oublié", body, foot);
+  },
+  async sendReset(){
+    const raw=((document.getElementById("fp-id")||{}).value||"").trim();
+    const res=document.getElementById("fp-res"), btn=document.getElementById("fp-go");
+    if(!raw) return this.toast("Saisissez votre e-mail ou votre numéro.","err");
+    if(!(window.Cloud && window.Cloud.enabled && window.Cloud.resetPassword))
+      return this.toast("Connexion Internet requise.","err");
+    const s=this.settings(), tel=s.phone?this.phoneFmt(s.phone):"";
+    const sansMail=`<div class="mail-box warn"><div style="font-weight:800;color:var(--ink)">Aucune adresse e-mail n'est liée à ce compte.</div>
+        <div class="hint" style="margin-top:6px">Contactez le cabinet : il vous aidera à retrouver l'accès à votre compte.</div>
+        ${tel?`<a class="btn btn-soft btn-sm" style="margin-top:10px;text-decoration:none" href="tel:+${this.phoneDigits(s.phone)}">📞 <span data-i18n="off">${this.escape(tel)}</span></a>`:""}</div>`;
+    let mail="", parTel=false;
+    if(raw.indexOf("@")>=0){
+      mail=raw.toLowerCase();
+      if(!this.isEmail(mail)) return this.toast("Adresse e-mail invalide.","err");
+    } else if(raw.toLowerCase()==="admin"){
+      if(res) res.innerHTML=`<div class="mail-box warn"><div class="hint" style="margin:0">Saisissez l'adresse e-mail de votre compte.</div></div>`;
+      return;
+    } else {
+      const key=this.phoneKey(raw);
+      if(!key) return this.toast("Numéro de téléphone invalide.","err");
+      parTel=true;
+      if(btn){ btn.disabled=true; }
+      const ent=await window.Cloud.lookupPhone(key);
+      if(btn){ btn.disabled=false; }
+      mail=(ent && ent.email) ? String(ent.email).toLowerCase() : "";
     }
+    // Les adresses internes (anciens comptes) ne reçoivent pas de courrier.
+    if(!mail || this.isInternalMail(mail)){ if(res) res.innerHTML=sansMail; return; }
+    if(btn){ btn.disabled=true; btn.textContent="Envoi en cours…"; }
+    try{
+      await window.Cloud.resetPassword(mail);
+    }catch(err){
+      const c=(err&&err.code)||"";
+      // « compte introuvable » : même réponse qu'un envoi réussi (on ne révèle
+      // pas si une adresse possède un compte).
+      if(c.indexOf("user-not-found")<0){
+        if(btn){ btn.disabled=false; btn.textContent="📧 Envoyer le lien"; }
+        return this.toast(this.authError(err),"err");
+      }
+    }
+    if(res) res.innerHTML=`<div class="mail-box"><div style="font-weight:800;color:var(--ink)">✅ E-mail envoyé</div>
+        <div style="margin-top:6px;color:var(--ink-2);font-weight:600"><span>Si un compte existe, un lien a été envoyé à :</span> <b data-i18n="off">${this.escape(parTel?this.maskEmail(mail):mail)}</b></div>
+        <div class="hint" style="margin-top:6px">Ouvrez l'e-mail, touchez le lien et choisissez un nouveau mot de passe. Pensez à regarder dans les spams.</div></div>`;
+    if(btn){ btn.disabled=false; btn.textContent="Retour à la connexion"; btn.onclick=()=>this.closeSheet(); }
+  },
+
+  /* ---------- Ajouter / modifier l'e-mail de connexion ---------- */
+  openEmailForm(){
+    const u=this.currentUser(); if(!u) return;
+    const cur=(window.Cloud && window.Cloud.authEmail) ? window.Cloud.authEmail() : "";
+    const interne=this.isInternalMail(cur);
+    const body=`
+      ${interne?`<p style="margin:0 0 12px;font-weight:600;color:var(--ink-2)">Ajoutez votre adresse e-mail : vous pourrez vous connecter avec elle et récupérer votre mot de passe si vous l'oubliez.</p>`
+        :`<div class="mail-box"><div class="mb-l">E-mail actuel</div><div class="mb-v" data-i18n="off">${this.escape(cur)}</div></div>`}
+      <div class="field"><label>${interne?"Adresse e-mail":"Nouvelle adresse e-mail"}</label>
+        <input class="input" id="em-new" type="email" inputmode="email" placeholder="Ex : nom@gmail.com" autocomplete="email" autocapitalize="none" spellcheck="false"></div>
+      <div class="field"><label>Mot de passe actuel</label>
+        <input class="input" id="em-pass" type="password" placeholder="Votre mot de passe" autocomplete="current-password"></div>
+      <div class="hint">Un e-mail de confirmation vous sera envoyé. L'adresse est enregistrée dès que vous touchez le lien qu'il contient.</div>
+      ${u.role==="admin"?`<div class="hint" style="margin-top:6px">Ensuite, connectez-vous avec cette adresse e-mail (l'identifiant « admin » ne fonctionnera plus).</div>`:""}
+      <div id="em-res"></div>`;
+    const foot=`<button class="btn btn-primary btn-block btn-lg" id="em-go" onclick="App.saveEmail()">📧 Envoyer la confirmation</button>`;
+    this.openSheet(interne?"Ajouter mon e-mail":"Modifier mon e-mail", body, foot);
+  },
+  async saveEmail(){
+    const u=this.currentUser(); if(!u) return;
+    const mail=((document.getElementById("em-new")||{}).value||"").trim().toLowerCase();
+    const pass=(document.getElementById("em-pass")||{}).value||"";
+    if(!mail||!pass) return this.toast("Remplissez tous les champs.","err");
+    if(!this.isEmail(mail) || this.isInternalMail(mail)) return this.toast("Adresse e-mail invalide.","err");
+    const cur=(window.Cloud && window.Cloud.authEmail) ? window.Cloud.authEmail() : "";
+    if(mail===String(cur).toLowerCase()) return this.toast("C'est déjà votre adresse actuelle.","err");
+    if(!(window.Cloud && window.Cloud.enabled && window.Cloud.changeEmail))
+      return this.toast("Connexion Internet requise.","err");
+    const btn=document.getElementById("em-go");
+    if(btn){ btn.disabled=true; btn.textContent="Envoi en cours…"; }
+    try{
+      await window.Cloud.changeEmail(mail, pass, u.role==="client" ? this.phoneKey(u.tel) : "");
+    }catch(err){
+      if(btn){ btn.disabled=false; btn.textContent="📧 Envoyer la confirmation"; }
+      const c=(err&&err.code)||"";
+      if(c.indexOf("wrong-password")>=0 || c.indexOf("invalid-credential")>=0) return this.toast("Mot de passe actuel incorrect.","err");
+      if(c.indexOf("email-already-in-use")>=0) return this.toast("Cette adresse e-mail est déjà utilisée par un autre compte.","err");
+      return this.toast(this.authError(err),"err");
+    }
+    const res=document.getElementById("em-res");
+    if(res) res.innerHTML=`<div class="mail-box" style="margin-top:12px"><div style="font-weight:800;color:var(--ink)">✅ E-mail de confirmation envoyé</div>
+        <div style="margin-top:6px;color:var(--ink-2);font-weight:600"><span>Ouvrez votre boîte :</span> <b data-i18n="off">${this.escape(mail)}</b></div>
+        <div class="hint" style="margin-top:6px">Touchez le lien pour valider votre adresse (pensez aux spams). Vous pourrez ensuite vous connecter avec votre numéro ou avec cette adresse.</div></div>`;
+    if(btn){ btn.disabled=false; btn.textContent="Fermer"; btn.onclick=()=>this.closeSheet(); }
+    try{ localStorage.setItem("ad_mailNudge","1"); }catch(e){}
+  },
+  // Anciens comptes sans e-mail : une invitation, une seule fois par appareil.
+  _nudgeAddEmail(){
+    try{ if(localStorage.getItem("ad_mailNudge")) return; }catch(e){ return; }
+    const u=this.currentUser(); if(!u || u.role!=="client") return;
+    const sh=document.getElementById("sheet-backdrop");
+    if(sh && sh.classList.contains("show")) return;     // une autre fenêtre est ouverte : on réessaiera
+    try{ localStorage.setItem("ad_mailNudge","1"); }catch(e){}
+    const body=`
+      <div class="mail-box"><div style="font-weight:800;color:var(--ink)">🔐 Sécurisez votre compte</div>
+        <div style="margin-top:6px;color:var(--ink-2);font-weight:600">Ajoutez votre adresse e-mail : si vous oubliez votre mot de passe, vous pourrez le réinitialiser vous-même.</div></div>`;
+    const foot=`<div style="display:flex;gap:8px"><button class="btn btn-ghost btn-lg" style="flex:1" onclick="App.closeSheet()">Plus tard</button>
+      <button class="btn btn-primary btn-lg" style="flex:2" onclick="App.openEmailForm()">📧 Ajouter mon e-mail</button></div>`;
+    this.openSheet("Votre adresse e-mail", body, foot);
+  },
+  // Bloc « E-mail de connexion » affiché dans Mon compte / Réglages.
+  emailCardHTML(){
+    const cur=(window.Cloud && window.Cloud.authEmail) ? window.Cloud.authEmail() : "";
+    if(this.isInternalMail(cur) || !cur){
+      return `<div class="mail-box warn"><div class="mb-l">E-mail de connexion</div>
+          <div style="font-weight:700;color:var(--ink);margin-top:2px">Aucune adresse e-mail</div>
+          <div class="hint" style="margin-top:4px">Ajoutez-en une pour pouvoir récupérer votre mot de passe.</div></div>
+        <button class="btn btn-primary btn-block" style="margin-bottom:8px" onclick="App.openEmailForm()">📧 Ajouter mon e-mail</button>`;
+    }
+    return `<div class="mail-box"><div class="mb-l">E-mail de connexion</div><div class="mb-v" data-i18n="off">${this.escape(cur)}</div></div>
+      <button class="btn btn-ghost btn-block" style="margin-bottom:8px" onclick="App.openEmailForm()">✏️ Modifier mon e-mail</button>`;
   },
   // Vérifie la robustesse d'un mot de passe.
   // Renvoie un message d'erreur (string) si une règle n'est pas respectée, sinon null.
@@ -1430,23 +1695,34 @@ const App = {
   async register(){
     const nom=(document.getElementById("reg-name").value||"").trim();
     const tel=this.normPhone(document.getElementById("reg-phone").value);
+    const email=(document.getElementById("reg-email").value||"").trim().toLowerCase();
     const pass=document.getElementById("reg-pass").value;
-    if(!nom||!tel||!pass) return this.toast("Remplissez tous les champs.","err");
-    if(!this.phoneKey(tel)) return this.toast("Numéro de téléphone invalide.","err");
+    if(!nom||!tel||!email||!pass) return this.toast("Remplissez tous les champs.","err");
+    const key=this.phoneKey(tel);
+    if(!key || key.length<8) return this.toast("Numéro de téléphone invalide.","err");
+    if(!this.isEmail(email) || this.isInternalMail(email)) return this.toast("Adresse e-mail invalide.","err");
     const pwIssue=this.passwordIssue(pass);            // contrôle de robustesse du mot de passe
     if(pwIssue) return this.toast(pwIssue,"err");
     if(!(window.Cloud && window.Cloud.enabled))
       return this.toast("Connexion Internet requise pour créer un compte.","err");
-    // On mémorise le nom + téléphone : _onAuthChanged créera le profil juste après.
-    this._pendingReg = { tel, nom };
+    if(this._registering) return;
+    this._registering=true;
     try{
-      await window.Cloud.signUp(this.credEmail(tel), pass);
+      // Un numéro = un compte.
+      const ent = window.Cloud.lookupPhone ? await window.Cloud.lookupPhone(key) : null;
+      if(ent && ent.uid) return this.toast("Ce numéro a déjà un compte. Connectez-vous ou utilisez « Mot de passe oublié ».","err");
+      // On mémorise nom + téléphone : _onAuthChanged créera le profil juste après.
+      this._pendingReg = { tel, nom, email };
+      try{ localStorage.setItem("ad_pendingReg", JSON.stringify(this._pendingReg)); }catch(e){}
+      // Le compte de connexion utilise la vraie adresse e-mail du client.
+      await window.Cloud.signUp(email, pass);
       this.toast("Compte créé, bienvenue ! 🐾","ok");
       // La navigation est gérée par _onAuthChanged.
     }catch(err){
       this._pendingReg = null;
+      try{ localStorage.removeItem("ad_pendingReg"); }catch(e){}
       this.toast(this.authError(err),"err");
-    }
+    }finally{ this._registering=false; }
   },
   async logout(){
     // ce téléphone ne doit plus recevoir les notifications du compte quitté
@@ -2889,6 +3165,7 @@ const App = {
 
       <div class="card mb">
         <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Confidentialité</div><h2 style="font-size:1.2rem">${role==="c"?"Mon compte":"Informations légales"}</h2></div></div>
+        ${role==="c"?this.emailCardHTML():""}
         <a class="btn btn-ghost btn-block" style="text-decoration:none;margin-bottom:8px" href="confidentialite.html">🔒 Politique de confidentialité</a>
         ${role==="c"?`<button class="btn btn-danger btn-block" onclick="App.openDeleteAccount()">🗑️ Supprimer mon compte</button>
         <div class="hint" style="margin-top:8px">Supprime définitivement votre compte et toutes vos données.</div>`:`<a class="btn btn-ghost btn-block" style="text-decoration:none" href="suppression-compte.html">🗑️ Page « Suppression de compte »</a>`}
@@ -3638,7 +3915,7 @@ const App = {
     const c=DB.find("users",clientId); if(!c) return;
     const animals=DB.get("animals",[]).filter(a=>a.ownerId===clientId);
     const qs=DB.get("questions",[]).filter(q=>q.clientId===clientId&&!q.reponse).length;
-    let body=`<div class="about-row" style="border:0;padding:0 0 12px"><div class="ic">👤</div><div><div class="lbl">Client</div><div class="val">${this.escape(c.nom||"Client")}</div><div class="lr-s">${this.escape(this.phoneFmt(c.tel))}</div></div>
+    let body=`<div class="about-row" style="border:0;padding:0 0 12px"><div class="ic">👤</div><div><div class="lbl">Client</div><div class="val">${this.escape(c.nom||"Client")}</div><div class="lr-s">${this.escape(this.phoneFmt(c.tel))}</div>${c.email?`<div class="lr-s" data-i18n="off" style="word-break:break-all">${this.escape(c.email)}</div>`:""}</div>
       <a href="tel:+${this.phoneDigits(c.tel)}" class="btn btn-soft btn-sm" style="margin-left:auto;text-decoration:none">📞 Appeler</a></div>
       <div style="display:flex;gap:8px;margin-bottom:14px">
         <button class="btn btn-soft btn-sm" style="flex:1" onclick="App.editClient('${clientId}')">✏️ Modifier le compte</button>
@@ -3666,7 +3943,7 @@ const App = {
     const body=`
       <div class="field"><label>Nom complet</label><input class="input" id="ce-nom" value="${this.escape(c.nom||"")}"></div>
       <div class="field"><label>Numéro de téléphone</label><input class="input" id="ce-tel" type="tel" inputmode="numeric" value="${this.escape(c.tel||"")}"></div>
-      <div class="hint">Vous pouvez corriger le nom affiché. Le mot de passe est géré de façon sécurisée par le client lui-même ; il se connecte avec le numéro utilisé lors de son inscription.</div>`;
+      <div class="hint">Vous pouvez corriger le nom affiché. Le mot de passe est géré de façon sécurisée par le client lui-même ; il se connecte avec son numéro d'inscription ou son adresse e-mail.</div>`;
     const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveClient()">Enregistrer</button>`;
     this.openSheet("Modifier le compte client", body, foot);
   },
@@ -3698,6 +3975,8 @@ const App = {
     DB.set("advices", DB.get("advices",[]).filter(a=>a.clientId!==clientId));
     DB.set("notifs", DB.get("notifs",[]).filter(n=>n.target!==clientId));
     DB.set("users", DB.get("users",[]).filter(u=>u.id!==clientId));
+    // Libère son numéro dans l'annuaire de connexion.
+    try{ if(window.Cloud && window.Cloud.removeLoginIndex) window.Cloud.removeLoginIndex(this.phoneKey(c.tel), clientId); }catch(e){}
     this.closeSheet(); this.toast("Compte supprimé.","ok"); this.renderAll();
   },
 
@@ -3946,6 +4225,12 @@ const App = {
         <button class="btn btn-primary btn-block" onclick="App.changeAdminPassword()">🔒 Modifier le mot de passe</button>
       </div>
 
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Sécurité</div><h2 style="font-size:1.2rem">E-mail administrateur</h2></div></div>
+        ${this.emailCardHTML()}
+        <div class="hint" style="margin:0">Avec une vraie adresse e-mail, vous pourrez utiliser « Mot de passe oublié » sur l'écran de connexion.</div>
+      </div>
+
       <button class="btn btn-primary btn-block btn-lg mb" onclick="App.saveSettings()">💾 Enregistrer les réglages</button>
       <button class="btn btn-danger btn-block" onclick="App.resetData()">🗑️ Réinitialiser toutes les données</button>
       <div class="hint center mt" style="padding-bottom:20px">Les données sont synchronisées dans le cloud (Firebase) et disponibles sur tous les appareils. Sans réseau, l'app reste utilisable en local.</div>`;
@@ -4079,7 +4364,7 @@ document.addEventListener("DOMContentLoaded", function(){
     const e=document.getElementById(id);
     if(e) e.addEventListener("keydown", function(ev){ if(ev.key==="Enter") App.login(); });
   });
-  ["reg-name","reg-phone","reg-pass"].forEach(function(id){
+  ["reg-name","reg-phone","reg-email","reg-pass"].forEach(function(id){
     const e=document.getElementById(id);
     if(e) e.addEventListener("keydown", function(ev){ if(ev.key==="Enter") App.register(); });
   });
@@ -4176,7 +4461,8 @@ document.addEventListener("DOMContentLoaded", function(){
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
   import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
            signInWithEmailAndPassword, signOut,
-           EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser }
+           EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser,
+           sendPasswordResetEmail, verifyBeforeUpdateEmail }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   // --- Configuration du projet Firebase (cabinet Animaux d'abord) ---
@@ -4523,6 +4809,113 @@ document.addEventListener("DOMContentLoaded", function(){
   };
 
   /* -------------------------------------------------------------------
+     E-MAIL DE CONNEXION, MOT DE PASSE OUBLIÉ, ANNUAIRE TÉLÉPHONE → E-MAIL
+     -------------------------------------------------------------------
+     • Nouveaux comptes : Firebase Auth utilise la vraie adresse e-mail.
+     • Anciens comptes : adresse interne numéro@dabordanimaux.app (aucun
+       courrier possible) jusqu'à ce que le client ajoute son e-mail.
+     • loginIndex/{numéro} = { email, uid } permet de se connecter avec son
+       numéro. Lecture document par document seulement (aucune liste) :
+       voir les règles Firestore fournies avec cette version.
+     ------------------------------------------------------------------- */
+  const IDX = "loginIndex";
+  const langueMail = () => { try{ return localStorage.getItem("ad_lang")==="ar" ? "ar" : "fr"; }catch(e){ return "fr"; } };
+  const avecDelai = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("delai")), ms))]);
+
+  Cloud.authEmail = () => (auth && auth.currentUser && auth.currentUser.email) || "";
+
+  // Numéro -> { email, uid, pending? } ; null si inconnu, refusé ou hors ligne.
+  Cloud.lookupPhone = async (key) => {
+    if(!db || !key) return null;
+    try{
+      const d = await avecDelai(getDoc(doc(db, IDX, String(key))), 6000);
+      return d.exists() ? d.data() : null;
+    }catch(e){ console.warn("loginIndex lecture", e); return null; }
+  };
+
+  // Après connexion : rattache le numéro du client à son e-mail de connexion.
+  Cloud.syncLoginIndex = async (key) => {
+    const user = auth && auth.currentUser;
+    if(!db || !user || !key) return;
+    const ref = doc(db, IDX, String(key));
+    try{
+      const d = await getDoc(ref);
+      const cur = d.exists() ? d.data() : null;
+      if(cur && cur.uid !== user.uid) return;          // numéro rattaché à un autre compte
+      if(cur && cur.email === user.email) return;      // à jour (on garde un éventuel « pending »)
+      await setDoc(ref, { email: user.email, uid: user.uid, ts: Date.now() });
+    }catch(e){ console.warn("loginIndex", e); }
+  };
+
+  // Libère un numéro (suppression de compte).
+  Cloud.removeLoginIndex = async (key, uid) => {
+    if(!db || !key) return;
+    try{
+      const ref = doc(db, IDX, String(key));
+      const d = await getDoc(ref);
+      if(d.exists() && (!uid || d.data().uid === uid)) await deleteDoc(ref);
+    }catch(e){ console.warn("loginIndex suppression", e); }
+  };
+
+  // Administratrice : indexe une fois les clients inscrits avant cette version.
+  Cloud.backfillLoginIndex = async (users, app) => {
+    if(!db) return;
+    try{ if(localStorage.getItem("ad_idxBackfill") === "1") return; }catch(e){}
+    let refus = 0;
+    for(const u of (users || [])){
+      if(!u || u.role !== "client" || !u.id || !u.tel) continue;
+      const key = app.phoneKey(u.tel);
+      if(!key) continue;
+      try{
+        const ref = doc(db, IDX, key);
+        const d = await getDoc(ref);
+        if(d.exists()) continue;
+        const email = (u.email && !app.isInternalMail(u.email)) ? String(u.email).toLowerCase() : app.credEmail(key);
+        await setDoc(ref, { email, uid: String(u.id), ts: Date.now() });
+      }catch(e){ refus++; }
+    }
+    if(!refus){ try{ localStorage.setItem("ad_idxBackfill", "1"); }catch(e){} }
+    else console.warn("loginIndex : " + refus + " écriture(s) refusée(s) — règles Firestore à jour ?");
+  };
+
+  // Ajoute un champ au profil (ex. l'e-mail) sans toucher au reste.
+  Cloud.saveUserField = async (uid, fields) => {
+    if(!db || !uid) return;
+    try{
+      await setDoc(doc(db, "users", String(uid)), fields, { merge: true });
+      const arr = LS.read("users", []).map(x => (x && x.id === uid) ? Object.assign({}, x, fields) : x);
+      LS.write("users", arr);
+    }catch(e){ console.warn("profil e-mail", e); }
+  };
+
+  // Mot de passe oublié : Firebase envoie le lien de réinitialisation.
+  Cloud.resetPassword = async (email) => {
+    auth.languageCode = langueMail();
+    await sendPasswordResetEmail(auth, email);
+  };
+
+  // Ajout / changement d'e-mail : confirmation par lien envoyé à la NOUVELLE
+  // adresse ; Firebase ne l'applique qu'une fois le lien touché.
+  Cloud.changeEmail = async (newEmail, pass, key) => {
+    const user = auth && auth.currentUser;
+    if(!user) throw new Error("aucun-compte");
+    const cred = EmailAuthProvider.credential(user.email, pass);
+    await reauthenticateWithCredential(user, cred);    // échoue si le mot de passe est faux
+    auth.languageCode = langueMail();
+    await verifyBeforeUpdateEmail(user, newEmail);
+    // « pending » : la connexion par numéro essaiera aussi la nouvelle adresse
+    // dès qu'elle sera confirmée.
+    if(key && db){
+      try{
+        const ref = doc(db, IDX, String(key));
+        const d = await getDoc(ref);
+        if(!d.exists() || d.data().uid === user.uid)
+          await setDoc(ref, { email: user.email, uid: user.uid, pending: newEmail, ts: Date.now() });
+      }catch(e){ console.warn("loginIndex pending", e); }
+    }
+  };
+
+  /* -------------------------------------------------------------------
      SUPPRESSION DU COMPTE PAR LE CLIENT LUI-MÊME  (exigence Google Play)
      -------------------------------------------------------------------
      1. Le mot de passe est re-vérifié (Firebase l'exige avant une suppression).
@@ -4558,6 +4951,12 @@ document.addEventListener("DOMContentLoaded", function(){
       const snap = await getDocs(query(collection(db, TOKENS_COLL), where("userId", "==", uid)));
       await Promise.allSettled(snap.docs.map(d => deleteDoc(d.ref)));
     }catch(e){ /* lecture refusée par les règles : sans conséquence */ }
+
+    // Annuaire de connexion : le numéro redevient libre.
+    try{
+      const cle = String((info && info.tel) || "").replace(/\D/g, "").replace(/^216/, "");
+      if(cle) await Cloud.removeLoginIndex(cle, uid);
+    }catch(e){}
 
     // Prévenir le cabinet AVANT d'effacer le profil (au cas où les règles de
     // sécurité exigent un profil existant pour écrire). Même format que App.notify.
