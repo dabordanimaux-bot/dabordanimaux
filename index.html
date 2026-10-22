@@ -571,6 +571,20 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .legal-link{color:var(--rose-deep);font-weight:800;text-decoration:underline;text-underline-offset:2px}
 .legal-foot{margin:14px 0 6px}
 .forgot-row{display:flex;justify-content:flex-end;margin-top:6px}
+.app-link{display:block;font-size:.84rem;font-weight:800;color:var(--rose-deep);word-break:break-all;margin-bottom:10px;text-decoration:underline;text-underline-offset:2px}
+.dev-links{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.dev-links a{color:var(--rose-deep);font-weight:700;font-size:.88rem;text-decoration:none;word-break:break-all}
+html.rtl .dev-links a,html.rtl .app-link{text-align:right}
+.legal-links{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:14px 0 6px;font-size:.86rem;color:var(--muted)}
+.copyright{text-align:center;font-size:.8rem;color:var(--muted);font-weight:600}
+.pw-wrap{position:relative}
+.pw-wrap .input{padding-right:50px}
+html.rtl .pw-wrap .input{padding-right:14px;padding-left:50px}
+.pw-eye{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:40px;height:40px;border:0;border-radius:10px;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;padding:0}
+html.rtl .pw-eye{right:auto;left:6px}
+.pw-eye:hover,.pw-eye.on{color:var(--rose-deep)}
+.pw-eye:focus-visible{outline:2px solid var(--rose);outline-offset:1px}
+.pw-eye svg{width:21px;height:21px}
 .forgot-link{background:none;border:0;padding:4px 0;font:inherit;font-size:.86rem;font-weight:800;color:var(--rose-deep);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .mail-box{background:var(--rose-tint);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;margin:0 0 10px}
 .mail-box .mb-l{font-size:.75rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -634,7 +648,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 
       <div class="card" id="form-login">
         <div class="field"><label>Téléphone ou e-mail</label>
-          <input class="input" id="log-id" placeholder="Ex : 95 063 068 ou nom@gmail.com" autocomplete="username" autocapitalize="none" spellcheck="false" /></div>
+          <input class="input" id="log-id" placeholder="Ex : XX XXX XXX ou nom@example.com" autocomplete="username" autocapitalize="none" spellcheck="false" /></div>
         <div class="field"><label>Mot de passe</label>
           <input class="input" id="log-pass" type="password" placeholder="••••••" autocomplete="current-password" />
           <div class="forgot-row"><button type="button" class="forgot-link" onclick="App.openForgot()">Mot de passe oublié ?</button></div></div>
@@ -644,11 +658,11 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 
       <div class="card" id="form-register" style="display:none">
         <div class="field"><label>Nom complet</label>
-          <input class="input" id="reg-name" placeholder="Ex : Hamdi Rahmeni" /></div>
+          <input class="input" id="reg-name" placeholder="Ex : Prénom Nom" autocomplete="name" /></div>
         <div class="field"><label>Numéro de téléphone</label>
-          <input class="input" id="reg-phone" type="tel" inputmode="numeric" placeholder="Ex : 95 063 068" autocomplete="tel" /></div>
+          <input class="input" id="reg-phone" type="tel" inputmode="numeric" placeholder="Ex : XX XXX XXX" autocomplete="tel" /></div>
         <div class="field"><label>Adresse e-mail</label>
-          <input class="input" id="reg-email" type="email" inputmode="email" placeholder="Ex : nom@gmail.com" autocomplete="email" autocapitalize="none" spellcheck="false" />
+          <input class="input" id="reg-email" type="email" inputmode="email" placeholder="Ex : nom@example.com" autocomplete="email" autocapitalize="none" spellcheck="false" />
           <div class="hint" style="margin-top:6px">Pour vous connecter et récupérer votre mot de passe si vous l'oubliez.</div></div>
         <div class="field"><label>Mot de passe</label>
           <input class="input" id="reg-pass" type="password" placeholder="Choisissez un mot de passe" autocomplete="new-password" />
@@ -656,7 +670,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
         <button class="btn btn-primary btn-block btn-lg" onclick="App.register()">Créer mon compte 🐾</button>
         <p class="hint center mt">En créant un compte, vous acceptez notre <a class="legal-link" href="confidentialite.html">politique de confidentialité</a>.</p>
       </div>
-      <p class="hint center legal-foot"><a class="legal-link" href="confidentialite.html">Politique de confidentialité</a> · <a class="legal-link" href="suppression-compte.html">Suppression de compte</a></p>
+      <p class="hint center legal-foot" id="auth-legal"><a class="legal-link" href="confidentialite.html">Politique de confidentialité</a> · <a class="legal-link" href="suppression-compte.html">Suppression de compte</a></p>
     </div>
   </section>
 
@@ -679,6 +693,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
         <button data-tab="tab-shop"><span class="ic">🛍️</span>Boutique</button>
         <button data-tab="tab-rdv"><span class="ic">📅</span>Rendez-vous</button>
         <button data-tab="tab-msg"><span class="ic">💬</span>Messages</button>
+        <button data-tab="tab-settings-c"><span class="ic">⚙️</span>Paramètres</button>
         <button data-tab="tab-about-c"><span class="ic">📍</span>À propos</button>
       </nav>
     </div>
@@ -701,6 +716,10 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
     <div class="screen-tab pad" id="tab-msg">
       <div class="section-head"><div><div class="eyebrow">Vétérinaire à l'écoute</div><h2>Messages</h2></div></div>
       <div id="msg-c"></div>
+    </div>
+    <div class="screen-tab pad" id="tab-settings-c">
+      <div class="section-head"><div><div class="eyebrow">Mon compte</div><h2>Paramètres</h2></div></div>
+      <div id="csettings-c"></div>
     </div>
     <div class="screen-tab pad" id="tab-about-c"><div id="about-c"></div></div>
   </section>
@@ -952,6 +971,13 @@ const DEFAULT_POSTS = [];
 /* ============================================================
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
+/* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
+const APP_VERSION = "1.1.0";
+/* Adresse publique de l'application (GitHub Pages). */
+const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
+/* Conception et développement de l'application. */
+const DEV_INFO = { nom: "Rahmeni Hamdi", mail: "rahmenihamdi@gmail.com", tel: "+216 95 063 068" };
+
 const AR_DICT = {
   "Accueil":"الرئيسية","Mes animaux":"حيواناتي","Boutique":"المتجر","Rendez-vous":"المواعيد","Messages":"الرسائل","À propos":"من نحن",
   "Agenda":"الأجندة","Commandes":"الطلبات","Caisse":"الصندوق","Patients":"المرضى","Réglages":"الإعدادات",
@@ -1035,7 +1061,6 @@ const AR_DICT = {
   "Votre message pour les clients…":"رسالتك للزبائن…","Votre recommandation…":"توصيتك…","Optionnel":"اختياري",
   "Choisissez un mot de passe":"اختر كلمة مرور","Courte description du produit":"وصف موجز للمنتج","Décrivez le motif si besoin":"صف السبب إذا لزم",
   "Laisser vide pour ne pas changer":"اتركه فارغًا لعدم التغيير","Médicaments, posologie, observations…":"أدوية، جرعات، ملاحظات…",
-  "Votre numéro, ex : 95 063 068":"رقمك، مثال: 95 063 068",
   "Tout":"الكل","Astuce":"نصيحة","Actu":"خبر","Astuce santé":"نصيحة صحية","Actualité":"خبر","Blog":"مدونة",
   "Fermé aujourd'hui":"مغلق اليوم","Ouvert maintenant":"مفتوح الآن","Terminer":"إنهاء",
   "Aucun rappel de vaccin ou de soin prévu dans les 60 prochains jours.":"لا يوجد تذكير تلقيح أو رعاية خلال الـ60 يومًا القادمة.",
@@ -1053,7 +1078,7 @@ const AR_DICT = {
   "Téléphone ou identifiant":"الهاتف أو المعرّف",
   "Nouveau ? Créez un compte pour suivre la santé de votre animal.":"جديد؟ أنشئ حسابًا لمتابعة صحة حيوانك.",
   "Nom complet":"الاسم الكامل","Numéro de téléphone":"رقم الهاتف","Créer mon compte":"إنشاء حسابي",
-  "Ex : Hamdi Rahmeni":"مثال: حمدي الرحماني","Ex : 95 063 068":"مثال: 95 063 068",
+  "Ex : Prénom Nom":"مثال: الاسم واللقب","Ex : XX XXX XXX":"مثال: XX XXX XXX",
   "Le Cabinet Vétérinaire de Manouba":"العيادة البيطرية بمنوبة",
   "Compte créé, bienvenue !":"تم إنشاء الحساب، مرحبًا!","Ce numéro a déjà un compte.":"هذا الرقم له حساب بالفعل.",
   "Identifiant ou mot de passe incorrect.":"المعرّف أو كلمة المرور غير صحيحة.",
@@ -1159,9 +1184,26 @@ const AR_DICT = {
   "Seront effacés : votre compte, vos animaux et leurs carnets de santé, vos rendez-vous, commandes, messages et notifications.":"سيتم حذف: حسابك، حيواناتك ودفاتر صحتها، مواعيدك، طلباتك، رسائلك وإشعاراتك.",
   "Supprimer définitivement votre compte et toutes vos données ?":"حذف حسابك وجميع بياناتك نهائيًا؟",
   /* ---- E-mail de connexion et mot de passe oublié ---- */
+  "Afficher le mot de passe":"إظهار كلمة المرور","Masquer le mot de passe":"إخفاء كلمة المرور",
+  /* ---- Paramètres du client et « À propos de l'application » ---- */
+  "Paramètres":"الإعدادات","Profil":"الملف الشخصي","Mes informations":"معلوماتي","Mes données":"بياناتي",
+  "Vous pourrez vous connecter avec ce numéro.":"يمكنك تسجيل الدخول بهذا الرقم.",
+  "Modifier le mot de passe":"تغيير كلمة المرور","Mot de passe modifié":"تم تغيير كلمة المرور",
+  "La confirmation ne correspond pas.":"التأكيد لا يطابق كلمة المرور.",
+  "Le nouveau mot de passe doit être différent de l'ancien.":"يجب أن تختلف كلمة المرور الجديدة عن القديمة.",
+  "Nom et téléphone requis.":"الاسم والهاتف مطلوبان.","Aucune modification.":"لا يوجد أي تعديل.",
+  "Informations enregistrées":"تم حفظ المعلومات",
+  "Ce numéro est déjà utilisé par un autre compte.":"هذا الرقم مستعمل في حساب آخر.",
+  "Alertes":"التنبيهات","Notifications sur le téléphone":"الإشعارات على الهاتف",
+  "Activées":"مفعّلة","Désactivées":"غير مفعّلة","Bloquées":"محظورة","À installer":"للتثبيت","Indisponible":"غير متاحة",
+  "Activer":"تفعيل","Désactiver sur cet appareil":"إيقاف على هذا الجهاز",
+  "Ce téléphone recevra les rappels et les réponses du cabinet.":"سيتلقى هذا الهاتف التذكيرات وردود العيادة.",
+  "Activez pour recevoir les rappels de vaccins et de rendez-vous, et les réponses de la vétérinaire.":"فعّل لتلقي تذكيرات التلاقيح والمواعيد وردود الطبيبة البيطرية.",
+  "Application":"التطبيق","À propos de l'application":"حول التطبيق","Version":"الإصدار",
+  "Conception et développement":"التصميم والتطوير","Tous droits réservés.":"جميع الحقوق محفوظة.",
   "Téléphone ou e-mail":"الهاتف أو البريد الإلكتروني",
-  "Ex : 95 063 068 ou nom@gmail.com":"مثال: 95 063 068 أو nom@gmail.com",
-  "Ex : nom@gmail.com":"مثال: nom@gmail.com",
+  "Ex : XX XXX XXX ou nom@example.com":"مثال: XX XXX XXX أو nom@example.com",
+  "Ex : nom@example.com":"مثال: nom@example.com",
   "Adresse e-mail":"البريد الإلكتروني",
   "Nouvelle adresse e-mail":"البريد الإلكتروني الجديد",
   "Pour vous connecter et récupérer votre mot de passe si vous l'oubliez.":"لتسجيل الدخول واسترجاع كلمة المرور إذا نسيتها.",
@@ -1430,7 +1472,7 @@ const App = {
   },
   normPhone(s){ return (s||"").replace(/\s+/g,"").trim(); },
   // Réduit un numéro à sa forme canonique (chiffres seuls, sans indicatif +216)
-  // pour que "95063068", "+21695063068", "216 95 063 068" soient identiques.
+  // pour que "22024232", "+21622024232", "216 22 024 232" soient identiques.
   phoneKey(s){ const d=(s||"").replace(/\D/g,""); return d.replace(/^216/,""); },
 
   // Convertit un identifiant (numéro de téléphone, ou "admin") en e-mail interne
@@ -1526,6 +1568,9 @@ const App = {
     document.querySelectorAll("#auth-tabs button").forEach(b=>b.classList.toggle("on",b.dataset.auth===mode));
     document.getElementById("form-login").style.display = mode==="login"?"":"none";
     document.getElementById("form-register").style.display = mode==="register"?"":"none";
+    // Le formulaire d'inscription a déjà son lien « politique de confidentialité » :
+    // le pied de page n'est affiché que sur l'onglet Connexion (pas de doublon).
+    const lf=document.getElementById("auth-legal"); if(lf) lf.style.display = mode==="login"?"":"none";
   },
   async login(){
     const id=(document.getElementById("log-id").value||"").trim();
@@ -1557,7 +1602,7 @@ const App = {
     const body=`
       <p style="margin:0 0 12px;font-weight:600;color:var(--ink-2)">Nous vous envoyons un lien par e-mail pour choisir un nouveau mot de passe.</p>
       <div class="field"><label>E-mail ou numéro de téléphone</label>
-        <input class="input" id="fp-id" value="${this.escape(pre)}" placeholder="Ex : 95 063 068 ou nom@gmail.com" autocapitalize="none" spellcheck="false" autocomplete="username"></div>
+        <input class="input" id="fp-id" value="${this.escape(pre)}" placeholder="Ex : XX XXX XXX ou nom@example.com" autocapitalize="none" spellcheck="false" autocomplete="username"></div>
       <div id="fp-res"></div>`;
     const foot=`<button class="btn btn-primary btn-block btn-lg" id="fp-go" onclick="App.sendReset()">📧 Envoyer le lien</button>`;
     this.openSheet("Mot de passe oublié", body, foot);
@@ -1617,7 +1662,7 @@ const App = {
       ${interne?`<p style="margin:0 0 12px;font-weight:600;color:var(--ink-2)">Ajoutez votre adresse e-mail : vous pourrez vous connecter avec elle et récupérer votre mot de passe si vous l'oubliez.</p>`
         :`<div class="mail-box"><div class="mb-l">E-mail actuel</div><div class="mb-v" data-i18n="off">${this.escape(cur)}</div></div>`}
       <div class="field"><label>${interne?"Adresse e-mail":"Nouvelle adresse e-mail"}</label>
-        <input class="input" id="em-new" type="email" inputmode="email" placeholder="Ex : nom@gmail.com" autocomplete="email" autocapitalize="none" spellcheck="false"></div>
+        <input class="input" id="em-new" type="email" inputmode="email" placeholder="Ex : nom@example.com" autocomplete="email" autocapitalize="none" spellcheck="false"></div>
       <div class="field"><label>Mot de passe actuel</label>
         <input class="input" id="em-pass" type="password" placeholder="Votre mot de passe" autocomplete="current-password"></div>
       <div class="hint">Un e-mail de confirmation vous sera envoyé. L'adresse est enregistrée dès que vous touchez le lien qu'il contient.</div>
@@ -1835,7 +1880,18 @@ const App = {
   phoneDigits(p){ const r=(p||"").replace(/\D/g,""); return r.startsWith("216")?r:("216"+r); },
   phoneFmt(p){ const r=(p||"").replace(/\D/g,""); const l=r.startsWith("216")?r.slice(3):r; return l.length===8?l.replace(/(\d{2})(\d{3})(\d{3})/,"$1 $2 $3"):(p||""); },
   settings(){ return Object.assign({},DEFAULT_SETTINGS,DB.get("settings",{})||{}); },
-  appUrl(){ const s=this.settings(); if(s.appUrl) return s.appUrl; try{ return location.href.split("#")[0]; }catch(e){ return ""; } },
+  // Lien public de l'application (QR code, partage). Réglage manuel de
+  // l'administratrice s'il existe, sinon l'adresse GitHub Pages du site
+  // (y compris dans l'application Android, qui affiche ce même site).
+  appUrl(){
+    const s=this.settings(); const manuel=String(s.appUrl||"").trim();
+    if(/^https?:\/\//i.test(manuel)) return manuel;
+    try{
+      if(/\.github\.io$/i.test(location.hostname))
+        return location.origin + location.pathname.replace(/[^/]*$/, "");
+    }catch(e){}
+    return PUBLIC_APP_URL;
+  },
 
   /* compression photo -> dataURL (pour rester léger en localStorage) */
   readPhoto(file, cb){
@@ -1851,11 +1907,40 @@ const App = {
     r.onerror=()=>cb(null); r.readAsDataURL(file);
   },
 
+  /* ---------- Œil « afficher / masquer le mot de passe » ----------
+     Ajouté automatiquement à chaque champ mot de passe (écran de connexion,
+     fenêtres, réglages). Un seul appel suffit : les champs déjà équipés
+     portent data-eye et sont ignorés. */
+  addPwEyes(root){
+    const OEIL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+    const BARRE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.2M6.6 6.6C3.9 8.3 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+    const tr=t=> (this.lang==="ar" && AR_DICT[t]) ? AR_DICT[t] : t;
+    (root||document).querySelectorAll('input[type="password"]:not([data-eye])').forEach(inp=>{
+      inp.setAttribute("data-eye","1");
+      const wrap=document.createElement("div"); wrap.className="pw-wrap";
+      inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
+      const b=document.createElement("button");
+      b.type="button"; b.className="pw-eye"; b.innerHTML=OEIL;
+      b.title=tr("Afficher le mot de passe"); b.setAttribute("aria-label", b.title);
+      b.addEventListener("click", ()=>{
+        const voir = inp.type==="password";
+        inp.type = voir ? "text" : "password";
+        b.innerHTML = voir ? BARRE : OEIL;
+        b.classList.toggle("on", voir);
+        b.title = tr(voir ? "Masquer le mot de passe" : "Afficher le mot de passe");
+        b.setAttribute("aria-label", b.title);
+        try{ inp.focus({preventScroll:true}); const n=inp.value.length; inp.setSelectionRange(n,n); }catch(e){}
+      });
+      wrap.appendChild(b);
+    });
+  },
+
   /* ---------- feuille modale générique ---------- */
   openSheet(title, bodyHTML, footHTML){
     document.getElementById("sheet-title").textContent=title;
     document.getElementById("sheet-body").innerHTML=bodyHTML;
     document.getElementById("sheet-foot").innerHTML=footHTML||"";
+    this.addPwEyes(document.getElementById("sheet-body"));
     document.getElementById("sheet-backdrop").classList.add("show");
     document.body.style.overflow="hidden";
   },
@@ -2151,11 +2236,11 @@ const App = {
       </div></div>`;
   },
   // Carte détaillée affichée dans les Réglages du docteur.
-  pushSettingsHTML(){
+  pushSettingsHTML(client){
     const st = this.pushState();
     const line = {
-      "granted":    ['<span class="badge b-ok">Activées ✓</span>', "Ce téléphone / cette tablette recevra les alertes du cabinet."],
-      "default":    ['<span class="badge b-warn">Désactivées</span>', "Activez pour être prévenue des nouveaux rendez-vous et des rappels du lendemain."],
+      "granted":    ['<span class="badge b-ok">Activées ✓</span>', client?"Ce téléphone recevra les rappels et les réponses du cabinet.":"Ce téléphone / cette tablette recevra les alertes du cabinet."],
+      "default":    ['<span class="badge b-warn">Désactivées</span>', client?"Activez pour recevoir les rappels de vaccins et de rendez-vous, et les réponses de la vétérinaire.":"Activez pour être prévenue des nouveaux rendez-vous et des rappels du lendemain."],
       "denied":     ['<span class="badge b-danger">Bloquées</span>', "Réautorisez les notifications dans les réglages du navigateur (🔒 → Notifications)."],
       "ios-install":['<span class="badge b-warn">À installer</span>', "Sur iPhone/iPad : Partager ⬆️ → « Sur l'écran d'accueil », puis rouvrir l'app depuis l'icône."],
       "unsupported":['<span class="badge b-grey">Indisponible</span>', "Ce navigateur ne gère pas les notifications. Essayez Chrome ou Edge."]
@@ -2167,8 +2252,8 @@ const App = {
       <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Alertes</div><h2 style="font-size:1.2rem">Notifications sur le téléphone</h2></div>${line[0]}</div>
       <div class="hint" style="margin-bottom:${btn?"12px":"0"}">${line[1]}</div>
       ${btn}
-      <div class="hint" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
-        À activer <b>sur chaque appareil</b> (téléphone du cabinet, tablette…). Les rappels de la veille et du jour même partent automatiquement, même application fermée.</div>
+      ${client?"":`<div class="hint" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
+        À activer <b>sur chaque appareil</b> (téléphone du cabinet, tablette…). Les rappels de la veille et du jour même partent automatiquement, même application fermée.</div>`}
     </div>`;
   },
   async enablePush(){
@@ -2455,6 +2540,7 @@ const App = {
     } else {
       this.renderHomeClient(); this.renderPets(); this.renderShop();
       this.renderRdvClient(); this.renderMsgClient(); this.renderAbout("c");
+      this.renderClientSettings();
       this.updateCartFab();
     }
   },
@@ -3153,7 +3239,7 @@ const App = {
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
           <div id="qr-${role}" style="width:176px;height:176px;background:#fff;border-radius:14px;border:1px solid var(--line);display:grid;place-items:center;padding:8px;flex:0 0 auto"></div>
           <div style="flex:1;min-width:170px">
-            <div style="font-size:.82rem;font-weight:700;color:var(--ink-2);word-break:break-all;margin-bottom:10px">${this.escape(this.appUrl())}</div>
+            <a class="app-link" data-i18n="off" dir="ltr" href="${this.escape(this.appUrl())}" target="_blank" rel="noopener">${this.escape(this.appUrl().replace(/^https?:\/\//,""))}</a>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-soft btn-sm" onclick="App.copyAppLink()">🔗 Copier le lien</button>
               <button class="btn btn-ok btn-sm" onclick="App.shareWhatsApp()">💬 WhatsApp</button>
@@ -3164,13 +3250,103 @@ const App = {
       </div>
 
       <div class="card mb">
-        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Confidentialité</div><h2 style="font-size:1.2rem">${role==="c"?"Mon compte":"Informations légales"}</h2></div></div>
-        ${role==="c"?this.emailCardHTML():""}
-        <a class="btn btn-ghost btn-block" style="text-decoration:none;margin-bottom:8px" href="confidentialite.html">🔒 Politique de confidentialité</a>
-        ${role==="c"?`<button class="btn btn-danger btn-block" onclick="App.openDeleteAccount()">🗑️ Supprimer mon compte</button>
-        <div class="hint" style="margin-top:8px">Supprime définitivement votre compte et toutes vos données.</div>`:`<a class="btn btn-ghost btn-block" style="text-decoration:none" href="suppression-compte.html">🗑️ Page « Suppression de compte »</a>`}
+        <div class="section-head" style="margin-bottom:6px"><div><div class="eyebrow">Application</div><h2 style="font-size:1.2rem">À propos de l'application</h2></div>
+          <span class="badge b-grey" data-i18n="off">v${APP_VERSION}</span></div>
+        <div class="about-row" style="padding-left:0;padding-right:0"><div class="ic">📱</div><div><div class="lbl">Version</div><div class="val"><span data-i18n="off">Animaux d'abord ${APP_VERSION}</span></div></div></div>
+        <div class="about-row" style="padding-left:0;padding-right:0"><div class="ic">👨‍💻</div><div style="min-width:0"><div class="lbl">Conception et développement</div>
+          <div class="val" data-i18n="off">${DEV_INFO.nom}</div>
+          <div class="dev-links" data-i18n="off">
+            <a href="mailto:${DEV_INFO.mail}" dir="ltr">✉️ ${DEV_INFO.mail}</a>
+            <a href="tel:${DEV_INFO.tel.replace(/\s/g,"")}" dir="ltr">📞 ${DEV_INFO.tel}</a>
+          </div></div></div>
+        <div class="legal-links">
+          <a class="legal-link" href="confidentialite.html">Politique de confidentialité</a>
+          ${role==="c"?"":`<span>·</span><a class="legal-link" href="suppression-compte.html">Suppression de compte</a>`}
+        </div>
+        <div class="copyright"><bdi data-i18n="off" dir="ltr">© ${new Date().getFullYear()} ${DEV_INFO.nom}.</bdi> <span>Tous droits réservés.</span></div>
       </div>`;
     this.renderQR("qr-"+role, this.appUrl());   // QR code de partage
+  },
+  /* ============================================================
+     CLIENT — PARAMÈTRES : ses informations, e-mail, mot de passe,
+     notifications, confidentialité et suppression du compte.
+     ============================================================ */
+  // Ne pas effacer ce que le client est en train de taper lors d'un
+  // rafraîchissement (synchro cloud, minuterie…).
+  _csDirty(){
+    const u=this.currentUser(); const g=id=>{ const e=document.getElementById(id); return e?e.value:null; };
+    if(!u || g("cs-nom")===null) return false;
+    return g("cs-nom")!==(u.nom||"") || g("cs-tel")!==(u.tel||"") ||
+           !!(g("cs-pass-old")||g("cs-pass-new")||g("cs-pass-conf"));
+  },
+  renderClientSettings(force){
+    const w=document.getElementById("csettings-c"); if(!w) return;
+    const u=this.currentUser(); if(!u || u.role==="admin") return;
+    if(!force && this._csDirty()) return;
+    w.innerHTML=`
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Profil</div><h2 style="font-size:1.2rem">Mes informations</h2></div></div>
+        <div class="field"><label>Nom complet</label>
+          <input class="input" id="cs-nom" value="${this.escape(u.nom||"")}" placeholder="Ex : Prénom Nom" autocomplete="name"></div>
+        <div class="field"><label>Numéro de téléphone</label>
+          <input class="input" id="cs-tel" type="tel" inputmode="numeric" value="${this.escape(u.tel||"")}" placeholder="Ex : XX XXX XXX" autocomplete="tel">
+          <div class="hint" style="margin-top:6px">Vous pourrez vous connecter avec ce numéro.</div></div>
+        <button class="btn btn-primary btn-block" id="cs-save" onclick="App.saveMyInfo()">💾 Enregistrer</button>
+      </div>
+
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Connexion</div><h2 style="font-size:1.2rem">Adresse e-mail</h2></div></div>
+        ${this.emailCardHTML()}
+      </div>
+
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Sécurité</div><h2 style="font-size:1.2rem">Mot de passe</h2></div></div>
+        <div class="field"><label>Mot de passe actuel</label>
+          <input class="input" id="cs-pass-old" type="password" placeholder="••••••" autocomplete="current-password"></div>
+        <div class="field"><label>Nouveau mot de passe</label>
+          <input class="input" id="cs-pass-new" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password"></div>
+        <div class="field" style="margin-bottom:4px"><label>Confirmer le nouveau mot de passe</label>
+          <input class="input" id="cs-pass-conf" type="password" placeholder="Retapez le mot de passe" autocomplete="new-password"></div>
+        <div class="hint" style="margin:0 0 12px">Au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un symbole.</div>
+        <button class="btn btn-primary btn-block" onclick="App.changeMyPassword('cs-pass')">🔒 Modifier le mot de passe</button>
+      </div>
+
+      ${this.pushSettingsHTML(true)}
+
+      <div class="card mb">
+        <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Confidentialité</div><h2 style="font-size:1.2rem">Mes données</h2></div></div>
+        <a class="btn btn-ghost btn-block" style="text-decoration:none;margin-bottom:8px" href="confidentialite.html">🔒 Politique de confidentialité</a>
+        <button class="btn btn-danger btn-block" onclick="App.openDeleteAccount()">🗑️ Supprimer mon compte</button>
+        <div class="hint" style="margin-top:8px">Supprime définitivement votre compte et toutes vos données.</div>
+      </div>
+
+      <button class="btn btn-ghost btn-block mb" onclick="App.logout()">↩️ Se déconnecter</button>`;
+    this.addPwEyes(w);
+  },
+  async saveMyInfo(){
+    const u=this.currentUser(); if(!u || u.role==="admin") return;
+    const nom=((document.getElementById("cs-nom")||{}).value||"").trim();
+    const tel=this.normPhone((document.getElementById("cs-tel")||{}).value);
+    if(!nom||!tel) return this.toast("Nom et téléphone requis.","err");
+    const key=this.phoneKey(tel), oldKey=this.phoneKey(u.tel);
+    if(!key || key.length<8) return this.toast("Numéro de téléphone invalide.","err");
+    if(nom===(u.nom||"") && tel===(u.tel||"")) return this.toast("Aucune modification.","warn");
+    const btn=document.getElementById("cs-save");
+    if(btn) btn.disabled=true;
+    try{
+      if(key!==oldKey){
+        if(!(window.Cloud && window.Cloud.enabled)){ this.toast("Connexion Internet requise.","err"); return; }
+        // Un numéro = un compte.
+        const ent = window.Cloud.lookupPhone ? await window.Cloud.lookupPhone(key) : null;
+        if(ent && ent.uid && ent.uid!==u.id){ this.toast("Ce numéro est déjà utilisé par un autre compte.","err"); return; }
+        if(window.Cloud.movePhone) await window.Cloud.movePhone(oldKey, key);
+      }
+      DB.update("users", u.id, { nom, tel });
+      const h=document.getElementById("client-hello");
+      if(h) h.textContent="Bonjour, "+nom.split(" ")[0];
+      this.toast("Informations enregistrées ✓","ok");
+      this.renderClientSettings(true); this.renderAll();
+    }finally{ if(btn) btn.disabled=false; }
   },
   phoneFmt(p){ // formate 22024232 -> +216 22 024 232
     const d=(p||"").replace(/\D/g,"").replace(/^216/,"");
@@ -4234,6 +4410,7 @@ const App = {
       <button class="btn btn-primary btn-block btn-lg mb" onclick="App.saveSettings()">💾 Enregistrer les réglages</button>
       <button class="btn btn-danger btn-block" onclick="App.resetData()">🗑️ Réinitialiser toutes les données</button>
       <div class="hint center mt" style="padding-bottom:20px">Les données sont synchronisées dans le cloud (Firebase) et disponibles sur tous les appareils. Sans réseau, l'app reste utilisable en local.</div>`;
+    this.addPwEyes(w);
   },
   toggleDayInputs(d){ const on=document.getElementById("h-open-"+d).checked; const t=document.getElementById("h-times-"+d); if(t) t.style.display=on?"block":"none"; },
   saveSettings(){
@@ -4254,8 +4431,12 @@ const App = {
   async changeAdminPassword(){
     const u=this.currentUser();
     if(!u || u.role!=="admin"){ this.toast("Action réservée à l'administrateur.","err"); return; }
+    return this.changeMyPassword("se-pass");
+  },
+  // Changement de mot de passe (admin : champs se-pass-*, client : cs-pass-*).
+  async changeMyPassword(pre){
     const g=id=>{ const e=document.getElementById(id); return e?e.value:""; };
-    const oldP=g("se-pass-old"), newP=g("se-pass-new"), confP=g("se-pass-conf");
+    const oldP=g(pre+"-old"), newP=g(pre+"-new"), confP=g(pre+"-conf");
     if(!oldP||!newP||!confP){ this.toast("Remplissez tous les champs.","err"); return; }
     const issue=this.passwordIssue(newP);            // mêmes règles que l'inscription
     if(issue){ this.toast(issue,"err"); return; }
@@ -4265,7 +4446,7 @@ const App = {
     try{
       // Firebase re-vérifie l'ancien mot de passe puis applique le nouveau (haché).
       await window.Cloud.changePassword(oldP, newP);
-      ["se-pass-old","se-pass-new","se-pass-conf"].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=""; });
+      ["-old","-new","-conf"].forEach(x=>{ const e=document.getElementById(pre+x); if(e) e.value=""; });
       this.toast("Mot de passe modifié ✓","ok");
     }catch(err){
       const c=(err&&err.code)||"";
@@ -4359,6 +4540,7 @@ document.addEventListener("DOMContentLoaded", function(){
   document.querySelectorAll("#admin-nav button[data-tab]").forEach(function(b){
     b.addEventListener("click", function(){ App.showTab(b.dataset.tab, "admin-nav"); });
   });
+  try{ App.addPwEyes(document.getElementById("screen-auth")); }catch(e){}
   // Soumission au clavier (touche Entrée) sur les formulaires de connexion
   ["log-id","log-pass"].forEach(function(id){
     const e=document.getElementById(id);
@@ -4886,6 +5068,27 @@ document.addEventListener("DOMContentLoaded", function(){
       const arr = LS.read("users", []).map(x => (x && x.id === uid) ? Object.assign({}, x, fields) : x);
       LS.write("users", arr);
     }catch(e){ console.warn("profil e-mail", e); }
+  };
+
+  // Le client change son numéro : le nouveau numéro est rattaché à son e-mail
+  // de connexion, puis l'ancien est libéré.
+  Cloud.movePhone = async (oldKey, newKey) => {
+    const user = auth && auth.currentUser;
+    if(!db || !user || !newKey || oldKey === newKey) return;
+    try{
+      let pending = null;
+      const oref = oldKey ? doc(db, IDX, String(oldKey)) : null;
+      const od = oref ? await getDoc(oref) : null;
+      const ancienAMoi = !!(od && od.exists() && od.data().uid === user.uid);
+      if(ancienAMoi && od.data().pending) pending = od.data().pending;
+      const nref = doc(db, IDX, String(newKey));
+      const nd = await getDoc(nref);
+      if(nd.exists() && nd.data().uid !== user.uid) return;   // numéro d'un autre compte
+      const data = { email: user.email, uid: user.uid, ts: Date.now() };
+      if(pending) data.pending = pending;
+      await setDoc(nref, data);
+      if(ancienAMoi) await deleteDoc(oref);
+    }catch(e){ console.warn("loginIndex changement de numéro", e); }
   };
 
   // Mot de passe oublié : Firebase envoie le lien de réinitialisation.
