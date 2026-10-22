@@ -60,6 +60,7 @@ twa.enableNotifications = true;          // les notifications push passent par l
 twa.monochromeIconUrl = new URL("icon-monochrome-512.png", site).href;
 twa.fallbackType = "customtabs";
 twa.orientation = "portrait";
+twa.minSdkVersion = 24;
 twa.splashScreenFadeOutDuration = 300;
 twa.navigationColor = twa.backgroundColor;   // barre de navigation crème (comme l'app)
 twa.navigationDividerColor = twa.backgroundColor;
