@@ -10,6 +10,8 @@
 <!-- PWA : installable sur l'écran d'accueil -->
 <link rel="manifest" href="manifest.webmanifest" />
 <meta name="theme-color" content="#FF3E7F" />
+<!-- L'app est conçue en clair : on interdit au navigateur de l'assombrir automatiquement (mode sombre forcé). -->
+<meta name="color-scheme" content="only light" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Animaux d'abord" />
@@ -38,6 +40,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
 :root{
+  color-scheme: only light;
   --cream:#FFF6F1; --cream-2:#FFEFE8; --surface:#FFFFFF; --surface-2:#FFF8F4;
   --rose:#FF3E7F; --rose-deep:#E11D63; --rose-soft:#FFD9E6; --rose-tint:#FFF0F5;
   --mango:#FF8A3C; --mango-deep:#F26419; --mango-soft:#FFE6D2; --mango-tint:#FFF4EC;
@@ -977,6 +980,7 @@ const AR_DICT = {
   "Notifications bloquées":"الإشعارات محجوبة",
   "Notifications indisponibles sur cet appareil.":"الإشعارات غير متاحة على هذا الجهاز.",
   "Vous avez refusé les notifications.":"لقد رفضت الإشعارات.",
+  "Notifications indisponibles avec Samsung Internet. Choisissez Chrome comme navigateur par défaut, puis rouvrez l'app.":"الإشعارات غير متاحة مع متصفح Samsung Internet. اختر Chrome كمتصفح افتراضي ثم أعد فتح التطبيق.",
   "Notifications désactivées sur cet appareil.":"تمّ تعطيل الإشعارات على هذا الجهاز.",
   "Module en cours de chargement, réessayez dans 5 secondes.":"جاري التحميل، أعد المحاولة بعد 5 ثوان.",
   "🔔 Notifications activées":"🔔 تمّ تفعيل الإشعارات",
@@ -1904,6 +1908,8 @@ const App = {
     }catch(e){
       const m = String(e && e.message || e);
       if(m === "denied") this.toast("Vous avez refusé les notifications.","err");
+      else if(/SamsungBrowser/i.test(navigator.userAgent||""))
+        this.toast("Notifications indisponibles avec Samsung Internet. Choisissez Chrome comme navigateur par défaut, puis rouvrez l'app.","err");
       else this.toast("Activation impossible. Vérifiez la connexion.","err");
     }
     this.renderAll();
