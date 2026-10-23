@@ -10,6 +10,10 @@
      • le jour même (J-0) → « Rendez-vous aujourd'hui à 10:30 »
    … au client concerné, et un récapitulatif quotidien au cabinet.
 
+   v1.2 — il fait aussi l'entretien de la base (fin du fichier) :
+     notifications de plus de 60 jours, traces d'envoi expirées, créneaux
+     passés, stories expirées, remise en stock des commandes annulées.
+
    Chaque rappel est mémorisé dans la collection « pushLog » : relancer le
    script dix fois dans la journée n'enverra jamais deux fois le même
    message. On peut donc le programmer plusieurs fois par jour sans risque.
@@ -74,10 +78,13 @@ const rdvs    = await docsOf("rdv",     "date",     [AUJOURD_HUI, DEMAIN]);
 const rappels = await docsOf("records", "nextDate", [AUJOURD_HUI, DEMAIN]);
 
 // Les animaux servent à retrouver le propriétaire et le nom de l'animal.
+// v1.2 : on ne lit QUE les animaux concernés par un rappel (avant : tous).
 const animaux = new Map();
-if (rappels.length) {
-  const snap = await db.collection("animals").get();
-  snap.forEach((d) => animaux.set(String(d.id), d.data()));
+const idsAnimaux = [...new Set(rappels.map((r) => String(r.animalId || "")).filter(Boolean))];
+for (let i = 0; i < idsAnimaux.length; i += 100) {
+  const refs = idsAnimaux.slice(i, i + 100).map((id) => db.collection("animals").doc(id));
+  const docs = await db.getAll(...refs);
+  docs.forEach((d) => { if (d.exists) animaux.set(String(d.id), d.data()); });
 }
 
 console.log(`  ${rdvs.length} rendez-vous et ${rappels.length} rappel(s) de soin sur les 2 jours.`);
@@ -215,5 +222,59 @@ for (const job of jobs) {
   });
 }
 
-console.log(`✓ Terminé — ${envoyes} notification(s) envoyée(s), ${ignores} déjà traitée(s), ` +
+console.log(`✓ Rappels — ${envoyes} notification(s) envoyée(s), ${ignores} déjà traitée(s), ` +
             `${sansAppareil} destinataire(s) sans appareil enregistré, ${jetonsSupprimes} jeton(s) obsolète(s) nettoyé(s).`);
+
+/* ---------------------------------------------------------------- */
+/*  Entretien de la base (v1.2) — garde Firestore léger et gratuit   */
+/* ---------------------------------------------------------------- */
+const NOTIFS_JOURS = 60;            // notifications plus anciennes : effacées
+
+// Supprime par lots de 400 (une requête = au plus `max` documents par passage).
+async function supprimer(requete, libelle, max = 2000) {
+  let total = 0;
+  while (total < max) {
+    const snap = await requete.limit(400).get();
+    if (snap.empty) break;
+    if (DRY_RUN) { console.log(`  [test] ${snap.size} ${libelle} à supprimer`); return snap.size; }
+    const lot = db.batch();
+    snap.docs.forEach((d) => lot.delete(d.ref));
+    await lot.commit();
+    total += snap.size;
+    if (snap.size < 400) break;
+  }
+  return total;
+}
+
+try {
+  const maintenant = Date.now();
+  const nNotifs   = await supprimer(db.collection("notifs").where("ts", "<", maintenant - NOTIFS_JOURS * 86400000), "notification(s) ancienne(s)");
+  const nLogs     = await supprimer(db.collection("pushLog").where("expireAt", "<", new Date()), "trace(s) d'envoi expirée(s)");
+  const nCreneaux = await supprimer(db.collection("creneaux").where("date", "<", AUJOURD_HUI), "créneau(x) passé(s)");
+  const nStories  = await supprimer(db.collection("stories").where("expiresAt", "<=", maintenant), "story(s) expirée(s)");
+
+  // Commandes annulées dont le stock avait été déduit : on le remet (une seule fois).
+  let nStock = 0;
+  const annulees = await db.collection("orders").where("status", "==", "annulee").get();
+  for (const d of annulees.docs) {
+    const o = d.data();
+    if (!o.stockDeduit || o.stockRendu) continue;
+    if (DRY_RUN) { console.log(`  [test] remise en stock de la commande ${d.id}`); continue; }
+    await db.runTransaction(async (tx) => {
+      const frais = await tx.get(d.ref);
+      if (!frais.exists || !frais.data().stockDeduit || frais.data().stockRendu) return;
+      const lignes = (frais.data().items || []).filter((it) => it && it.id && +it.qty > 0);
+      const prods = await Promise.all(lignes.map((it) => tx.get(db.collection("products").doc(String(it.id)))));
+      prods.forEach((p, k) => {
+        if (p.exists && p.data().stock != null) tx.update(p.ref, { stock: FieldValue.increment(Math.round(+lignes[k].qty) || 0) });
+      });
+      tx.update(d.ref, { stockRendu: true });
+    });
+    nStock++;
+  }
+  console.log(`✓ Entretien — ${nNotifs} notification(s) > ${NOTIFS_JOURS} j, ${nLogs} trace(s) d'envoi, ` +
+              `${nCreneaux} créneau(x) passé(s), ${nStories} story(s) expirée(s) supprimé(s) ; ${nStock} commande(s) remise(s) en stock.`);
+} catch (e) {
+  // L'entretien ne doit jamais faire échouer l'envoi des rappels.
+  console.warn("! Entretien interrompu :", e && e.message ? e.message : e);
+}
