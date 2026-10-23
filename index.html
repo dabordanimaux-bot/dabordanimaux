@@ -679,6 +679,96 @@ html.rtl .mark-plus{right:auto;left:-4px}
 .sv-stage.is-admin .sv-admin{display:flex}
 .sv-stage.is-admin .sv-cap{bottom:calc(62px + env(safe-area-inset-bottom))}
 .sv-btn{flex:1;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font:800 .88rem var(--body);padding:10px 12px;border-radius:12px;cursor:pointer}
+
+/* ---------- v1.3 : visionneuse — musique ---------- */
+.sv-who{flex:1;min-width:0}
+.sv-x{margin-inline-start:0!important;flex:none}
+.sv-music{font-size:.74rem;font-weight:800;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.45)}
+
+/* ---------- v1.3 : choix « Photo / Texte » ---------- */
+.se-choix{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.se-choix-b{border:1px solid var(--line);background:#fff;border-radius:18px;padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-family:var(--body);color:var(--ink);box-shadow:var(--shadow-sm)}
+.se-choix-b b{font-family:var(--display);font-size:1.1rem}
+.se-choix-b small{font-size:.74rem;color:var(--muted);font-weight:700;text-align:center;line-height:1.3}
+.se-choix-ic{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:30px;background:var(--rose-tint)}
+.se-choix-b.is-txt .se-choix-ic{background:var(--grad);color:#fff;font:800 26px var(--display)}
+
+/* ---------- v1.3 : éditeur de story ---------- */
+.story-editor{position:fixed;inset:0;z-index:210;background:#000;display:none;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.story-editor.show{display:flex;animation:fadeScreen .2s ease}
+.se-stage{position:relative;overflow:hidden;background:#111}
+@media (min-width:600px){.se-stage{border-radius:18px}}
+#se-canvas{display:block;touch-action:none}
+.se-top{position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;z-index:3;pointer-events:none}
+.se-top > *{pointer-events:auto}
+.se-tools{display:flex;flex-direction:column;gap:10px}
+.se-ic{width:46px;height:46px;border-radius:50%;border:0;padding:0;background:rgba(0,0,0,.45);color:#fff;font:800 19px/1 var(--body);display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.se-ic.on{background:#fff;color:#111}
+.se-aa{font:800 20px/1 var(--display)}
+.se-zoom{position:absolute;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));display:none;align-items:center;gap:8px;z-index:3;background:rgba(0,0,0,.42);border-radius:999px;padding:6px 8px 6px 14px;color:#fff;font-weight:800}
+.story-editor.a-photo .se-zoom{display:flex}
+.se-zoom input{flex:1;accent-color:#fff}
+.se-zoom button{border:0;background:rgba(255,255,255,.18);color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer}
+.se-bottom{position:absolute;left:0;right:0;bottom:0;padding:12px 12px calc(14px + env(safe-area-inset-bottom));display:flex;justify-content:flex-end;z-index:3;background:linear-gradient(transparent,rgba(0,0,0,.45));pointer-events:none}
+.se-publish{pointer-events:auto;border:0;border-radius:999px;padding:13px 22px;background:#fff;color:#111;font:800 .98rem var(--body);cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.se-publish:disabled{opacity:.6}
+.se-trash{position:absolute;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));width:62px;height:62px;margin-left:-31px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.45);display:none;place-items:center;font-size:26px;z-index:4;pointer-events:none;transition:transform .15s,background .15s}
+.se-trash.show{display:grid}
+.se-trash.hot{background:#E23B4E;transform:scale(1.18)}
+/* mode dessin */
+.se-drawbar{display:none;position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;right:10px;z-index:4;flex-direction:column;gap:10px}
+.story-editor.is-dessin .se-drawbar{display:flex}
+.story-editor.is-dessin .se-top,.story-editor.is-dessin .se-bottom,.story-editor.is-dessin .se-zoom{display:none}
+.se-drawrow{display:flex;align-items:center;gap:10px}
+.se-larg{display:flex;gap:6px;background:rgba(0,0,0,.45);border-radius:999px;padding:5px}
+.se-larg button{width:36px;height:36px;border-radius:50%;border:0;background:transparent;display:grid;place-items:center;cursor:pointer}
+.se-larg button i{display:block;border-radius:50%;background:#fff}
+.se-larg button.on{background:rgba(255,255,255,.25)}
+.se-ok{margin-inline-start:auto;border:0;border-radius:999px;padding:10px 18px;background:#fff;color:#111;font:800 .92rem var(--body);cursor:pointer}
+.se-draw-cols,.se-cols{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding:4px 2px}
+.se-draw-cols::-webkit-scrollbar,.se-cols::-webkit-scrollbar{display:none}
+.se-col{flex:none;width:30px;height:30px;border-radius:50%;border:3px solid rgba(255,255,255,.9);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.se-col.on{transform:scale(1.22);border-color:#fff;outline:2px solid rgba(0,0,0,.35)}
+/* édition d'un texte */
+.story-editor.is-texte .se-top,.story-editor.is-texte .se-bottom,.story-editor.is-texte .se-zoom{display:none}
+#se-ta:focus{outline:0;box-shadow:none}
+.se-textedit{position:fixed;inset:0;z-index:230;background:rgba(0,0,0,.66);display:none;flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) 12px 12px;gap:10px}
+.se-textedit.show{display:flex}
+.se-te-bar{display:flex;align-items:center;gap:8px}
+.se-polices{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.se-polices button{flex:none;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:999px;padding:6px 12px;font-size:.92rem;cursor:pointer}
+.se-polices button.on{background:#fff;color:#111}
+.se-te-ic{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;font:800 18px/1 var(--body);cursor:pointer}
+#se-fondtxt[data-m="1"]{background:#fff;color:#111}
+#se-fondtxt[data-m="2"]{background:rgba(255,255,255,.4)}
+#se-align[data-a="left"] span{display:inline-block;transform:translateX(-4px)}
+#se-align[data-a="right"] span{display:inline-block;transform:translateX(4px)}
+.se-te-taille{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;padding:0 4px}
+.se-te-taille input{flex:1;accent-color:#fff}
+.se-te-zone{flex:1;display:flex;align-items:flex-start;justify-content:center;padding-top:6vh}
+#se-ta{width:min(92vw,500px);border:0!important;outline:0;box-shadow:none!important;min-height:0;resize:none;background:transparent;color:#fff;border-radius:12px;padding:8px 12px;overflow:hidden;caret-color:#fff}
+#se-ta::placeholder{color:rgba(255,255,255,.65)}
+/* panneaux stickers / musique */
+.se-panel{position:fixed;left:0;right:0;bottom:0;z-index:230;max-width:560px;margin:0 auto;background:#1c1b20;color:#fff;border-radius:22px 22px 0 0;max-height:72vh;overflow:auto;padding:14px 16px calc(18px + env(safe-area-inset-bottom));display:none;box-shadow:0 -10px 40px rgba(0,0,0,.5)}
+.se-panel.show{display:block;animation:tabIn .25s ease}
+.se-pan-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-family:var(--display);font-size:1.1rem}
+.se-st-puces{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.se-puce{border:0;border-radius:999px;background:#fff;color:#E11D63;font:800 .86rem var(--body);padding:8px 14px;cursor:pointer}
+.se-st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px}
+.se-emo{font-size:32px;line-height:1;border:0;background:transparent;padding:8px 0;border-radius:12px;cursor:pointer}
+.se-emo:active{background:rgba(255,255,255,.12)}
+.se-mu-info{padding:20px 0;text-align:center;font-weight:800;opacity:.9}
+.se-mu-l{display:block;font-size:.8rem;font-weight:800;opacity:.8;margin:12px 0 6px}
+.se-mu-in{width:100%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;border-radius:12px;padding:10px 12px;font:700 .95rem var(--body)}
+#se-mu-debut{accent-color:#FF3E7F}
+.se-mu-durees{display:flex;gap:8px}
+.se-mu-durees button{flex:1;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:12px;padding:9px;font:800 .9rem var(--body);cursor:pointer}
+.se-mu-durees button.on{background:#fff;color:#111}
+.se-mu-actions{display:flex;gap:10px;margin-top:16px}
+.se-mu-b{flex:1;border:0;border-radius:14px;padding:13px;font:800 .95rem var(--body);cursor:pointer;background:rgba(255,255,255,.14);color:#fff}
+.se-mu-b.is-ok{background:var(--grad)}
+.se-mu-b:disabled{opacity:.6}
+.se-mu-note{font-size:.74rem;opacity:.65;margin-top:12px;line-height:1.4}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -894,7 +984,9 @@ html.rtl .mark-plus{right:auto;left:-4px}
       <div class="sv-bars" id="sv-bars"></div>
       <div class="sv-head">
         <div class="sv-av"><img src="logo-mark.png" alt=""></div>
-        <div class="sv-who"><div class="sv-name" data-i18n="off">Animaux d'abord</div><div class="sv-time" id="sv-time" data-i18n="off"></div></div>
+        <div class="sv-who"><div class="sv-name" data-i18n="off">Animaux d'abord</div><div class="sv-time" id="sv-time" data-i18n="off"></div>
+          <div class="sv-music" id="sv-music" data-i18n="off" style="display:none"></div></div>
+        <button type="button" class="sv-x sv-son" id="sv-son" onclick="App.toggleStorySon()" aria-label="Son" style="display:none">🔊</button>
         <button type="button" class="sv-x" onclick="App.closeStories()" aria-label="Fermer">✕</button>
       </div>
       <div class="sv-cap" id="sv-cap" dir="auto" data-i18n="off"></div>
@@ -905,6 +997,68 @@ html.rtl .mark-plus{right:auto;left:-4px}
     </div>
   </div>
   <input type="file" id="story-file" accept="image/*" style="display:none" onchange="App.onStoryFile(this)">
+
+  <!-- Éditeur de story (vétérinaire) -->
+  <div class="story-editor" id="story-editor" aria-hidden="true">
+    <div class="se-stage" id="se-stage">
+      <canvas id="se-canvas"></canvas>
+      <div class="se-top">
+        <button type="button" class="se-ic" onclick="StoryEd.fermer()" aria-label="Fermer">✕</button>
+        <div class="se-tools">
+          <button type="button" class="se-ic se-aa" onclick="StoryEd.ajouterTexte()" title="Texte">Aa</button>
+          <button type="button" class="se-ic" onclick="StoryEd.ouvrirStickers()" title="Stickers">😊</button>
+          <button type="button" class="se-ic" id="se-b-musique" onclick="StoryEd.choisirMusique()" title="Musique">♪</button>
+          <button type="button" class="se-ic" onclick="StoryEd.modeDessin(true)" title="Dessiner">✏️</button>
+          <button type="button" class="se-ic" onclick="StoryEd.changerFond()" title="Fond">🎨</button>
+          <button type="button" class="se-ic" onclick="StoryEd.choisirPhoto()" title="Photo">🖼️</button>
+        </div>
+      </div>
+      <div class="se-drawbar">
+        <div class="se-drawrow">
+          <button type="button" class="se-ic" onclick="StoryEd.annulerTrait()" title="Annuler le dernier trait">↶</button>
+          <div class="se-larg" id="se-larg">
+            <button type="button" data-l="8" onclick="StoryEd.largeur(8)"><i style="width:6px;height:6px"></i></button>
+            <button type="button" data-l="14" onclick="StoryEd.largeur(14)"><i style="width:10px;height:10px"></i></button>
+            <button type="button" data-l="28" onclick="StoryEd.largeur(28)"><i style="width:16px;height:16px"></i></button>
+          </div>
+          <button type="button" class="se-ok" onclick="StoryEd.modeDessin(false)">OK</button>
+        </div>
+        <div class="se-draw-cols" id="se-draw-cols"></div>
+      </div>
+      <div class="se-zoom"><span>−</span><input type="range" id="se-zoom-r" min="30" max="400" value="100" aria-label="Zoom"><span>+</span>
+        <button type="button" onclick="StoryEd.recentrer()" title="Recentrer">⟲</button></div>
+      <div class="se-trash" id="se-trash">🗑️</div>
+      <div class="se-bottom"><button type="button" class="se-publish" id="se-pub" onclick="StoryEd.publier()">Publier la story ›</button></div>
+    </div>
+  </div>
+  <div class="se-textedit" id="se-textedit">
+    <div class="se-te-bar">
+      <button type="button" class="se-te-ic" id="se-align" onclick="StoryEd.aligner()" title="Alignement"><span class="al-c">≡</span></button>
+      <button type="button" class="se-te-ic" id="se-fondtxt" onclick="StoryEd.fondTexte()" title="Fond du texte"><b>A</b></button>
+      <button type="button" class="se-ok" onclick="StoryEd.finTexte()">Terminé</button>
+    </div>
+    <div class="se-polices" id="se-polices">
+      <button type="button" data-p="moderne" style="font-family:'Baloo 2';font-weight:800" onclick="StoryEd.police('moderne')">Moderne</button>
+      <button type="button" data-p="simple" style="font-family:'Nunito';font-weight:700" onclick="StoryEd.police('simple')">Simple</button>
+      <button type="button" data-p="ecriture" style="font-family:'Pacifico',cursive" onclick="StoryEd.police('ecriture')">Écriture</button>
+    </div>
+    <div class="se-cols" id="se-cols"></div>
+    <div class="se-te-taille"><span>A</span><input type="range" id="se-taille" min="40" max="190" value="84" aria-label="Taille du texte"><span style="font-size:22px">A</span></div>
+    <div class="se-te-zone" onclick="if(event.target===this) StoryEd.finTexte()">
+      <textarea id="se-ta" rows="1" placeholder="Tapez votre texte…" dir="auto" spellcheck="false"></textarea>
+    </div>
+  </div>
+  <div class="se-panel" id="se-stickers">
+    <div class="se-pan-head"><b>Stickers</b><button type="button" class="se-ok" onclick="StoryEd.fermerPanneau('se-stickers')">Fermer</button></div>
+    <div class="se-st-puces" id="se-st-puces"></div>
+    <div class="se-st-grid" id="se-st-grid"></div>
+  </div>
+  <div class="se-panel" id="se-music">
+    <div class="se-pan-head"><b>♪ Musique</b><button type="button" class="se-ok" onclick="StoryEd.fermerPanneau('se-music')">Annuler</button></div>
+    <div id="se-mu-corps"></div>
+  </div>
+  <input type="file" id="se-photo-in" accept="image/*" style="display:none">
+  <input type="file" id="se-audio-in" accept="audio/*" style="display:none">
   <div id="print-area" style="display:none"></div>
 
   <div id="boot">
@@ -1081,7 +1235,7 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.3.0";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
 /* Conception et développement de l'application. */
@@ -1387,6 +1541,41 @@ const AR_DICT = {
   "Saisissez votre adresse e-mail complète":"أدخل بريدك الإلكتروني كاملًا",
   "Pour protéger vos données, le lien ne peut être demandé qu'avec l'adresse e-mail du compte. Indice :":"لحماية بياناتك، لا يمكن طلب الرابط إلا بالبريد الإلكتروني للحساب. تلميح:",
   "Identifiant ou mot de passe incorrect. Si vous venez de changer votre mot de passe, connectez-vous une fois avec votre adresse e-mail :":"المعرّف أو كلمة المرور غير صحيحة. إذا غيّرت كلمة المرور للتوّ، سجّل الدخول مرة واحدة ببريدك الإلكتروني:",
+
+  /* --- v1.3 : éditeur de story --- */
+  "Photo":"صورة",
+  "Depuis la galerie ou l'appareil photo":"من المعرض أو الكاميرا",
+  "Texte":"نص",
+  "Un message sur un fond coloré":"رسالة على خلفية ملوّنة",
+  "Ensuite : zoom à deux doigts, textes, stickers, dessin et musique. Visible 24 heures par tous les clients.":"بعدها: تكبير بإصبعين، نصوص، ملصقات، رسم وموسيقى. تظهر 24 ساعة لجميع الحرفاء.",
+  "Publier la story ›":"نشر القصة ›",
+  "Terminé":"تمّ",
+  "Moderne":"عصري",
+  "Simple":"بسيط",
+  "Écriture":"خط يدوي",
+  "Tapez votre texte…":"اكتب نصّك…",
+  "Stickers":"ملصقات",
+  "Musique":"موسيقى",
+  "♪ Musique":"♪ موسيقى",
+  "Annuler":"إلغاء",
+  "Chargement de la musique…":"جارٍ تحميل الموسيقى…",
+  "Fichier audio illisible.":"ملف صوتي غير مقروء.",
+  "Titre affiché":"العنوان المعروض",
+  "Début de l'extrait :":"بداية المقطع:",
+  "Durée":"المدة",
+  "Écouter":"استماع",
+  "Arrêter":"إيقاف",
+  "Ajouter la musique":"إضافة الموسيقى",
+  "Préparation de la musique…":"جارٍ تجهيز الموسيقى…",
+  "Utilisez une musique libre de droits (ex. bibliothèque audio YouTube, Pixabay Music) : les chansons connues sont protégées.":"استعمل موسيقى خالية من حقوق النشر (مثل مكتبة YouTube الصوتية أو Pixabay Music): الأغاني المعروفة محمية.",
+  "Musique ajoutée ♪":"تمت إضافة الموسيقى ♪",
+  "Musique indisponible : vérifiez la connexion Internet.":"الموسيقى غير متاحة: تحقّق من الاتصال بالإنترنت.",
+  "Ajoutez une photo ou un texte.":"أضف صورة أو نصًا.",
+  "Quitter sans publier ?":"الخروج دون نشر؟",
+  "Cabinet de Manouba":"عيادة منوبة",
+  "Urgences 24h/24":"طوارئ 24/24",
+  "Vaccination":"تلقيح",
+  "Nouveau en boutique":"جديد في المتجر",
 
 };
 const AR_TOKENS_LIST = [
@@ -4006,42 +4195,21 @@ const App = {
     if(this.activeStories().length) return this.openStories();
     if(this.isAdmin()) return this.pickStory();
   },
+  // « + » de la vétérinaire : story photo ou story texte (éditeur plein écran).
   pickStory(){
     if(!this.isAdmin()) return;
     if(!(CLOUD_ON && window.Cloud && window.Cloud.enabled && window.Cloud.addStory)) return this.toast("Connexion Internet requise.","err");
-    const f=document.getElementById("story-file"); if(f){ f.value=""; f.click(); }
+    const body=`<div class="se-choix">
+        <button type="button" class="se-choix-b" onclick="App.closeSheet();App._choisirPhotoStory()"><span class="se-choix-ic">📷</span><b>Photo</b><small>Depuis la galerie ou l'appareil photo</small></button>
+        <button type="button" class="se-choix-b is-txt" onclick="App.closeSheet();StoryEd.ouvrir({texte:true})"><span class="se-choix-ic">Aa</span><b>Texte</b><small>Un message sur un fond coloré</small></button>
+      </div>
+      <div class="hint" style="margin-top:12px">Ensuite : zoom à deux doigts, textes, stickers, dessin et musique. Visible 24 heures par tous les clients.</div>`;
+    this.openSheet("Nouvelle story", body, "");
   },
+  _choisirPhotoStory(){ const f=document.getElementById("story-file"); if(f){ f.value=""; f.click(); } },
   onStoryFile(inp){
     const file=inp.files && inp.files[0]; if(!file) return;
-    this.readPhoto(file, d=>{
-      if(!d) return this.toast("Image illisible ou trop lourde. Essayez une autre photo.","err");
-      this._storyImg=d;
-      const body=`<div class="story-prev"><img class="flou" src="${d}" alt="" aria-hidden="true"><img src="${d}" alt=""></div>
-        <div class="field mt"><label>Texte sur la story (optionnel)</label>
-          <input class="input" id="st-cap" maxlength="140" placeholder="Ex : Journée vaccination samedi" dir="auto"></div>
-        <div class="hint">Visible par tous les clients pendant 24 heures, puis elle disparaît automatiquement.</div>`;
-      const foot=`<button class="btn btn-primary btn-block btn-lg" id="st-go" onclick="App.publishStory()">✨ Publier la story (24 h)</button>`;
-      this.openSheet("Nouvelle story", body, foot);
-    }, 1080, 450000);
-  },
-  async publishStory(){
-    if(!this._storyImg || this._storyBusy) return;
-    const cap=((document.getElementById("st-cap")||{}).value||"").trim().slice(0,140);
-    const btn=document.getElementById("st-go"); if(btn){ btn.disabled=true; btn.textContent="Publication…"; }
-    this._storyBusy=true;
-    try{ await window.Cloud.addStory(this._storyImg, cap); }
-    catch(e){
-      this._storyBusy=false;
-      if(e && e.message==="delai"){
-        this._storyImg=null; this.closeSheet();
-        return this.toast("Connexion lente : la story sera publiée dès que le réseau le permet.","warn");
-      }
-      if(btn){ btn.disabled=false; btn.textContent="✨ Publier la story (24 h)"; }
-      return this.toast("Échec de la publication. Vérifiez la connexion et réessayez.","err");
-    }
-    this._storyBusy=false; this._storyImg=null;
-    this.closeSheet(); this.toast("Story publiée ! Elle disparaîtra dans 24 h. ✨","ok");
-    this.renderStoryRings();
+    StoryEd.ouvrir({ fichier:file });
   },
   _agoText(ts){
     const min=Math.max(1, Math.round((Date.now()-ts)/60000)), ar=this.lang==="ar";
@@ -4067,7 +4235,7 @@ const App = {
   },
   closeStories(){
     const sv=this._sv; if(sv && sv.raf) cancelAnimationFrame(sv.raf);
-    this._sv=null;
+    this._sv=null; this._svStopAudio();
     const v=document.getElementById("story-viewer");
     if(v){ v.classList.remove("show"); v.setAttribute("aria-hidden","true"); }
     document.body.style.overflow="";
@@ -4085,12 +4253,25 @@ const App = {
     document.getElementById("sv-time").textContent=this._agoText(s.createdAt||Date.now())+(adm?" · "+this._leftText(s.expiresAt):"");
     document.getElementById("sv-stage").classList.toggle("is-admin", adm);
     this._markStorySeen(s.id);
+    // Musique : extrait joué pendant la story (bouton pour couper le son).
+    this._svStopAudio();
+    const mus=document.getElementById("sv-music"), son=document.getElementById("sv-son");
+    if(s.audio){
+      const a=new Audio(s.audio); a.loop=true; a.muted=this._svMuted(); this._svAudio=a;
+      a.play().catch(()=>{});
+      if(mus){ mus.textContent="♪ "+(s.audioTitle||"Musique"); mus.style.display=""; }
+      if(son){ son.style.display=""; son.textContent=a.muted?"🔇":"🔊"; }
+    } else {
+      if(mus) mus.style.display="none";
+      if(son) son.style.display="none";
+    }
+    const duree = s.audio ? Math.min(30000, Math.max(5000, +s.dur || 15000)) : this.STORY_MS;
     if(sv.raf) cancelAnimationFrame(sv.raf);
     sv.elapsed=0; sv.start=performance.now(); sv.paused=false;
     const tick=(t)=>{
       if(this._sv!==sv) return;
       if(!sv.paused){
-        const p=Math.min(1, (sv.elapsed + t - sv.start)/this.STORY_MS);
+        const p=Math.min(1, (sv.elapsed + t - sv.start)/duree);
         const bar=bars.children[sv.i] && bars.children[sv.i].firstChild;
         if(bar) bar.style.width=(p*100)+"%";
         if(p>=1) return this._svStep(1);
@@ -4108,8 +4289,18 @@ const App = {
   _svPause(on){
     const sv=this._sv; if(!sv || sv.paused===on) return;
     const now=performance.now();
-    if(on){ sv.elapsed += now - sv.start; sv.paused=true; }
-    else { sv.start=now; sv.paused=false; }
+    if(on){ sv.elapsed += now - sv.start; sv.paused=true; if(this._svAudio) this._svAudio.pause(); }
+    else { sv.start=now; sv.paused=false; if(this._svAudio) this._svAudio.play().catch(()=>{}); }
+  },
+  _svStopAudio(){
+    if(this._svAudio){ try{ this._svAudio.pause(); this._svAudio.src=""; }catch(e){} this._svAudio=null; }
+  },
+  _svMuted(){ try{ return localStorage.getItem("ad_storyMute")==="1"; }catch(e){ return false; } },
+  toggleStorySon(){
+    const m=!this._svMuted();
+    try{ localStorage.setItem("ad_storyMute", m?"1":"0"); }catch(e){}
+    if(this._svAudio){ this._svAudio.muted=m; if(!m) this._svAudio.play().catch(()=>{}); }
+    const son=document.getElementById("sv-son"); if(son) son.textContent=m?"🔇":"🔊";
   },
   // Gestes : toucher à droite = suivante, à gauche = précédente, appui long =
   // pause, glisser vers le bas = fermer.
@@ -5030,6 +5221,572 @@ const App = {
 };
 
 /* =====================================================================
+   ÉDITEUR DE STORY (vétérinaire) — comme Instagram / Facebook
+   ---------------------------------------------------------------------
+   • Story PHOTO : zoom, déplacement et rotation (deux doigts ou curseur),
+     fond flou / noir / dégradé derrière la photo.
+   • Story TEXTE : un message sur un fond dégradé.
+   • Outils : textes stylés (3 polices, couleurs, fond de texte, taille),
+     stickers et infos du cabinet, dessin au doigt, MUSIQUE (extrait MP3).
+   • Chaque élément se déplace au doigt, se pince pour grandir / tourner,
+     et se jette dans la corbeille. Toucher un texte pour le modifier.
+   Tout est dessiné sur un canevas 1080 × 1920 puis publié en UNE image
+   (+ l'extrait de musique) : rien d'autre à installer.
+   ===================================================================== */
+const StoryEd = {
+  LW:1080, LH:1920,
+  FONDS:[
+    ["#FF3E7F","#FF8A3C"], ["#7F5AF0","#2CB1BC"], ["#FC5C7D","#6A82FB"], ["#00B09B","#96C93D"],
+    ["#F7971E","#FFD200"], ["#232526","#414345"], ["#FFF6F1","#FFD9E6"], ["#0F2027","#2C5364"]
+  ],
+  COULEURS:["#FFFFFF","#111111","#FF3E7F","#E11D63","#FF8A3C","#FFC23C","#26A96B","#3E7BFF","#7F5AF0","#8B5E3C","#FFD9E6","#A3E4FF"],
+  POLICES:[
+    { id:"moderne",  nom:"Moderne",  css:'800 {s}px "Baloo 2", system-ui, sans-serif', lh:1.12 },
+    { id:"simple",   nom:"Simple",   css:'700 {s}px "Nunito", system-ui, sans-serif',  lh:1.28 },
+    { id:"ecriture", nom:"Écriture", css:'400 {s}px "Pacifico", cursive',              lh:1.45 }
+  ],
+  STICKERS:"🐶 🐱 🐰 🐹 🐦 🐢 🐠 🐴 🐾 🦴 💉 🩺 💊 🏥 ❤️ 💕 ✨ ⭐ 🎉 🎁 🎂 ☀️ 🌸 🍀 👍 👏 😍 🥰 😂 😺 📢 ⏰ 📅 ✅ ❗ 🔥 🛍️ 🧼 🛁 ✂️".split(" "),
+  MUSIQUE_URL:"https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js",
+  st:null, _ptrs:new Map(), _geste:null, _edI:-1,
+
+  _el(id){ return document.getElementById(id); },
+  ouvert(){ const e=this._el("story-editor"); return !!(e && e.classList.contains("show")); },
+
+  async ouvrir(opts){
+    opts=opts||{};
+    this.st={ photo:null, fond:0, fondPhoto:"flou", items:[], traits:[], musique:null, sel:-1,
+              dessin:false, coulTrait:"#FFFFFF", larg:14 };
+    this._ptrs.clear(); this._geste=null; this._edI=-1;
+    this._chargerPolices();
+    const ed=this._el("story-editor"); ed.classList.add("show"); ed.setAttribute("aria-hidden","false");
+    document.body.style.overflow="hidden";
+    this._lier(); this._dim(); this._maj(); this.rendu();
+    if(opts.fichier){ await this.chargerPhoto(opts.fichier); }
+    else if(opts.texte){ this.ajouterTexte(); }
+  },
+  fermer(force){
+    const st=this.st;
+    if(!force && st && (st.photo || st.items.length || st.traits.length)){
+      const q="Quitter sans publier ?";
+      if(!confirm(App.lang==="ar" && AR_DICT[q] ? AR_DICT[q] : q)) return;
+    }
+    this._stopEcoute();
+    ["se-textedit","se-stickers","se-music"].forEach(id=>{ const e=this._el(id); if(e) e.classList.remove("show"); });
+    const ed=this._el("story-editor"); ed.classList.remove("show"); ed.setAttribute("aria-hidden","true");
+    document.body.style.overflow="";
+    this.st=null;
+  },
+
+  // Police « Écriture » (Pacifico) chargée seulement quand l'éditeur s'ouvre.
+  _chargerPolices(){
+    if(!document.getElementById("se-font-pacifico")){
+      const l=document.createElement("link"); l.id="se-font-pacifico"; l.rel="stylesheet";
+      l.href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"; document.head.appendChild(l);
+    }
+    try{
+      Promise.all(['800 60px "Baloo 2"','700 60px "Nunito"','400 60px "Pacifico"'].map(f=>document.fonts.load(f)))
+        .then(()=>this.rendu()).catch(()=>{});
+    }catch(e){}
+  },
+
+  // Zone de travail au format 9:16, la plus grande possible à l'écran.
+  _dim(){
+    const vw=window.innerWidth, vh=window.innerHeight;
+    const W=Math.floor(Math.min(vw, 520, vh*9/16)), H=Math.round(W*16/9);
+    const stage=this._el("se-stage"); stage.style.width=W+"px"; stage.style.height=H+"px";
+    const cv=this._el("se-canvas"), dpr=Math.min(2.5, window.devicePixelRatio||1);
+    cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.width=W+"px"; cv.style.height=H+"px";
+    this.W=W; this.H=H; this.k=W*dpr/this.LW; this.kc=W/this.LW;
+  },
+
+  _lier(){
+    if(this._lie) return; this._lie=true;
+    const cv=this._el("se-canvas");
+    cv.addEventListener("pointerdown", e=>this._pd(e));
+    cv.addEventListener("pointermove", e=>this._pm(e));
+    cv.addEventListener("pointerup",   e=>this._pu(e,false));
+    cv.addEventListener("pointercancel", e=>this._pu(e,true));
+    window.addEventListener("resize", ()=>{ if(this.st && this.ouvert() && this._edI<0){ this._dim(); this.rendu(); } });
+    this._el("se-zoom-r").addEventListener("input", e=>{ const p=this.st&&this.st.photo; if(!p) return; p.s=(+e.target.value||100)/100; this.rendu(); });
+    this._el("se-photo-in").addEventListener("change", e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(f) this.chargerPhoto(f); });
+    this._el("se-audio-in").addEventListener("change", e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(f) this._fichierAudio(f); });
+    const ta=this._el("se-ta");
+    ta.addEventListener("input", ()=>{ const it=this.st&&this.st.items[this._edI]; if(it){ it.texte=ta.value; this._styleTa(); } });
+    this._el("se-taille").addEventListener("input", e=>{ const it=this.st&&this.st.items[this._edI]; if(it){ it.fs=+e.target.value; this._styleTa(); } });
+  },
+
+  // Met à jour les boutons (dessin, zoom, musique…).
+  _maj(){
+    const st=this.st; if(!st) return;
+    const ed=this._el("story-editor");
+    ed.classList.toggle("is-dessin", !!st.dessin);
+    ed.classList.toggle("a-photo", !!st.photo);
+    this._el("se-zoom-r").value=st.photo ? Math.round(st.photo.s*100) : 100;
+    const bm=this._el("se-b-musique"); if(bm) bm.classList.toggle("on", !!st.musique);
+    const dc=this._el("se-draw-cols");
+    if(dc && !dc.childNodes.length){
+      dc.innerHTML=this.COULEURS.map(c=>`<button type="button" class="se-col" style="background:${c}" onclick="StoryEd.coulTrait('${c}')"></button>`).join("");
+    }
+    if(dc) [...dc.children].forEach((b,i)=>b.classList.toggle("on", this.COULEURS[i]===st.coulTrait));
+    document.querySelectorAll("#se-larg button").forEach(b=>b.classList.toggle("on", +b.dataset.l===st.larg));
+  },
+
+  /* ---------------- Photo ---------------- */
+  async chargerPhoto(file){
+    let img;
+    try{ img=await this._image(file); }catch(e){ return App.toast("Image illisible ou trop lourde. Essayez une autre photo.","err"); }
+    if(!this.st) return;
+    // Copie réduite (1600 px max) : rapide à redessiner pendant les gestes.
+    const r=Math.min(1, 1600/Math.max(img.width, img.height));
+    const w=Math.max(1, Math.round(img.width*r)), h=Math.max(1, Math.round(img.height*r));
+    const src=document.createElement("canvas"); src.width=w; src.height=h;
+    src.getContext("2d").drawImage(img, 0, 0, w, h);
+    // Fond flou : réduction très forte puis agrandissement (marche partout, sans filtre).
+    const fl=document.createElement("canvas"); fl.width=27; fl.height=48;
+    const fx=fl.getContext("2d"); const sc=Math.max(27/w, 48/h);
+    fx.drawImage(src, (27-w*sc)/2, (48-h*sc)/2, w*sc, h*sc);
+    this.st.photo={ src, flou:fl, w, h, x:this.LW/2, y:this.LH/2, s:1, r:0 };
+    this._maj(); this.rendu();
+  },
+  _image(file){
+    return new Promise((ok, ko)=>{
+      const url=URL.createObjectURL(file); const im=new Image();
+      im.onload=()=>{ URL.revokeObjectURL(url); ok(im); };
+      im.onerror=()=>{ URL.revokeObjectURL(url); ko(new Error("image")); };
+      im.src=url;
+    });
+  },
+  choisirPhoto(){ this._el("se-photo-in").click(); },
+  recentrer(){ const p=this.st&&this.st.photo; if(!p) return; p.x=this.LW/2; p.y=this.LH/2; p.s=1; p.r=0; this._maj(); this.rendu(); },
+  // 🎨 : fond suivant (story texte : dégradés ; photo : flou → noir → dégradés).
+  changerFond(){
+    const st=this.st; if(!st) return;
+    if(st.photo){
+      const modes=["flou","noir"].concat(this.FONDS.map((_,i)=>"g"+i));
+      const i=modes.indexOf(st.fondPhoto===`grad` ? "g"+st.fond : st.fondPhoto);
+      const n=modes[(i+1)%modes.length];
+      if(n[0]==="g"){ st.fondPhoto="grad"; st.fond=+n.slice(1); } else st.fondPhoto=n;
+    } else st.fond=(st.fond+1)%this.FONDS.length;
+    this.rendu();
+  },
+
+  /* ---------------- Rendu (aperçu = export, même code) ---------------- */
+  rendu(){
+    if(this._raf || !this.st) return;
+    this._raf=requestAnimationFrame(()=>{
+      this._raf=0; if(!this.st) return;
+      const cv=this._el("se-canvas"), ctx=cv.getContext("2d");
+      ctx.setTransform(this.k,0,0,this.k,0,0);
+      this.dessiner(ctx, false);
+    });
+  },
+  _degrade(ctx, i){
+    const f=this.FONDS[i]||this.FONDS[0];
+    const g=ctx.createLinearGradient(0,0,this.LW,this.LH); g.addColorStop(0,f[0]); g.addColorStop(1,f[1]);
+    ctx.fillStyle=g; ctx.fillRect(0,0,this.LW,this.LH);
+  },
+  dessiner(ctx, exporter){
+    const st=this.st, LW=this.LW, LH=this.LH;
+    ctx.save();
+    if(st.photo){
+      const p=st.photo;
+      if(st.fondPhoto==="flou"){ ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality="high"; ctx.drawImage(p.flou,0,0,LW,LH); ctx.fillStyle="rgba(0,0,0,.18)"; ctx.fillRect(0,0,LW,LH); }
+      else if(st.fondPhoto==="noir"){ ctx.fillStyle="#000"; ctx.fillRect(0,0,LW,LH); }
+      else this._degrade(ctx, st.fond);
+      const base=Math.min(LW/p.w, LH/p.h)*p.s;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.scale(base,base);
+      ctx.imageSmoothingQuality="high"; ctx.drawImage(p.src, -p.w/2, -p.h/2, p.w, p.h); ctx.restore();
+    } else this._degrade(ctx, st.fond);
+    st.traits.forEach(t=>this._trait(ctx,t));
+    st.items.forEach((it,i)=>{ if(!exporter && i===this._edI) return; this._element(ctx, it, !exporter && i===st.sel && !st.dessin); });
+    ctx.restore();
+  },
+  _trait(ctx, t){
+    const pts=t.pts; if(!pts.length) return;
+    ctx.save(); ctx.strokeStyle=t.c; ctx.fillStyle=t.c; ctx.lineWidth=t.l; ctx.lineCap="round"; ctx.lineJoin="round";
+    if(pts.length===1){ ctx.beginPath(); ctx.arc(pts[0][0], pts[0][1], t.l/2, 0, Math.PI*2); ctx.fill(); ctx.restore(); return; }
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for(let i=1;i<pts.length-1;i++){ const mx=(pts[i][0]+pts[i+1][0])/2, my=(pts[i][1]+pts[i+1][1])/2; ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my); }
+    const L=pts[pts.length-1]; ctx.lineTo(L[0], L[1]); ctx.stroke(); ctx.restore();
+  },
+  _police(it){ return this.POLICES.find(p=>p.id===it.police) || this.POLICES[0]; },
+  _font(it){
+    if(it.type==="emoji") return `${it.fs}px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif`;
+    if(it.type==="puce" || it.type==="musique") return `800 ${it.fs}px "Nunito", system-ui, sans-serif`;
+    return this._police(it).css.replace("{s}", it.fs);
+  },
+  // Coupe le texte en lignes (même calcul pour l'aperçu et l'image finale).
+  _mesure(ctx, it){
+    ctx.font=this._font(it);
+    const lh = it.type==="emoji" ? it.fs*1.15 : (it.type==="texte" ? it.fs*this._police(it).lh : it.fs*1.3);
+    const max = it.type==="texte" ? 860 : 2000;
+    const lignes=[];
+    String(it.texte||" ").split("\n").forEach(par=>{
+      const mots=par.split(/(\s+)/); let cur="";
+      mots.forEach(m=>{
+        if(!m) return;
+        const essai=cur+m;
+        if(cur && ctx.measureText(essai.trimEnd()).width>max){ lignes.push(cur.trimEnd()); cur=m.trimStart(); }
+        else cur=essai;
+        while(ctx.measureText(cur).width>max && cur.length>1){        // mot plus long que la ligne
+          let n=cur.length-1; while(n>1 && ctx.measureText(cur.slice(0,n)).width>max) n--;
+          lignes.push(cur.slice(0,n)); cur=cur.slice(n);
+        }
+      });
+      lignes.push(cur.trimEnd());
+    });
+    const L=lignes.map(t=>({ t, w:ctx.measureText(t).width }));
+    const w=Math.max(10, ...L.map(l=>l.w));
+    const pad = it.type==="emoji" ? 0 : it.fs*0.32;
+    return { lignes:L, lh, w, h:lh*L.length, pad };
+  },
+  _contraste(c){
+    const h=c.replace("#",""); const r=parseInt(h.substr(0,2),16), g=parseInt(h.substr(2,2),16), b=parseInt(h.substr(4,2),16);
+    return (0.299*r+0.587*g+0.114*b) > 160 ? "#111111" : "#FFFFFF";
+  },
+  _rond(ctx, x, y, w, h, r){
+    r=Math.min(r, h/2, w/2);
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  },
+  _element(ctx, it, actif){
+    const m=this._mesure(ctx, it); it._m=m;
+    ctx.save(); ctx.translate(it.x, it.y); ctx.rotate(it.r||0); ctx.scale(it.sc||1, it.sc||1);
+    ctx.font=this._font(it); ctx.textBaseline="middle";
+    try{ ctx.direction = /[֐-ࣿ]/.test(it.texte) ? "rtl" : "ltr"; }catch(e){}
+    const n=m.lignes.length, align=it.align||"center";
+    const tx = align==="left" ? -m.w/2 : (align==="right" ? m.w/2 : 0);
+    ctx.textAlign = align;
+    const yL=i=>(i-(n-1)/2)*m.lh;
+    if(it.type==="puce" || it.type==="musique"){
+      const l=m.lignes[0], bw=l.w+m.pad*2.4, bh=m.lh+m.pad*0.6;
+      ctx.fillStyle = it.type==="musique" ? "rgba(0,0,0,.55)" : "#FFFFFF";
+      ctx.shadowColor="rgba(0,0,0,.25)"; ctx.shadowBlur=18;
+      this._rond(ctx, -bw/2, -bh/2, bw, bh, bh/2); ctx.fill(); ctx.shadowBlur=0;
+      ctx.fillStyle = it.type==="musique" ? "#FFFFFF" : "#E11D63"; ctx.textAlign="center";
+      ctx.fillText(l.t, 0, 2);
+    } else if(it.type==="emoji"){
+      ctx.textAlign="center"; ctx.fillText(it.texte, 0, 0);
+    } else {
+      const c=it.couleur||"#FFFFFF", mode=it.fondTxt||0;
+      if(mode>0){
+        ctx.fillStyle = mode===1 ? c : (this._contraste(c)==="#111111" ? "rgba(0,0,0,.55)" : "rgba(255,255,255,.82)");
+        m.lignes.forEach((l,i)=>{
+          if(!l.t) return;
+          const x0 = align==="left" ? -m.w/2-m.pad : (align==="right" ? m.w/2-l.w-m.pad : -l.w/2-m.pad);
+          this._rond(ctx, x0, yL(i)-m.lh/2-m.pad*0.15, l.w+m.pad*2, m.lh+m.pad*0.3, m.pad*0.9); ctx.fill();
+        });
+      } else { ctx.shadowColor="rgba(0,0,0,.35)"; ctx.shadowBlur=it.fs*0.18; }
+      ctx.fillStyle = mode===1 ? this._contraste(c) : c;
+      m.lignes.forEach((l,i)=>ctx.fillText(l.t, tx, yL(i)+it.fs*0.04));
+      ctx.shadowBlur=0;
+    }
+    if(actif){
+      ctx.setLineDash([14,10]); ctx.lineWidth=3/(it.sc||1); ctx.strokeStyle="rgba(255,255,255,.85)";
+      const bw=m.w+m.pad*2+20, bh=m.h+m.pad+20; ctx.strokeRect(-bw/2, -bh/2, bw, bh); ctx.setLineDash([]);
+    }
+    ctx.restore();
+  },
+  // Élément sous le doigt (du plus haut au plus bas).
+  _touche(x, y){
+    const st=this.st;
+    for(let i=st.items.length-1;i>=0;i--){
+      const it=st.items[i], m=it._m; if(!m) continue;
+      const dx=x-it.x, dy=y-it.y, c=Math.cos(-(it.r||0)), s=Math.sin(-(it.r||0)), sc=it.sc||1;
+      const lx=(dx*c-dy*s)/sc, ly=(dx*s+dy*c)/sc;
+      if(Math.abs(lx)<=m.w/2+m.pad+30 && Math.abs(ly)<=m.h/2+m.pad+30) return i;
+    }
+    return -1;
+  },
+
+  /* ---------------- Gestes ---------------- */
+  _pt(e){ const r=this._el("se-canvas").getBoundingClientRect(); return { x:(e.clientX-r.left)/this.kc, y:(e.clientY-r.top)/this.kc, cx:e.clientX, cy:e.clientY }; },
+  _copie(o){ return o ? { x:o.x, y:o.y, s:o.s, sc:o.sc, r:o.r||0 } : null; },
+  _cible(g){ return g.cible==="photo" ? this.st.photo : this.st.items[g.cible]; },
+  _pd(e){
+    const st=this.st; if(!st) return;
+    e.preventDefault();
+    try{ this._el("se-canvas").setPointerCapture(e.pointerId); }catch(_){}
+    const p=this._pt(e); this._ptrs.set(e.pointerId, p);
+    if(st.dessin){
+      if(this._ptrs.size===1){ this._traitCour={ c:st.coulTrait, l:st.larg, pts:[[p.x,p.y]] }; st.traits.push(this._traitCour); this.rendu(); }
+      return;
+    }
+    if(this._ptrs.size===1){
+      let i=this._touche(p.x, p.y);
+      if(i>=0){ const it=st.items.splice(i,1)[0]; st.items.push(it); i=st.items.length-1; }   // au premier plan
+      st.sel=i;
+      const cible = i>=0 ? i : (st.photo ? "photo" : null);
+      this._geste={ cible, t0:Date.now(), p0:p, bouge:false, base:cible===null?null:this._copie(cible==="photo"?st.photo:st.items[cible]) };
+      this.rendu();
+    } else if(this._ptrs.size===2 && this._geste && this._geste.cible!==null){
+      const [a,b]=[...this._ptrs.values()];
+      this._geste.pince={ d0:Math.hypot(b.x-a.x,b.y-a.y)||1, a0:Math.atan2(b.y-a.y,b.x-a.x), m0:{x:(a.x+b.x)/2,y:(a.y+b.y)/2}, base:this._copie(this._cible(this._geste)) };
+      this._geste.bouge=true;
+    }
+  },
+  _pm(e){
+    const st=this.st; if(!st || !this._ptrs.has(e.pointerId)) return;
+    const p=this._pt(e); this._ptrs.set(e.pointerId, p);
+    if(st.dessin){ if(this._traitCour){ this._traitCour.pts.push([p.x,p.y]); this.rendu(); } return; }
+    const g=this._geste; if(!g || g.cible===null) return;
+    const o=this._cible(g); if(!o) return;
+    if(this._ptrs.size>=2 && g.pince){
+      const [a,b]=[...this._ptrs.values()];
+      const f=Math.hypot(b.x-a.x,b.y-a.y)/g.pince.d0, da=Math.atan2(b.y-a.y,b.x-a.x)-g.pince.a0;
+      const mx=(a.x+b.x)/2-g.pince.m0.x, my=(a.y+b.y)/2-g.pince.m0.y, B=g.pince.base;
+      if(g.cible==="photo") o.s=Math.max(0.3, Math.min(6, B.s*f)); else o.sc=Math.max(0.25, Math.min(6, B.sc*f));
+      o.r=B.r+da; o.x=B.x+mx; o.y=B.y+my;
+      if(g.cible==="photo") this._el("se-zoom-r").value=Math.round(o.s*100);
+    } else if(this._ptrs.size===1 && !g.pince){
+      const dx=p.x-g.p0.x, dy=p.y-g.p0.y;
+      if(!g.bouge && Math.hypot(dx,dy)*this.kc>6) g.bouge=true;
+      if(g.bouge){ o.x=g.base.x+dx; o.y=g.base.y+dy; }
+      if(g.bouge && g.cible!=="photo") this._corbeille(true, this._surCorbeille(p));
+    }
+    this.rendu();
+  },
+  _pu(e, annule){
+    const st=this.st; if(!st) return;
+    const p=this._ptrs.get(e.pointerId) || this._pt(e);
+    this._ptrs.delete(e.pointerId);
+    if(st.dessin){ if(!this._ptrs.size) this._traitCour=null; return; }
+    const g=this._geste; if(!g) return;
+    if(this._ptrs.size===1 && g.pince){
+      const reste=[...this._ptrs.values()][0];
+      g.pince=null; g.p0=reste; g.base=this._copie(this._cible(g)); return;
+    }
+    if(this._ptrs.size) return;
+    if(g.cible!==null && g.cible!=="photo"){
+      const it=st.items[g.cible];
+      if(!annule && g.bouge && !g.pince && this._surCorbeille(p)){
+        st.items.splice(g.cible,1); if(it && it.type==="musique") st.musique=null; st.sel=-1;
+      } else if(!annule && !g.bouge && Date.now()-g.t0<400 && it && it.type==="texte"){
+        this.editerTexte(g.cible);
+      }
+    }
+    this._corbeille(false); this._geste=null; this._maj(); this.rendu();
+  },
+  _surCorbeille(p){
+    const t=this._el("se-trash"), r=t.getBoundingClientRect();
+    return Math.hypot(p.cx-(r.left+r.width/2), p.cy-(r.top+r.height/2)) < 60;
+  },
+  _corbeille(voir, chaud){ const t=this._el("se-trash"); t.classList.toggle("show", !!voir); t.classList.toggle("hot", !!chaud); },
+
+  /* ---------------- Texte ---------------- */
+  ajouterTexte(){
+    const st=this.st; if(!st) return;
+    st.items.push({ type:"texte", texte:"", x:this.LW/2, y:this.LH*0.42, sc:1, r:0, fs:84, police:"moderne", couleur:"#FFFFFF", fondTxt: st.photo?0:0, align:"center" });
+    this.editerTexte(st.items.length-1);
+  },
+  editerTexte(i){
+    const st=this.st, it=st.items[i]; if(!it) return;
+    this._edI=i; st.sel=-1;
+    this._el("story-editor").classList.add("is-texte");
+    const ov=this._el("se-textedit"); ov.classList.add("show");
+    const pal=this._el("se-cols");
+    pal.innerHTML=this.COULEURS.map(c=>`<button type="button" class="se-col" style="background:${c}" onclick="StoryEd.couleur('${c}')"></button>`).join("");
+    const ta=this._el("se-ta"); ta.value=it.texte;
+    this._el("se-taille").value=it.fs;
+    this._styleTa(); this.rendu();
+    setTimeout(()=>{ try{ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }catch(e){} }, 60);
+  },
+  _styleTa(){
+    const it=this.st && this.st.items[this._edI]; if(!it) return;
+    const ta=this._el("se-ta"), P=this._police(it), c=it.couleur, mode=it.fondTxt||0;
+    const px=Math.max(16, Math.round(it.fs*this.kc*(it.sc||1)));
+    ta.style.font=P.css.replace("{s}", px); ta.style.lineHeight=P.lh;
+    ta.style.textAlign=it.align||"center";
+    ta.style.color = mode===1 ? this._contraste(c) : c;
+    ta.style.background = mode===1 ? c : (mode===2 ? (this._contraste(c)==="#111111" ? "rgba(0,0,0,.55)" : "rgba(255,255,255,.82)") : "transparent");
+    ta.style.textShadow = mode===0 ? "0 2px 10px rgba(0,0,0,.35)" : "none";
+    document.querySelectorAll("#se-polices button").forEach(b=>b.classList.toggle("on", b.dataset.p===it.police));
+    [...this._el("se-cols").children].forEach((b,i)=>b.classList.toggle("on", this.COULEURS[i]===c));
+    const fa=this._el("se-fondtxt"); if(fa) fa.dataset.m=mode;
+    const al=this._el("se-align"); if(al) al.dataset.a=it.align||"center";
+    // hauteur automatique du champ
+    ta.style.height="auto"; ta.style.height=Math.min(ta.scrollHeight+4, window.innerHeight*0.45)+"px";
+  },
+  police(id){ const it=this.st&&this.st.items[this._edI]; if(it){ it.police=id; this._styleTa(); } },
+  couleur(c){ const it=this.st&&this.st.items[this._edI]; if(it){ it.couleur=c; this._styleTa(); } },
+  fondTexte(){ const it=this.st&&this.st.items[this._edI]; if(it){ it.fondTxt=((it.fondTxt||0)+1)%3; this._styleTa(); } },
+  aligner(){ const it=this.st&&this.st.items[this._edI]; if(it){ const o=["center","left","right"]; it.align=o[(o.indexOf(it.align||"center")+1)%3]; this._styleTa(); } },
+  finTexte(){
+    const st=this.st; if(!st || this._edI<0) return;
+    const it=st.items[this._edI];
+    if(it){ it.texte=this._el("se-ta").value.replace(/\s+$/,""); if(!it.texte.trim()) st.items.splice(this._edI,1); }
+    this._edI=-1; this._el("se-textedit").classList.remove("show"); this._el("story-editor").classList.remove("is-texte");
+    try{ this._el("se-ta").blur(); }catch(e){}
+    setTimeout(()=>{ if(this.st){ this._dim(); this.rendu(); } }, 250);    // le clavier se referme
+    this.rendu();
+  },
+
+  /* ---------------- Stickers ---------------- */
+  ouvrirStickers(){
+    const s=App.settings ? App.settings() : {};
+    const puces=["📍 Cabinet de Manouba"];
+    if(s.phone) puces.push("📞 "+App.phoneFmt(s.phone));
+    puces.push("🗓️ "+App.fmtDate(App.todayStr()));
+    if(s.emergency24) puces.push("🚨 Urgences 24h/24");
+    puces.push("💉 Vaccination", "🛍️ Nouveau en boutique");
+    const pan=this._el("se-stickers");
+    this._el("se-st-grid").innerHTML=this.STICKERS.map(e=>`<button type="button" class="se-emo" onclick="StoryEd.ajouterSticker('${e}')">${e}</button>`).join("");
+    this._el("se-st-puces").innerHTML=puces.map(t=>`<button type="button" class="se-puce" onclick="StoryEd.ajouterPuce(this.textContent)" data-i18n="off">${App.escape(t)}</button>`).join("");
+    pan.classList.add("show");
+  },
+  fermerPanneau(id){ this._el(id).classList.remove("show"); if(id==="se-music") this._stopEcoute(); },
+  _placer(it){ const st=this.st; st.items.push(it); st.sel=st.items.length-1; this._maj(); this.rendu(); },
+  ajouterSticker(e){ this.fermerPanneau("se-stickers"); this._placer({ type:"emoji", texte:e, x:this.LW/2, y:this.LH*0.5, sc:1, r:0, fs:220 }); },
+  ajouterPuce(t){ this.fermerPanneau("se-stickers"); this._placer({ type:"puce", texte:String(t).trim(), x:this.LW/2, y:this.LH*0.62, sc:1, r:0, fs:54 }); },
+
+  /* ---------------- Dessin ---------------- */
+  modeDessin(on){
+    const st=this.st; if(!st) return;
+    st.dessin = (on===undefined) ? !st.dessin : !!on; st.sel=-1;
+    this._maj(); this.rendu();
+  },
+  coulTrait(c){ if(this.st){ this.st.coulTrait=c; this._maj(); } },
+  largeur(l){ if(this.st){ this.st.larg=l; this._maj(); } },
+  annulerTrait(){ if(this.st && this.st.traits.length){ this.st.traits.pop(); this.rendu(); } },
+
+  /* ---------------- Musique ----------------
+     La vétérinaire choisit un fichier audio de son téléphone ; on garde un
+     extrait de 10 à 20 s, converti en MP3 léger (64 kb/s, mono) avec la
+     bibliothèque libre lamejs, chargée seulement à ce moment-là. */
+  choisirMusique(){ this._el("se-audio-in").click(); },
+  async _fichierAudio(file){
+    const pan=this._el("se-music"), corps=this._el("se-mu-corps");
+    pan.classList.add("show");
+    corps.innerHTML=`<div class="se-mu-info">Chargement de la musique…</div>`;
+    let buf;
+    try{
+      const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+      const dec=new OAC(1, 44100, 44100);
+      buf=await dec.decodeAudioData(await file.arrayBuffer());
+    }catch(e){ corps.innerHTML=`<div class="se-mu-info">Fichier audio illisible.</div>`; return; }
+    const titre=String(file.name||"Musique").replace(/\.[^.]+$/,"").replace(/[_-]+/g," ").trim().slice(0,40);
+    this._aud={ buf, titre, debut:0, duree:Math.min(15, Math.floor(buf.duration)) || 1 };
+    this._uiMusique();
+  },
+  _uiMusique(){
+    const a=this._aud, corps=this._el("se-mu-corps"); if(!a) return;
+    const max=Math.max(0, Math.floor(a.buf.duration - a.duree));
+    a.debut=Math.min(a.debut, max);
+    const f=s=>Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
+    corps.innerHTML=`
+      <label class="se-mu-l">Titre affiché</label>
+      <input class="se-mu-in" id="se-mu-titre" maxlength="40" value="${App.escape(a.titre)}" dir="auto">
+      <label class="se-mu-l">Début de l'extrait : <b id="se-mu-pos" data-i18n="off">${f(a.debut)}</b> / <span data-i18n="off">${f(a.buf.duration)}</span></label>
+      <input type="range" id="se-mu-debut" min="0" max="${max}" step="1" value="${a.debut}" style="width:100%">
+      <label class="se-mu-l">Durée</label>
+      <div class="se-mu-durees">${[10,15,20].filter(d=>d<=Math.max(10,Math.ceil(a.buf.duration))).map(d=>`<button type="button" class="${d===a.duree?"on":""}" onclick="StoryEd.dureeMusique(${d})"><span data-i18n="off">${d}</span> s</button>`).join("")}</div>
+      <div class="se-mu-actions">
+        <button type="button" class="se-mu-b" id="se-mu-play" onclick="StoryEd.ecouter()">▶ Écouter</button>
+        <button type="button" class="se-mu-b is-ok" id="se-mu-ok" onclick="StoryEd.validerMusique()">Ajouter la musique</button>
+      </div>
+      <div class="se-mu-note">Utilisez une musique libre de droits (ex. bibliothèque audio YouTube, Pixabay Music) : les chansons connues sont protégées.</div>`;
+    this._el("se-mu-debut").addEventListener("input", e=>{ a.debut=+e.target.value; this._el("se-mu-pos").textContent=f(a.debut); if(this._ecoute) this.ecouter(true); });
+  },
+  dureeMusique(d){ if(this._aud){ this._aud.duree=Math.min(d, Math.max(1, Math.floor(this._aud.buf.duration))); this._stopEcoute(); this._uiMusique(); } },
+  ecouter(relancer){
+    const a=this._aud; if(!a) return;
+    if(this._ecoute && !relancer){ this._stopEcoute(); return; }
+    this._stopEcoute();
+    try{
+      const AC=window.AudioContext||window.webkitAudioContext;
+      this._ac=this._ac||new AC();
+      const src=this._ac.createBufferSource(); src.buffer=a.buf; src.connect(this._ac.destination);
+      src.onended=()=>{ if(this._ecoute===src){ this._ecoute=null; const b=this._el("se-mu-play"); if(b) b.textContent="▶ Écouter"; } };
+      src.start(0, a.debut, a.duree); this._ecoute=src;
+      const b=this._el("se-mu-play"); if(b) b.textContent="⏸ Arrêter";
+    }catch(e){}
+  },
+  _stopEcoute(){
+    if(this._ecoute){ try{ this._ecoute.onended=null; this._ecoute.stop(); }catch(e){} this._ecoute=null; }
+    const b=this._el("se-mu-play"); if(b) b.textContent="▶ Écouter";
+  },
+  _lame(){
+    if(window.lamejs && window.lamejs.Mp3Encoder) return Promise.resolve();
+    return new Promise((ok, ko)=>{
+      const s=document.createElement("script"); s.src=this.MUSIQUE_URL; s.async=true;
+      s.onload=()=> (window.lamejs && window.lamejs.Mp3Encoder) ? ok() : ko(new Error("lamejs"));
+      s.onerror=()=>ko(new Error("lamejs")); document.head.appendChild(s);
+    });
+  },
+  async validerMusique(){
+    const a=this._aud; if(!a || this._encodage) return;
+    this._stopEcoute();
+    a.titre=((this._el("se-mu-titre")||{}).value||a.titre||"Musique").trim().slice(0,40) || "Musique";
+    const ok=this._el("se-mu-ok"); if(ok){ ok.disabled=true; ok.textContent="Préparation de la musique…"; }
+    this._encodage=true;
+    try{
+      await this._lame();
+      const data=await this._mp3(a.buf, a.debut, a.duree);
+      const st=this.st; if(!st) return;
+      st.musique={ data, titre:a.titre, dur:a.duree*1000 };
+      st.items=st.items.filter(x=>x.type!=="musique");
+      st.items.push({ type:"musique", texte:"♪ "+a.titre, x:this.LW/2, y:this.LH*0.8, sc:1, r:0, fs:44 });
+      this.fermerPanneau("se-music"); this._maj(); this.rendu();
+      App.toast("Musique ajoutée ♪","ok");
+    }catch(e){
+      console.warn("musique", e);
+      App.toast("Musique indisponible : vérifiez la connexion Internet.","err");
+    }finally{
+      this._encodage=false;
+      if(ok){ ok.disabled=false; ok.textContent="Ajouter la musique"; }
+    }
+  },
+  // Extrait → MP3 mono 64 kb/s, avec fondu d'entrée et de sortie.
+  async _mp3(buf, debut, duree){
+    const sr=buf.sampleRate, n0=Math.floor(debut*sr), n=Math.min(buf.length-n0, Math.floor(duree*sr));
+    const ch=buf.numberOfChannels, mono=new Float32Array(n);
+    for(let c=0;c<ch;c++){ const d=buf.getChannelData(c); for(let i=0;i<n;i++) mono[i]+=d[n0+i]/ch; }
+    const fondu=Math.floor(sr*0.6);
+    const pcm=new Int16Array(n);
+    for(let i=0;i<n;i++){
+      let v=mono[i]; if(i<fondu) v*=i/fondu; if(i>n-fondu) v*=(n-i)/fondu;
+      v=Math.max(-1, Math.min(1, v)); pcm[i]=v<0 ? v*0x8000 : v*0x7FFF;
+    }
+    const enc=new lamejs.Mp3Encoder(1, sr, 64), morceaux=[];
+    for(let i=0;i<n;i+=1152){ const o=enc.encodeBuffer(pcm.subarray(i, i+1152)); if(o.length) morceaux.push(o); if(i%(1152*200)===0) await new Promise(r=>setTimeout(r,0)); }
+    const fin=enc.flush(); if(fin.length) morceaux.push(fin);
+    const blob=new Blob(morceaux, { type:"audio/mpeg" });
+    return await new Promise((ok, ko)=>{ const r=new FileReader(); r.onload=()=>ok(r.result); r.onerror=ko; r.readAsDataURL(blob); });
+  },
+
+  /* ---------------- Publication ---------------- */
+  async publier(){
+    const st=this.st; if(!st || this._envoi) return;
+    if(this._edI>=0) this.finTexte();
+    if(!st.photo && !st.items.length && !st.traits.length) return App.toast("Ajoutez une photo ou un texte.","err");
+    if(!(window.Cloud && window.Cloud.enabled && window.Cloud.addStory)) return App.toast("Connexion Internet requise.","err");
+    const btn=this._el("se-pub"); if(btn){ btn.disabled=true; btn.textContent="Publication…"; }
+    this._envoi=true;
+    try{
+      try{ await Promise.race([document.fonts.ready, new Promise(r=>setTimeout(r,1500))]); }catch(e){}
+      const cv=document.createElement("canvas"); cv.width=this.LW; cv.height=this.LH;
+      const ctx=cv.getContext("2d"); st.sel=-1; this.dessiner(ctx, true);
+      // Un document Firestore ne dépasse pas 1 Mo : image + musique doivent tenir.
+      const max = st.musique ? 620000 : 760000;
+      let q=0.86, img=cv.toDataURL("image/jpeg", q);
+      while(img.length>max && q>0.42){ q-=0.08; img=cv.toDataURL("image/jpeg", q); }
+      const extra={};
+      if(st.musique){ extra.audio=st.musique.data; extra.audioTitle=st.musique.titre; extra.dur=st.musique.dur; }
+      await window.Cloud.addStory(img, "", extra);
+      this.fermer(true);
+      App.toast("Story publiée ! Elle disparaîtra dans 24 h. ✨","ok");
+      App.renderStoryRings();
+    }catch(e){
+      if(e && e.message==="delai"){ this.fermer(true); App.toast("Connexion lente : la story sera publiée dès que le réseau le permet.","warn"); }
+      else App.toast("Échec de la publication. Vérifiez la connexion et réessayez.","err");
+    }finally{
+      this._envoi=false;
+      if(btn){ btn.disabled=false; btn.textContent="Publier la story ›"; }
+    }
+  }
+};
+window.StoryEd = StoryEd;
+
+/* =====================================================================
    AMORÇAGE : liaisons d'événements + démarrage + service worker
    ===================================================================== */
 document.addEventListener("DOMContentLoaded", function(){
@@ -5709,12 +6466,13 @@ document.addEventListener("DOMContentLoaded", function(){
   /* -------------------------------------------------------------------
      STORIES (24 h) — écriture réservée à la vétérinaire (règles Firestore)
      ------------------------------------------------------------------- */
-  Cloud.addStory = async (img, caption) => {
+  // extra (v1.3) : { audio, audioTitle, dur } quand la story a une musique.
+  Cloud.addStory = async (img, caption, extra) => {
     const user = auth && auth.currentUser;
     if(!db || !user) throw new Error("hors-ligne");
     const now = Date.now();
     const id = "st" + now.toString(36) + Math.random().toString(36).slice(2, 6);
-    const data = { id, img, caption: String(caption || ""), createdAt: now, expiresAt: now + 24 * 3600 * 1000, by: user.uid };
+    const data = Object.assign({ id, img, caption: String(caption || ""), createdAt: now, expiresAt: now + 24 * 3600 * 1000, by: user.uid }, extra || {});
     await avecDelai(setDoc(doc(db, "stories", id), data), 45000);
     if(!(Cloud.stories || []).some(s => s.id === id)) Cloud.stories = (Cloud.stories || []).concat([data]);
   };
