@@ -571,10 +571,9 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .legal-link{color:var(--rose-deep);font-weight:800;text-decoration:underline;text-underline-offset:2px}
 .legal-foot{margin:14px 0 6px}
 .forgot-row{display:flex;justify-content:flex-end;margin-top:6px}
-.app-link{display:block;font-size:.84rem;font-weight:800;color:var(--rose-deep);word-break:break-all;margin-bottom:10px;text-decoration:underline;text-underline-offset:2px}
 .dev-links{display:flex;flex-direction:column;gap:4px;margin-top:4px}
 .dev-links a{color:var(--rose-deep);font-weight:700;font-size:.88rem;text-decoration:none;word-break:break-all}
-html.rtl .dev-links a,html.rtl .app-link{text-align:right}
+html.rtl .dev-links a{text-align:right}
 .legal-links{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:14px 0 6px;font-size:.86rem;color:var(--muted)}
 .copyright{text-align:center;font-size:.8rem;color:var(--muted);font-weight:600}
 .pw-wrap{position:relative}
@@ -648,7 +647,7 @@ html.rtl .pw-eye{right:auto;left:6px}
 
       <div class="card" id="form-login">
         <div class="field"><label>Téléphone ou e-mail</label>
-          <input class="input" id="log-id" placeholder="Ex : XX XXX XXX ou nom@example.com" autocomplete="username" autocapitalize="none" spellcheck="false" /></div>
+          <input class="input" id="log-id" placeholder="Votre numéro ou votre e-mail" autocomplete="username" autocapitalize="none" spellcheck="false" /></div>
         <div class="field"><label>Mot de passe</label>
           <input class="input" id="log-pass" type="password" placeholder="••••••" autocomplete="current-password" />
           <div class="forgot-row"><button type="button" class="forgot-link" onclick="App.openForgot()">Mot de passe oublié ?</button></div></div>
@@ -658,11 +657,11 @@ html.rtl .pw-eye{right:auto;left:6px}
 
       <div class="card" id="form-register" style="display:none">
         <div class="field"><label>Nom complet</label>
-          <input class="input" id="reg-name" placeholder="Ex : Prénom Nom" autocomplete="name" /></div>
+          <input class="input" id="reg-name" placeholder="Votre nom et prénom" autocomplete="name" /></div>
         <div class="field"><label>Numéro de téléphone</label>
-          <input class="input" id="reg-phone" type="tel" inputmode="numeric" placeholder="Ex : XX XXX XXX" autocomplete="tel" /></div>
+          <input class="input" id="reg-phone" type="tel" inputmode="numeric" placeholder="Votre numéro de téléphone" autocomplete="tel" /></div>
         <div class="field"><label>Adresse e-mail</label>
-          <input class="input" id="reg-email" type="email" inputmode="email" placeholder="Ex : nom@example.com" autocomplete="email" autocapitalize="none" spellcheck="false" />
+          <input class="input" id="reg-email" type="email" inputmode="email" placeholder="Votre adresse e-mail" autocomplete="email" autocapitalize="none" spellcheck="false" />
           <div class="hint" style="margin-top:6px">Pour vous connecter et récupérer votre mot de passe si vous l'oubliez.</div></div>
         <div class="field"><label>Mot de passe</label>
           <input class="input" id="reg-pass" type="password" placeholder="Choisissez un mot de passe" autocomplete="new-password" />
@@ -972,7 +971,7 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.1.1";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
 /* Conception et développement de l'application. */
@@ -1078,7 +1077,7 @@ const AR_DICT = {
   "Téléphone ou identifiant":"الهاتف أو المعرّف",
   "Nouveau ? Créez un compte pour suivre la santé de votre animal.":"جديد؟ أنشئ حسابًا لمتابعة صحة حيوانك.",
   "Nom complet":"الاسم الكامل","Numéro de téléphone":"رقم الهاتف","Créer mon compte":"إنشاء حسابي",
-  "Ex : Prénom Nom":"مثال: الاسم واللقب","Ex : XX XXX XXX":"مثال: XX XXX XXX",
+  "Votre nom et prénom":"اسمك ولقبك","Votre numéro de téléphone":"رقم هاتفك",
   "Le Cabinet Vétérinaire de Manouba":"العيادة البيطرية بمنوبة",
   "Compte créé, bienvenue !":"تم إنشاء الحساب، مرحبًا!","Ce numéro a déjà un compte.":"هذا الرقم له حساب بالفعل.",
   "Identifiant ou mot de passe incorrect.":"المعرّف أو كلمة المرور غير صحيحة.",
@@ -1202,8 +1201,7 @@ const AR_DICT = {
   "Application":"التطبيق","À propos de l'application":"حول التطبيق","Version":"الإصدار",
   "Conception et développement":"التصميم والتطوير","Tous droits réservés.":"جميع الحقوق محفوظة.",
   "Téléphone ou e-mail":"الهاتف أو البريد الإلكتروني",
-  "Ex : XX XXX XXX ou nom@example.com":"مثال: XX XXX XXX أو nom@example.com",
-  "Ex : nom@example.com":"مثال: nom@example.com",
+  "Votre numéro ou votre e-mail":"رقمك أو بريدك الإلكتروني",
   "Adresse e-mail":"البريد الإلكتروني",
   "Nouvelle adresse e-mail":"البريد الإلكتروني الجديد",
   "Pour vous connecter et récupérer votre mot de passe si vous l'oubliez.":"لتسجيل الدخول واسترجاع كلمة المرور إذا نسيتها.",
@@ -1602,7 +1600,7 @@ const App = {
     const body=`
       <p style="margin:0 0 12px;font-weight:600;color:var(--ink-2)">Nous vous envoyons un lien par e-mail pour choisir un nouveau mot de passe.</p>
       <div class="field"><label>E-mail ou numéro de téléphone</label>
-        <input class="input" id="fp-id" value="${this.escape(pre)}" placeholder="Ex : XX XXX XXX ou nom@example.com" autocapitalize="none" spellcheck="false" autocomplete="username"></div>
+        <input class="input" id="fp-id" value="${this.escape(pre)}" placeholder="Votre numéro ou votre e-mail" autocapitalize="none" spellcheck="false" autocomplete="username"></div>
       <div id="fp-res"></div>`;
     const foot=`<button class="btn btn-primary btn-block btn-lg" id="fp-go" onclick="App.sendReset()">📧 Envoyer le lien</button>`;
     this.openSheet("Mot de passe oublié", body, foot);
@@ -1662,7 +1660,7 @@ const App = {
       ${interne?`<p style="margin:0 0 12px;font-weight:600;color:var(--ink-2)">Ajoutez votre adresse e-mail : vous pourrez vous connecter avec elle et récupérer votre mot de passe si vous l'oubliez.</p>`
         :`<div class="mail-box"><div class="mb-l">E-mail actuel</div><div class="mb-v" data-i18n="off">${this.escape(cur)}</div></div>`}
       <div class="field"><label>${interne?"Adresse e-mail":"Nouvelle adresse e-mail"}</label>
-        <input class="input" id="em-new" type="email" inputmode="email" placeholder="Ex : nom@example.com" autocomplete="email" autocapitalize="none" spellcheck="false"></div>
+        <input class="input" id="em-new" type="email" inputmode="email" placeholder="Votre adresse e-mail" autocomplete="email" autocapitalize="none" spellcheck="false"></div>
       <div class="field"><label>Mot de passe actuel</label>
         <input class="input" id="em-pass" type="password" placeholder="Votre mot de passe" autocomplete="current-password"></div>
       <div class="hint">Un e-mail de confirmation vous sera envoyé. L'adresse est enregistrée dès que vous touchez le lien qu'il contient.</div>
@@ -3239,7 +3237,6 @@ const App = {
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
           <div id="qr-${role}" style="width:176px;height:176px;background:#fff;border-radius:14px;border:1px solid var(--line);display:grid;place-items:center;padding:8px;flex:0 0 auto"></div>
           <div style="flex:1;min-width:170px">
-            <a class="app-link" data-i18n="off" dir="ltr" href="${this.escape(this.appUrl())}" target="_blank" rel="noopener">${this.escape(this.appUrl().replace(/^https?:\/\//,""))}</a>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-soft btn-sm" onclick="App.copyAppLink()">🔗 Copier le lien</button>
               <button class="btn btn-ok btn-sm" onclick="App.shareWhatsApp()">💬 WhatsApp</button>
@@ -3287,9 +3284,9 @@ const App = {
       <div class="card mb">
         <div class="section-head" style="margin-bottom:10px"><div><div class="eyebrow">Profil</div><h2 style="font-size:1.2rem">Mes informations</h2></div></div>
         <div class="field"><label>Nom complet</label>
-          <input class="input" id="cs-nom" value="${this.escape(u.nom||"")}" placeholder="Ex : Prénom Nom" autocomplete="name"></div>
+          <input class="input" id="cs-nom" value="${this.escape(u.nom||"")}" placeholder="Votre nom et prénom" autocomplete="name"></div>
         <div class="field"><label>Numéro de téléphone</label>
-          <input class="input" id="cs-tel" type="tel" inputmode="numeric" value="${this.escape(u.tel||"")}" placeholder="Ex : XX XXX XXX" autocomplete="tel">
+          <input class="input" id="cs-tel" type="tel" inputmode="numeric" value="${this.escape(u.tel||"")}" placeholder="Votre numéro de téléphone" autocomplete="tel">
           <div class="hint" style="margin-top:6px">Vous pourrez vous connecter avec ce numéro.</div></div>
         <button class="btn btn-primary btn-block" id="cs-save" onclick="App.saveMyInfo()">💾 Enregistrer</button>
       </div>
