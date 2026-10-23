@@ -621,6 +621,64 @@ html.rtl .pw-eye{right:auto;left:6px}
 .install-banner .ib-txt b{font-weight:800}
 
 @media (max-width:380px){ .prod-grid{gap:9px} .quick-grid{gap:8px} }
+
+/* ---------- v1.2 : publications complètes (image de couverture en entier) ---------- */
+.pcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:14px}
+.pcard.is-tip{border-color:var(--mango-soft)}
+.pc-img{background:var(--cream-2);line-height:0}
+.pc-img img{display:block;width:100%;height:auto;max-height:80vh;object-fit:contain;cursor:zoom-in}
+.pc-body{padding:14px 16px 16px}
+.pcard.is-tip .pc-body{background:linear-gradient(135deg,var(--mango-tint),#fff 60%)}
+.pc-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.pc-emo{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:18px;background:var(--rose-tint);flex:none}
+.pcard.is-tip .pc-emo{background:var(--mango-soft)}
+.pc-date{font-size:.72rem;color:var(--muted);font-weight:700;margin-inline-start:auto}
+.pc-title{font-family:var(--display);font-weight:800;font-size:1.15rem;color:var(--ink);line-height:1.25;margin:2px 0 6px}
+.pc-text{color:var(--ink-2);font-size:.93rem;font-weight:500;white-space:pre-wrap;overflow-wrap:anywhere}
+.pc-actions{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.pc-actions .btn{flex:1}
+
+/* ---------- v1.2 : stories (logo en haut, comme Instagram) ---------- */
+/* L'anneau est dessiné SOUS le logo (pseudo-élément) : la barre du haut ne bouge pas d'un pixel. */
+.mark-wrap{position:relative;flex:none;border-radius:50%;display:grid;place-items:center;-webkit-tap-highlight-color:transparent}
+.mark-wrap::before{content:"";position:absolute;inset:-4px;border-radius:50%;background:transparent;z-index:0}
+.mark-wrap .mark{position:relative;z-index:1}
+.mark-wrap.has-story{cursor:pointer}
+.mark-wrap.has-story::before{background:#D8C9D0}
+.mark-wrap.story-new::before{background:conic-gradient(from 200deg,#FF3E7F,#FF6B57,#FF8A3C,#FFC23C,#FF3E7F);animation:storyRing 2.4s ease-in-out infinite}
+.mark-wrap.has-story .mark{box-shadow:none}
+@keyframes storyRing{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.09);opacity:.85}}
+.mark-plus{position:absolute;right:-4px;bottom:-4px;width:21px;height:21px;border-radius:50%;padding:0;border:2px solid #fff;
+  background:var(--rose-deep);color:#fff;font:800 15px/1 var(--body);display:grid;place-items:center;cursor:pointer;box-shadow:0 3px 8px rgba(225,29,99,.35);z-index:2}
+html.rtl .mark-plus{right:auto;left:-4px}
+.story-prev{position:relative;width:min(240px,62vw);aspect-ratio:9/16;margin:0 auto;border-radius:18px;overflow:hidden;background:#111;box-shadow:var(--shadow)}
+.story-prev img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.story-prev img.flou,.sv-blur{object-fit:cover;filter:blur(22px) brightness(.62) saturate(1.15);transform:scale(1.25)}
+
+.story-viewer{position:fixed;inset:0;z-index:200;background:#000;display:none;align-items:center;justify-content:center;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.story-viewer.show{display:flex;animation:fadeScreen .2s ease}
+.sv-stage{position:relative;width:100%;height:100%;max-width:520px;background:#000;overflow:hidden;touch-action:none}
+@media (min-width:600px){.sv-stage{height:min(100dvh,900px);border-radius:18px}}
+.sv-stage::before{content:"";position:absolute;left:0;right:0;top:0;height:130px;background:linear-gradient(rgba(0,0,0,.6),transparent);z-index:2;pointer-events:none}
+.sv-img,.sv-blur{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.sv-blur{object-fit:cover}
+.sv-bars{position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;right:10px;display:flex;gap:4px;z-index:3}
+.sv-bar{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.35);overflow:hidden}
+.sv-bar i{display:block;height:100%;width:0;background:#fff}
+.sv-head{position:absolute;top:calc(22px + env(safe-area-inset-top));left:12px;right:12px;display:flex;align-items:center;gap:10px;z-index:3;color:#fff}
+.sv-av{width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid #fff;flex:none;background:var(--grad)}
+.sv-av img{width:100%;height:100%;object-fit:cover}
+.sv-name{font-family:var(--display);font-weight:800;font-size:.98rem;line-height:1.1;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.sv-time{font-size:.74rem;font-weight:700;opacity:.9;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.sv-x{margin-inline-start:auto;width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:18px;cursor:pointer}
+.sv-cap{position:absolute;left:0;right:0;bottom:0;padding:34px 18px calc(24px + env(safe-area-inset-bottom));z-index:3;color:#fff;font-weight:800;font-size:1.05rem;
+  text-align:center;background:linear-gradient(transparent,rgba(0,0,0,.7));white-space:pre-wrap;overflow-wrap:anywhere;pointer-events:none}
+.sv-cap:empty{display:none}
+.sv-admin{display:none;position:absolute;left:0;right:0;bottom:0;padding:10px 14px calc(14px + env(safe-area-inset-bottom));gap:10px;z-index:4;background:rgba(0,0,0,.55)}
+.sv-stage.is-admin .sv-admin{display:flex}
+.sv-stage.is-admin .sv-cap{bottom:calc(62px + env(safe-area-inset-bottom))}
+.sv-btn{flex:1;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font:800 .88rem var(--body);padding:10px 12px;border-radius:12px;cursor:pointer}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -677,7 +735,7 @@ html.rtl .pw-eye{right:auto;left:6px}
   <section class="screen" id="app-client">
     <div class="appbar">
       <header class="topbar">
-        <div class="brand"><div class="mark"><img src="logo-mark.png" alt="" /></div>
+        <div class="brand"><div class="mark-wrap" id="mark-c" onclick="App.onStoryMark()"><div class="mark"><img src="logo-mark.png" alt="" /></div></div>
           <div><div class="name" data-i18n="off">Animaux <span>d'abord</span></div><div class="tag" id="client-hello">—</div></div>
         </div>
         <div class="top-actions">
@@ -727,7 +785,8 @@ html.rtl .pw-eye{right:auto;left:6px}
   <section class="screen" id="app-admin">
     <div class="appbar">
       <header class="topbar">
-        <div class="brand"><div class="mark"><img src="logo-mark.png" alt="" /></div>
+        <div class="brand"><div class="mark-wrap" id="mark-a" onclick="App.onStoryMark()"><div class="mark"><img src="logo-mark.png" alt="" /></div>
+            <button type="button" class="mark-plus" onclick="event.stopPropagation();App.pickStory()" title="Ajouter une story" aria-label="Ajouter une story">+</button></div>
           <div><div class="name">Espace <span>Docteur</span></div><div class="tag" id="admin-hello">Dr. Asma Gnaoui</div></div>
         </div>
         <div class="top-actions">
@@ -827,6 +886,25 @@ html.rtl .pw-eye{right:auto;left:6px}
     <button class="iv-nav iv-next" id="iv-next" onclick="event.stopPropagation();App.zoomStep(1)" aria-label="Suivant">›</button>
     <div class="iv-count" id="iv-count"></div>
   </div>
+  <!-- Stories (24 h) : visionneuse plein écran -->
+  <div class="story-viewer" id="story-viewer" aria-hidden="true">
+    <div class="sv-stage" id="sv-stage">
+      <img class="sv-blur" id="sv-blur" alt="" draggable="false" aria-hidden="true">
+      <img class="sv-img" id="sv-img" alt="" draggable="false">
+      <div class="sv-bars" id="sv-bars"></div>
+      <div class="sv-head">
+        <div class="sv-av"><img src="logo-mark.png" alt=""></div>
+        <div class="sv-who"><div class="sv-name" data-i18n="off">Animaux d'abord</div><div class="sv-time" id="sv-time" data-i18n="off"></div></div>
+        <button type="button" class="sv-x" onclick="App.closeStories()" aria-label="Fermer">✕</button>
+      </div>
+      <div class="sv-cap" id="sv-cap" dir="auto" data-i18n="off"></div>
+      <div class="sv-admin">
+        <button type="button" class="sv-btn" onclick="App.deleteCurrentStory()">🗑️ Supprimer</button>
+        <button type="button" class="sv-btn" onclick="App.closeStories();App.pickStory()">＋ Nouvelle story</button>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="story-file" accept="image/*" style="display:none" onchange="App.onStoryFile(this)">
   <div id="print-area" style="display:none"></div>
 
   <div id="boot">
@@ -860,29 +938,61 @@ let CLOUD_ON = false;
 // publie donc explicitement.
 try{ window.App = App; }catch(e){}
 
+/* ---------------------------------------------------------------------
+   STOCKAGE LOCAL
+   ---------------------------------------------------------------------
+   • La copie de travail de la session est gardée EN MÉMOIRE (texte JSON).
+     Le localStorage n'en est qu'une sauvegarde pour le mode hors-ligne.
+   • Si le localStorage est plein (≈ 5 Mo par site — vite atteint avec les
+     photos de tous les animaux sur l'appareil de la vétérinaire), la donnée
+     reste simplement en mémoire : l'app continue de fonctionner normalement.
+   • Synchronisation cloud : seuls les documents RÉELLEMENT modifiés sont
+     écrits, et seulement les champs qui ont changé (avant v1.2 : toute la
+     collection était réécrite à chaque modification → quotas Firestore).
+   --------------------------------------------------------------------- */
 const DB = {
+  _mem:Object.create(null),        // clé → texte JSON (source de vérité de la session)
+  _horsDisque:Object.create(null), // clés gardées en mémoire seulement (localStorage plein)
   clone(v){ return v==null ? v : JSON.parse(JSON.stringify(v)); },
   _k(key){ return "ad_"+key; },
+  _texte(key){
+    if(key in this._mem) return this._mem[key];
+    let r=null;
+    try{ r=localStorage.getItem(this._k(key)); }catch(e){ r=null; }
+    if(r!=null) this._mem[key]=r;
+    return r;
+  },
   get(key, def){
-    try{ const r=localStorage.getItem(this._k(key)); return (r==null)?def:JSON.parse(r); }
-    catch(e){ return def; }
+    const r=this._texte(key);
+    if(r==null) return def;
+    try{ return JSON.parse(r); }catch(e){ return def; }
   },
   // écriture locale seule (utilisée par la synchro cloud pour éviter les boucles)
   _raw(key, val){
-    try{ localStorage.setItem(this._k(key), JSON.stringify(val)); }catch(e){ console.warn("storage plein", e); }
+    let s;
+    try{ s=JSON.stringify(val); }catch(e){ console.warn("DB._raw", key, e); return; }
+    if(s===undefined){ delete this._mem[key]; try{ localStorage.removeItem(this._k(key)); }catch(e){} return; }
+    this._mem[key]=s;
+    try{
+      localStorage.setItem(this._k(key), s);
+      delete this._horsDisque[key];
+    }catch(e){
+      // Quota dépassé : on garde la donnée en mémoire et on libère la place
+      // occupée par l'ancienne copie (sinon elle resterait périmée sur le disque).
+      if(!this._horsDisque[key]) console.warn("Stockage local plein : « "+key+" » gardé en mémoire.");
+      this._horsDisque[key]=true;
+      try{ localStorage.removeItem(this._k(key)); }catch(_){}
+    }
   },
   set(key, val){
-    // On mémorise les ids précédents pour savoir quoi supprimer côté cloud.
-    let prevIds=null;
+    // Copie précédente : sert à calculer ce qui a changé (écritures minimales).
+    let prev=null;
     const cloudOn = CLOUD_ON && window.Cloud && window.Cloud.enabled;
-    if(cloudOn && COLLECTIONS.indexOf(key)>=0){
-      const prev=this.get(key,[]);
-      prevIds = Array.isArray(prev) ? prev.map(x=>x&&x.id).filter(Boolean) : [];
-    }
+    if(cloudOn && COLLECTIONS.indexOf(key)>=0) prev=this.get(key,[]);
     this._raw(key, val);                        // local immédiat (interface instantanée)
     if(!cloudOn) return;                         // pas de cloud → on s'arrête là
     try{
-      if(COLLECTIONS.indexOf(key)>=0 && Array.isArray(val)) window.Cloud.replaceCollection(key, val, prevIds);
+      if(COLLECTIONS.indexOf(key)>=0 && Array.isArray(val)) window.Cloud.syncCollection(key, val, Array.isArray(prev)?prev:[]);
       else if(CONFIG_KEYS.indexOf(key)>=0)                  window.Cloud.setConfig(key, val);
       // clés locales (session, cart_*) : jamais synchronisées
     }catch(e){ console.warn("Synchronisation cloud échouée", e); }
@@ -971,7 +1081,7 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.1.1";
+const APP_VERSION = "1.2.0";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
 /* Conception et développement de l'application. */
@@ -1248,6 +1358,36 @@ const AR_DICT = {
   "Avec une vraie adresse e-mail, vous pourrez utiliser « Mot de passe oublié » sur l'écran de connexion.":"مع بريد إلكتروني حقيقي، يمكنك استعمال «نسيت كلمة المرور» في شاشة تسجيل الدخول.",
   "Vous pouvez corriger le nom affiché. Le mot de passe est géré de façon sécurisée par le client lui-même ; il se connecte avec son numéro d'inscription ou son adresse e-mail.":"يمكنك تصحيح الاسم المعروض. كلمة المرور يديرها الزبون بنفسه بشكل آمن؛ يسجّل الدخول برقم التسجيل أو ببريده الإلكتروني.",
 
+  /* --- v1.2 : stories, publications, réservations, commandes --- */
+  "Ajouter une story":"إضافة قصة",
+  "Voir la story du cabinet":"مشاهدة قصة العيادة",
+  "Nouvelle story":"قصة جديدة",
+  "Texte sur la story (optionnel)":"نص على القصة (اختياري)",
+  "Ex : Journée vaccination samedi":"مثال: يوم التلقيح يوم السبت",
+  "Visible par tous les clients pendant 24 heures, puis elle disparaît automatiquement.":"تظهر لجميع الحرفاء لمدة 24 ساعة، ثم تختفي تلقائيًا.",
+  "Publier la story (24 h)":"نشر القصة (24 س)",
+  "Publication…":"جارٍ النشر…",
+  "Story publiée ! Elle disparaîtra dans 24 h.":"تم نشر القصة! ستختفي بعد 24 ساعة.",
+  "Connexion lente : la story sera publiée dès que le réseau le permet.":"اتصال بطيء: ستُنشر القصة بمجرد توفّر الشبكة.",
+  "Échec de la publication. Vérifiez la connexion et réessayez.":"فشل النشر. تحقّق من الاتصال وأعد المحاولة.",
+  "Image illisible ou trop lourde. Essayez une autre photo.":"الصورة غير مقروءة أو ثقيلة جدًا. جرّب صورة أخرى.",
+  "Supprimer cette story ?":"حذف هذه القصة؟",
+  "Suppression impossible. Vérifiez la connexion.":"تعذّر الحذف. تحقّق من الاتصال.",
+  "Story supprimée.":"تم حذف القصة.",
+  "Ce créneau vient d'être pris. Choisissez-en un autre.":"تم حجز هذا الموعد للتوّ. اختر موعدًا آخر.",
+  "Connexion Internet requise pour réserver. Réessayez.":"يلزم الاتصال بالإنترنت للحجز. أعد المحاولة.",
+  "Stock insuffisant pour un des produits : le stock vient de changer. Vérifiez votre panier.":"المخزون غير كافٍ لأحد المنتجات: تغيّر المخزون للتوّ. تحقّق من سلتك.",
+  "Connexion Internet requise pour commander. Réessayez.":"يلزم الاتصال بالإنترنت للطلب. أعد المحاولة.",
+  "Connexion lente : votre commande partira dès le retour du réseau. Vérifiez « Mes commandes ».":"اتصال بطيء: سيُرسل طلبك عند عودة الشبكة. تحقّق من «طلباتي».",
+  "Commande envoyée ! Le cabinet va la préparer.":"تم إرسال الطلب! ستجهّزه العيادة.",
+  "Annuler cette commande ?":"إلغاء هذا الطلب؟",
+  "Stock faible":"مخزون منخفض",
+  "Produit en rupture":"منتج نفد من المخزون",
+  "Maximum 6 photos par animal : les photos en trop n'ont pas été ajoutées.":"6 صور كحدّ أقصى لكل حيوان: لم تُضف الصور الزائدة.",
+  "Saisissez votre adresse e-mail complète":"أدخل بريدك الإلكتروني كاملًا",
+  "Pour protéger vos données, le lien ne peut être demandé qu'avec l'adresse e-mail du compte. Indice :":"لحماية بياناتك، لا يمكن طلب الرابط إلا بالبريد الإلكتروني للحساب. تلميح:",
+  "Identifiant ou mot de passe incorrect. Si vous venez de changer votre mot de passe, connectez-vous une fois avec votre adresse e-mail :":"المعرّف أو كلمة المرور غير صحيحة. إذا غيّرت كلمة المرور للتوّ، سجّل الدخول مرة واحدة ببريدك الإلكتروني:",
+
 };
 const AR_TOKENS_LIST = [
   ["janvier","جانفي"],["février","فيفري"],["mars","مارس"],["avril","أفريل"],["mai","ماي"],["juin","جوان"],
@@ -1371,7 +1511,7 @@ const App = {
       window.Cloud.setScope({ uid:user.uid, admin: prof.role === "admin" });
       try{ await window.Cloud.pullAll(); }catch(e){ console.warn("pullAll", e); }
       // E-mail de connexion + annuaire « téléphone → e-mail » (sans bloquer l'ouverture).
-      if(lectureOK) this._syncLoginMail(prof, user);
+      if(lectureOK) this._syncLoginMail(prof, user); else this._passIdx="";
 
       // Filet : si la synchro n'a pas encore ramené le profil, on le pose en
       // local (écriture locale seule, pour ne pas relancer d'écriture cloud).
@@ -1382,12 +1522,16 @@ const App = {
       CLOUD_ON = true;                       // les écritures se synchronisent maintenant
       this.ensureSeed();
       this._repairRecordOwners();            // met à jour les anciens carnets (admin)
-      if(!this._watching){ window.Cloud.watchAll((key)=>this._onCloudChange(key)); this._watching = true; }
+      // Les écoutes temps réel tournent déjà (démarrées par pullAll) : on
+      // branche seulement le rafraîchissement de l'écran.
+      window.Cloud.watchAll((key)=>this._onCloudChange(key)); this._watching = true;
       this.loadCart();
+      if(prof.role==="admin") setTimeout(()=>this._adminMaintenance(), 2500);
     } else {
       this.session = null;
       CLOUD_ON = false;
       this.cart = [];
+      try{ window.Cloud && window.Cloud.stopAll && window.Cloud.stopAll(); }catch(e){}
       try{ window.Cloud && window.Cloud.setScope && window.Cloud.setScope({uid:null, admin:false}); }catch(e){}
       try{ const f=document.getElementById("cart-fab"); if(f) f.style.display="none"; }catch(e){}
     }
@@ -1424,7 +1568,32 @@ const App = {
   // Appelé quand des données changent dans le cloud (ex. depuis un autre appareil).
   _onCloudChange(key){
     if(key==="notifs"){ const n=this.unread(); if(n>0) this.ringBell && this.ringBell(); }
+    if(key==="stories"){ this.renderStoryRings(); this.refreshStoryViewer(); return; }
+    if(this.isAdmin() && (key==="orders" || key==="rdv" || key==="creneaux")) this._scheduleAdminSync();
     this.renderAll();   // renderAll est protégé : ne fait rien si personne n'est connecté
+  },
+  /* ---------------------------------------------------------------------
+     Tâches d'entretien faites par l'appareil de la vétérinaire (elle seule
+     a le droit de tout lire) : créneaux, stock des commandes annulées,
+     stories expirées, annuaire de connexion.
+     --------------------------------------------------------------------- */
+  _adminMaintenance(){
+    if(!this.isAdmin() || !window.Cloud || !window.Cloud.enabled) return;
+    this._adminSync();
+    try{ window.Cloud.cleanupStories && window.Cloud.cleanupStories(); }catch(e){}
+    try{ window.Cloud.migrateLoginIndex && window.Cloud.migrateLoginIndex(DB.get("users",[]), this); }catch(e){}
+  },
+  _scheduleAdminSync(){
+    clearTimeout(this._adminSyncT);
+    this._adminSyncT=setTimeout(()=>this._adminSync(), 3000);
+  },
+  _adminSync(){
+    if(!this.isAdmin() || !window.Cloud || !window.Cloud.enabled) return;
+    try{ window.Cloud.reconcileSlots && window.Cloud.reconcileSlots(DB.get("rdv",[]), this.todayStr()); }catch(e){ console.warn("créneaux", e); }
+    try{
+      DB.get("orders",[]).filter(o=>o && o.status==="annulee" && o.stockDeduit && !o.stockRendu)
+        .forEach(o=>{ window.Cloud.restoreOrderStock && window.Cloud.restoreOrderStock(o.id); });
+    }catch(e){ console.warn("stock", e); }
   },
   ensureSeed(){
     // Les réglages du cabinet appartiennent à l'administratrice : elle seule
@@ -1528,16 +1697,23 @@ const App = {
   // Adresses à essayer pour un identifiant saisi : e-mail tel quel, « admin »,
   // ou numéro de téléphone (annuaire téléphone → e-mail, puis adresse interne
   // des anciens comptes).
-  async _loginCandidates(raw){
+  // Depuis la v1.2, l'annuaire ne contient plus l'e-mail en clair : il est
+  // chiffré avec le mot de passe du client. Seule la personne qui connaît le
+  // mot de passe peut donc retrouver l'e-mail à partir du numéro.
+  async _loginCandidates(raw, pass){
     const v=(raw||"").trim();
+    this._loginHint="";
     if(v.indexOf("@")>=0) return [v.toLowerCase()];
     if(v.toLowerCase()==="admin") return [this.credEmail("admin")];
     const key=this.phoneKey(v);
     const list=[];
     if(key){
       const ent = window.Cloud.lookupPhone ? await window.Cloud.lookupPhone(key) : null;
-      if(ent && ent.email) list.push(String(ent.email).toLowerCase());
-      if(ent && ent.pending) list.push(String(ent.pending).toLowerCase());
+      if(ent){
+        const mails = window.Cloud.indexEmails ? await window.Cloud.indexEmails(ent, pass) : [];
+        mails.forEach(m=>{ m=String(m||"").toLowerCase(); if(m && list.indexOf(m)<0) list.push(m); });
+        if(ent.mask) this._loginHint=String(ent.mask);
+      }
     }
     const ancien=this.credEmail(v);
     if(list.indexOf(ancien)<0) list.push(ancien);
@@ -1546,12 +1722,13 @@ const App = {
   // Après chaque connexion : garde à jour l'e-mail du profil et l'annuaire
   // « téléphone → e-mail » qui permet de se connecter avec son numéro.
   async _syncLoginMail(prof, user){
+    const pass=this._passIdx||""; this._passIdx="";     // mot de passe tapé à l'instant (jamais stocké)
     try{
       if(!window.Cloud || !user) return;
       const mail=(user.email||"").toLowerCase();
       if(prof.role==="client"){
         const key=this.phoneKey(prof.tel);
-        if(key && window.Cloud.syncLoginIndex) await window.Cloud.syncLoginIndex(key);
+        if(key && window.Cloud.syncLoginIndex) await window.Cloud.syncLoginIndex(key, pass);
         if(mail && !this.isInternalMail(mail) && prof.email!==mail && window.Cloud.saveUserField)
           await window.Cloud.saveUserField(user.uid, { email: mail });
         if(this.isInternalMail(mail)) setTimeout(()=>this._nudgeAddEmail(), 1800);
@@ -1578,9 +1755,12 @@ const App = {
       return this.toast("Connexion Internet requise pour se connecter.","err");
     if(this._loggingIn) return;
     this._loggingIn=true;
+    const parTel = id.indexOf("@")<0 && id.toLowerCase()!=="admin";
     try{
       // Téléphone ou e-mail : on essaie, dans l'ordre, les adresses possibles.
-      const essais=await this._loginCandidates(id.indexOf("@")>=0 ? id : this.normPhone(id));
+      const essais=await this._loginCandidates(id.indexOf("@")>=0 ? id : this.normPhone(id), pass);
+      // Gardé en mémoire le temps de mettre à jour l'annuaire chiffré (jamais écrit).
+      this._passIdx=pass;
       let derniere=null;
       for(const mail of essais){
         try{ await window.Cloud.signIn(mail, pass); derniere=null; break; }
@@ -1589,8 +1769,15 @@ const App = {
       if(derniere) throw derniere;
       // La suite (chargement des données + navigation) est gérée par _onAuthChanged.
     }catch(err){
+      this._passIdx="";
       const c=(err&&err.code)||"";
-      this.toast(c.indexOf("invalid-email")>=0 ? "Identifiant ou mot de passe incorrect." : this.authError(err),"err");
+      if(parTel && this._loginHint && this._isCredError(err)){
+        // Mot de passe changé par e-mail (lien « Mot de passe oublié ») : l'annuaire
+        // chiffré avec l'ancien mot de passe ne correspond plus → connexion par e-mail.
+        this.toast("Identifiant ou mot de passe incorrect. Si vous venez de changer votre mot de passe, connectez-vous une fois avec votre adresse e-mail : "+this._loginHint,"err");
+      } else {
+        this.toast(c.indexOf("invalid-email")>=0 ? "Identifiant ou mot de passe incorrect." : this.authError(err),"err");
+      }
     }finally{ this._loggingIn=false; }
   },
 
@@ -1629,7 +1816,16 @@ const App = {
       if(btn){ btn.disabled=true; }
       const ent=await window.Cloud.lookupPhone(key);
       if(btn){ btn.disabled=false; }
-      mail=(ent && ent.email) ? String(ent.email).toLowerCase() : "";
+      mail=(ent && ent.email) ? String(ent.email).toLowerCase() : "";   // anciens comptes non encore migrés
+      // v1.2 : l'e-mail n'est plus lisible à partir du numéro (protection des
+      // données). On donne un indice et on demande l'adresse complète.
+      if(!mail && ent && ent.mask){
+        if(res) res.innerHTML=`<div class="mail-box warn"><div style="font-weight:800;color:var(--ink)">Saisissez votre adresse e-mail complète</div>
+          <div class="hint" style="margin-top:6px">Pour protéger vos données, le lien ne peut être demandé qu'avec l'adresse e-mail du compte. Indice :</div>
+          <div style="margin-top:4px;font-weight:800" data-i18n="off">${this.escape(ent.mask)}</div></div>`;
+        const inp=document.getElementById("fp-id"); if(inp){ inp.value=""; inp.focus(); }
+        return;
+      }
     }
     // Les adresses internes (anciens comptes) ne reçoivent pas de courrier.
     if(!mail || this.isInternalMail(mail)){ if(res) res.innerHTML=sansMail; return; }
@@ -1757,11 +1953,13 @@ const App = {
       // On mémorise nom + téléphone : _onAuthChanged créera le profil juste après.
       this._pendingReg = { tel, nom, email };
       try{ localStorage.setItem("ad_pendingReg", JSON.stringify(this._pendingReg)); }catch(e){}
+      this._passIdx = pass;                     // pour chiffrer l'annuaire (mémoire seulement)
       // Le compte de connexion utilise la vraie adresse e-mail du client.
       await window.Cloud.signUp(email, pass);
       this.toast("Compte créé, bienvenue ! 🐾","ok");
       // La navigation est gérée par _onAuthChanged.
     }catch(err){
+      this._passIdx = "";
       this._pendingReg = null;
       try{ localStorage.removeItem("ad_pendingReg"); }catch(e){}
       this.toast(this.authError(err),"err");
@@ -1892,15 +2090,25 @@ const App = {
   },
 
   /* compression photo -> dataURL (pour rester léger en localStorage) */
-  readPhoto(file, cb){
+  // max : plus grand côté en pixels ; limite : taille maximale du résultat
+  // (en caractères). Un document Firestore ne peut pas dépasser 1 Mo.
+  readPhoto(file, cb, max, limite){
     if(!file){ cb(null); return; }
+    max = max || 560; limite = limite || 300000;
     const r=new FileReader();
     r.onload=()=>{ const img=new Image(); img.onload=()=>{
-      const max=560; let{width:w,height:h}=img;
+      let{width:w,height:h}=img;
       if(w>h && w>max){ h=h*max/w; w=max; } else if(h>max){ w=w*max/h; h=max; }
+      w=Math.round(w); h=Math.round(h);
       const c=document.createElement("canvas"); c.width=w; c.height=h;
-      c.getContext("2d").drawImage(img,0,0,w,h);
-      try{ cb(c.toDataURL("image/jpeg",0.72)); }catch(e){ cb(null); }
+      const ctx=c.getContext("2d");
+      ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);           // PNG transparents → fond blanc
+      ctx.drawImage(img,0,0,w,h);
+      try{
+        let q=(max>600?0.8:0.72), out=c.toDataURL("image/jpeg",q);
+        while(out.length>limite && q>0.4){ q-=0.1; out=c.toDataURL("image/jpeg",q); }
+        cb(out.length>limite*1.5 ? null : out);
+      }catch(e){ cb(null); }
     }; img.onerror=()=>cb(null); img.src=r.result; };
     r.onerror=()=>cb(null); r.readAsDataURL(file);
   },
@@ -2346,24 +2554,43 @@ const App = {
     html+=`<div class="status-banner is-${st.open?"open":"closed"}"><div class="dot"></div>
       <div><div class="st-main">${st.open?"Cabinet ouvert":"Cabinet fermé"}</div><div class="st-sub">${this.escape(st.text)}</div></div></div>`;
 
-    // astuces
+    // astuces (toutes, en entier, avec leur image de couverture)
     if(astuces.length){
       html+=`<div class="section-head mt"><div><div class="eyebrow">Le saviez-vous</div><h2 style="font-size:1.25rem">Astuces santé</h2></div></div>`;
-      html+=`<div class="stagger">`+astuces.slice(0,4).map(p=>`
-        <div class="astuce"><div class="ai">${p.emo||"💡"}</div>
-          <div><div class="at" data-i18n="off" dir="auto">${this.escape(p.titre)}</div><div class="as" data-i18n="off" dir="auto">${this.escape(p.contenu)}</div></div></div>`).join("")+`</div>`;
+      html+=astuces.map(p=>this.postCardHTML(p, false)).join("");
     }
     // blog / actualités
     if(blogs.length){
       html+=`<div class="section-head mt"><div><div class="eyebrow">Le cabinet</div><h2 style="font-size:1.25rem">Actualités</h2></div></div>`;
-      html+=`<div class="stagger">`+blogs.map(p=>`
-        <div class="post">
-          <div class="cover">${p.image?`<img src="${p.image}" alt="">`:(p.emo||"📰")}</div>
-          <div class="body"><div class="pt-top"><span class="badge b-rose">Actu</span><span class="dt">${this.fmtDate(this.dstr(new Date(p.createdAt)))}</span></div>
-            <h3 data-i18n="off" dir="auto">${this.escape(p.titre)}</h3><p data-i18n="off" dir="auto">${this.escape(p.contenu)}</p></div>
-        </div>`).join("")+`</div>`;
+      html+=blogs.map(p=>this.postCardHTML(p, false)).join("");
     }
-    w.innerHTML=html;
+    this._setHTML(w, html);
+  },
+  // N'écrit le HTML que s'il a changé : l'accueil est recalculé toutes les
+  // 30 s, et réécrire des images (publications) à chaque fois les ferait clignoter.
+  _setHTML(w, html){
+    if(w._lastHTML===html && w.childNodes.length) return;
+    w._lastHTML=html; w.innerHTML=html;
+  },
+  // Carte d'une publication (astuce ou actualité), identique pour le client
+  // et pour la vétérinaire : image de couverture en entier, titre, texte complet.
+  postCardHTML(p, admin){
+    const astuce = p.type==="astuce";
+    const date = this.fmtDate(this.dstr(new Date(p.createdAt||p.date||Date.now())));
+    const emo = p.emo || (astuce?"💡":"📰");
+    return `<article class="pcard ${astuce?"is-tip":"is-news"}">
+      ${p.image?`<div class="pc-img"><img src="${p.image}" alt="" loading="lazy" decoding="async"></div>`:""}
+      <div class="pc-body">
+        <div class="pc-top"><span class="pc-emo">${this.escape(emo)}</span>
+          <span class="badge ${astuce?"b-mango":"b-rose"}">${astuce?"Astuce":"Actu"}</span>
+          <span class="pc-date">${date}</span></div>
+        <h3 class="pc-title" data-i18n="off" dir="auto">${this.escape(p.titre)}</h3>
+        <div class="pc-text" data-i18n="off" dir="auto">${this.escape(p.contenu)}</div>
+        ${admin?`<div class="pc-actions">
+          <button class="btn btn-soft btn-sm" onclick="App.openPostForm('${p.id}')">✏️ Modifier</button>
+          <button class="btn btn-danger btn-sm" onclick="App.deletePost('${p.id}')">🗑️ Supprimer</button></div>`:""}
+      </div>
+    </article>`;
   },
 
   /* =====================================================================
@@ -2494,14 +2721,20 @@ const App = {
     this._renderPetPhotos();
   },
   pickPetPhoto(inp){
-    Array.from(inp.files||[]).forEach(f=>this.readPhoto(f, d=>{ if(d){ this._petPhotos.push(d); this._renderPetPhotos(); } }));
+    const MAX=App.MAX_PET_PHOTOS;
+    const place=Math.max(0, MAX-(this._petPhotos||[]).length);
+    const files=Array.from(inp.files||[]);
+    if(files.length>place) this.toast("Maximum 6 photos par animal : les photos en trop n'ont pas été ajoutées.","warn");
+    files.slice(0, place).forEach(f=>this.readPhoto(f, d=>{ if(d && this._petPhotos.length<MAX){ this._petPhotos.push(d); this._renderPetPhotos(); } }));
     inp.value=""; // permet de re-sélectionner le même fichier
   },
+  MAX_PET_PHOTOS:6,   // ≈ 6 × 60 ko : reste loin de la limite de 1 Mo d'un document Firestore
   removePetPhoto(i){ this._petPhotos.splice(i,1); this._renderPetPhotos(); },
   _renderPetPhotos(){
     const w=document.getElementById("pet-photos"); if(!w) return;
     const thumbs=(this._petPhotos||[]).map((src,i)=>`<div class="pp-thumb"><img src="${src}" alt=""><button type="button" class="pp-x" onclick="App.removePetPhoto(${i})" title="Retirer">✕</button></div>`).join("");
-    w.innerHTML = thumbs + `<button type="button" class="pp-add" onclick="document.getElementById('pet-photo').click()"><span style="font-size:20px">📷</span><span style="font-size:.6rem;font-weight:800">Ajouter</span></button>`;
+    const plein=(this._petPhotos||[]).length>=App.MAX_PET_PHOTOS;
+    w.innerHTML = thumbs + (plein?"":`<button type="button" class="pp-add" onclick="document.getElementById('pet-photo').click()"><span style="font-size:20px">📷</span><span style="font-size:.6rem;font-weight:800">Ajouter</span></button>`);
   },
   savePet(){
     const nom=(document.getElementById("pf-nom").value||"").trim();
@@ -2530,7 +2763,7 @@ const App = {
      ============================================================ */
   renderAll(){
     const u=this.currentUser(); if(!u) return;
-    this.renderBell();
+    this.renderBell(); this.renderStoryRings();
     if(u.role==="admin"){
       this.renderHomeAdmin(); this.renderAgenda(); this.renderShopAdmin();
       this.renderOrders(); this.renderCaisse(); this.renderPatients(); this.renderMsgAdmin();
@@ -2545,7 +2778,7 @@ const App = {
   tick(){ // rafraîchissement léger toutes les 30 s (statut ouvert/fermé, cloche…)
     if(!this.currentUser()) return;
     this.keepPushLinked(); this.checkReminders();      // rappels automatiques : RDV + vaccins, J-1 et jour J
-    this.renderBell();
+    this.renderBell(); this.renderStoryRings();        // une story expirée disparaît d'elle-même
     const u=this.currentUser();
     if(u.role==="admin"){ this.renderHomeAdmin(); this.renderAbout("a"); }
     else { this.renderHomeClient(); this.renderAbout("c"); }
@@ -2706,7 +2939,7 @@ const App = {
     this.openSheet("Mon panier 🛒", body, foot);
   },
   clearCart(){ this.cart=[]; this.saveCart(); this.updateCartFab(); this.closeSheet(); this.toast("Panier vidé.","ok"); },
-  checkout(){
+  async checkout(){
     if(!this.cart.length) return;
     // Sécurité : le stock a pu changer depuis l'ajout au panier — on revérifie.
     let adjusted=false;
@@ -2724,19 +2957,52 @@ const App = {
     const order={ id:this.uid("o"), clientId:u.id, clientNom:u.nom||"Client",
       items:this.cart.map(l=>({id:l.id,nom:l.nom,prix:l.prix,qty:l.qty,emo:l.emo})),
       total:this.cartTotal(), status:"attente", note:note.trim(), createdAt:Date.now() };
-    DB.push("orders", order);
-    // Gestion automatique du stock : on décrémente et on alerte si stock faible.
-    order.items.forEach(it=>{
-      const p=DB.find("products", it.id);
-      if(p && p.stock!=null){
-        const newStock=Math.max(0, (+p.stock||0) - (+it.qty||0));
-        DB.update("products", it.id, {stock:newStock});
-        if(newStock<=3) this.notify("admin","stock", newStock<=0?"Produit en rupture ⛔":"Stock faible ⚠️", `${p.nom} · reste ${newStock}`);
+    // Stocks avant la commande (pour l'alerte « stock faible »).
+    const avant={}; order.items.forEach(it=>{ const p=DB.find("products", it.id); if(p && p.stock!=null) avant[it.id]={nom:p.nom, stock:+p.stock||0}; });
+
+    if(CLOUD_ON && window.Cloud && window.Cloud.enabled && window.Cloud.placeOrder){
+      // v1.2 : commande + baisse du stock envoyées ENSEMBLE (tout ou rien).
+      // Si le stock ne suffit plus, Firestore refuse et rien n'est enregistré.
+      if(this._ordering) return;
+      this._ordering=true;
+      const btn=document.querySelector("#sheet-foot .btn-primary"); if(btn) btn.disabled=true;
+      let res;
+      try{ res=await window.Cloud.placeOrder(order); }
+      catch(e){
+        if(e && e.message==="delai"){
+          // Réseau très lent : l'envoi reste en file d'attente et partira tout seul.
+          // On vide le panier pour éviter une 2e commande identique.
+          res=Object.assign({}, order); this._orderSlow=true;
+        } else {
+          this._ordering=false; if(btn) btn.disabled=false;
+          if(e && e.message==="stock") this.toast("Stock insuffisant pour un des produits : le stock vient de changer. Vérifiez votre panier.","err");
+          else this.toast("Connexion Internet requise pour commander. Réessayez.","err");
+          return;
+        }
       }
+      this._ordering=false;
+      // Copie locale immédiate (le cloud la confirmera dans la foulée).
+      const loc=DB.get("orders",[]); if(!loc.some(o=>o.id===res.id)){ loc.push(res); DB._raw("orders", loc); }
+      const prods=DB.get("products",[]);
+      prods.forEach(p=>{ const it=order.items.find(x=>x.id===p.id); if(it && p.stock!=null) p.stock=Math.max(0,(+p.stock||0)-(+it.qty||0)); });
+      DB._raw("products", prods);
+    } else {
+      // Mode local (sans cloud) : comportement d'origine.
+      DB.push("orders", order);
+      order.items.forEach(it=>{ const p=DB.find("products", it.id);
+        if(p && p.stock!=null) DB.update("products", it.id, {stock:Math.max(0,(+p.stock||0)-(+it.qty||0))}); });
+    }
+    // Alerte au cabinet si un produit passe sous 3.
+    order.items.forEach(it=>{
+      const a=avant[it.id]; if(!a) return;
+      const newStock=Math.max(0, a.stock-(+it.qty||0));
+      if(newStock<=3) this.notify("admin","stock", newStock<=0?"Produit en rupture ⛔":"Stock faible ⚠️", `${a.nom} · reste ${newStock}`);
     });
     this.notify("admin","order","Nouvelle commande",`${u.nom||"Un client"} · ${this.money(order.total)}`);
     this.cart=[]; this.saveCart(); this.updateCartFab();
-    this.closeSheet(); this.toast("Commande envoyée ! Le cabinet va la préparer. 📦","ok");
+    this.closeSheet();
+    if(this._orderSlow){ this._orderSlow=false; this.toast("Connexion lente : votre commande partira dès le retour du réseau. Vérifiez « Mes commandes ».","warn"); }
+    else this.toast("Commande envoyée ! Le cabinet va la préparer. 📦","ok");
     this.renderAll();
   },
   myOrders(){ const u=this.currentUser(); return DB.get("orders",[]).filter(o=>o.clientId===u.id).sort((a,b)=>b.createdAt-a.createdAt); },
@@ -2819,7 +3085,15 @@ const App = {
   selectRdvDate(ds){ this._rdvSel=ds; this.renderRdvClient(); },
 
   /* créneaux disponibles pour une date */
-  bookedTimes(ds){ return DB.get("rdv",[]).filter(r=>r.date===ds && (r.status==="attente"||r.status==="confirme")).map(r=>r.time); },
+  // Créneaux pris : mes rendez-vous + les créneaux réservés par TOUS les clients
+  // (collection « creneaux », sans aucune donnée personnelle). Un client ne
+  // voit pas les rendez-vous des autres : sans cette collection, tous les
+  // créneaux lui paraissaient libres (double réservation).
+  bookedTimes(ds){
+    const t=DB.get("rdv",[]).filter(r=>r.date===ds && (r.status==="attente"||r.status==="confirme")).map(r=>r.time);
+    try{ ((window.Cloud && window.Cloud.slots) || []).forEach(s=>{ if(s && s.date===ds && t.indexOf(s.time)<0) t.push(s.time); }); }catch(e){}
+    return t;
+  },
   slotsFor(ds){
     const s=this.settings(); const wd=this.parseD(ds).getDay();
     const h=(s.hours&&(s.hours[wd]||s.hours[String(wd)]))||null;
@@ -2872,7 +3146,8 @@ const App = {
     const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.confirmBook('${time}')">Confirmer le rendez-vous 📅</button>`;
     this.openSheet("Réserver un créneau", body, foot);
   },
-  confirmBook(time){
+  async confirmBook(time){
+    if(this._booking) return;
     // vérifie que le créneau est toujours libre (anti double-réservation)
     if(this.bookedTimes(this._rdvSel).includes(time)){ this.toast("Ce créneau vient d'être pris. Choisissez-en un autre.","err"); this.closeSheet(); this.renderRdvClient(); return; }
     const u=this.currentUser();
@@ -2881,6 +3156,21 @@ const App = {
     const note=(document.getElementById("bk-note")||{}).value||"";
     const rdv={ id:this.uid("r"), clientId:u.id, clientNom:u.nom||"Client", animalId, motif, note:note.trim(),
       date:this._rdvSel, time, status:"attente", createdAt:Date.now() };
+    // Verrou du créneau dans le cloud : si un autre client l'a pris entre-temps,
+    // Firestore refuse et on prévient (au lieu d'une double réservation).
+    if(CLOUD_ON && window.Cloud && window.Cloud.enabled && window.Cloud.lockSlot){
+      this._booking=true;
+      const btn=document.querySelector("#sheet-foot .btn-primary");
+      if(btn){ btn.disabled=true; }
+      try{ await window.Cloud.lockSlot(rdv.date, rdv.time, rdv.id); }
+      catch(e){
+        this._booking=false; if(btn){ btn.disabled=false; }
+        if(e && e.message==="pris"){ this.toast("Ce créneau vient d'être pris. Choisissez-en un autre.","err"); this.closeSheet(); this.renderRdvClient(); }
+        else this.toast("Connexion Internet requise pour réserver. Réessayez.","err");
+        return;
+      }
+      this._booking=false;
+    }
     DB.push("rdv", rdv);
     const petLbl = animalId ? " · "+this.animalName(animalId) : "";
     this.notify("admin","rdv","Nouveau rendez-vous",`${u.nom||"Un client"} · ${this.fmtDateShort(this._rdvSel)} ${time}${petLbl}`);
@@ -3401,6 +3691,11 @@ const App = {
     const tomorrow = this.dstr(new Date(Date.now()+864e5));
     const clinic   = this.settings().clinicName || "le cabinet";
 
+    // v1.2 : l'appareil de la vétérinaire ne crée plus les rappels des clients
+    // (le robot GitHub « Rappels push » et l'appareil de chaque client s'en
+    // chargent). Il ne lit d'ailleurs plus les notifications des clients.
+    if(this.isAdmin()){ this._adminRecap(today, tomorrow); return; }
+
     // --- Rendez-vous confirmés → le client ---
     DB.get("rdv",[]).forEach(r=>{
       if(r.status!=="confirme" || !r.clientId) return;
@@ -3427,10 +3722,11 @@ const App = {
         `${rec.titre||"Rappel de soin"} — prenez rendez-vous au ${clinic}.`);
     });
 
-    // --- Récapitulatif pour le cabinet (une seule alerte par journée) ---
-    // Réservé à l'appareil de la vétérinaire : elle seule dispose de la
-    // totalité des rendez-vous et des rappels, donc du bon décompte.
-    if(!this.isAdmin()) return;
+  },
+  // --- Récapitulatif pour le cabinet (une seule alerte par journée) ---
+  // Réservé à l'appareil de la vétérinaire : elle seule dispose de la
+  // totalité des rendez-vous et des rappels, donc du bon décompte.
+  _adminRecap(today, tomorrow){
     [["j1", tomorrow, "Demain"], ["j0", today, "Aujourd'hui"]].forEach(pair=>{
       const tag=pair[0], d=pair[1], label=pair[2];
       const rdvs = DB.get("rdv",[]).filter(r=>r.date===d && (r.status==="confirme"||r.status==="attente"));
@@ -3645,18 +3941,9 @@ const App = {
     if(!posts.length){
       html+=`<div class="empty"><span class="ic">📰</span><div class="et">Aucune publication</div><div class="hint">Ajoutez un article ou une astuce pour vos clients.</div></div>`;
     } else {
-      html+=`<div class="stagger">`+posts.map(p=>`
-        <div class="list-row" style="cursor:default">
-          <div class="lr-av">${p.emo||(p.type==="astuce"?"💡":"📰")}</div>
-          <div class="lr-body"><div class="lr-t" data-i18n="off" dir="auto">${this.escape(p.titre)}</div>
-            <div class="lr-s"><span class="badge ${p.type==="astuce"?"b-mango":"b-rose"}">${p.type==="astuce"?"Astuce":"Actu"}</span> ${this.fmtDateShort(this.dstr(new Date(p.createdAt)))}</div></div>
-          <div style="display:flex;gap:6px;flex:none">
-            <button class="btn btn-soft btn-sm" onclick="App.openPostForm('${p.id}')">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="App.deletePost('${p.id}')">🗑️</button>
-          </div>
-        </div>`).join("")+`</div>`;
+      html+=posts.map(p=>this.postCardHTML(p, true)).join("");
     }
-    w.innerHTML=html;
+    this._setHTML(w, html);
   },
   openPostForm(id){
     const p=id?DB.find("posts",id):null; this._postEdit=id||null; this._postImg=p?(p.image||null):null;
@@ -3679,7 +3966,213 @@ const App = {
       ${id?`<button class="btn btn-danger btn-block mt-s" onclick="App.deletePost('${id}')">Supprimer</button>`:""}`;
     this.openSheet(id?"Modifier la publication":"Nouvelle publication", body, foot);
   },
-  pickPostPhoto(inp){ this.readPhoto(inp.files[0], d=>{ this._postImg=d; const pv=document.getElementById("post-pv"); if(pv) pv.innerHTML=d?`<img src="${d}">`:"🖼️"; const rm=document.getElementById("post-rm"); if(rm) rm.style.display=d?"inline-flex":"none"; }); },
+  /* =====================================================================
+     STORIES (24 h) — publiées par la vétérinaire, vues par tous les clients
+     ---------------------------------------------------------------------
+     • Le logo en haut à gauche s'entoure d'un anneau coloré quand une story
+       est en ligne (gris quand elle a déjà été vue sur cet appareil).
+     • La vétérinaire a un « + » sur le logo pour publier une photo.
+     • Chaque story disparaît 24 h après sa publication.
+     • Les stories ne sont jamais copiées dans le stockage du téléphone.
+     ===================================================================== */
+  STORY_MS:6000,
+  activeStories(){
+    const now=Date.now();
+    return ((window.Cloud && window.Cloud.stories) || [])
+      .filter(s=>s && s.img && +s.expiresAt>now)
+      .sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  },
+  _storySeen(){ try{ return JSON.parse(localStorage.getItem("ad_storySeen")||"{}")||{}; }catch(e){ return {}; } },
+  _markStorySeen(id){
+    try{
+      const m=this._storySeen(); m[id]=Date.now();
+      const lim=Date.now()-2*864e5; Object.keys(m).forEach(k=>{ if(m[k]<lim) delete m[k]; });
+      localStorage.setItem("ad_storySeen", JSON.stringify(m));
+    }catch(e){}
+  },
+  renderStoryRings(){
+    const list=this.activeStories(), seen=this._storySeen();
+    const unseen=list.some(s=>!seen[s.id]);
+    const sig=list.length+"|"+unseen;
+    ["mark-c","mark-a"].forEach(id=>{
+      const el=document.getElementById(id); if(!el || el._sig===sig) return;
+      el._sig=sig;
+      el.classList.toggle("has-story", list.length>0);
+      el.classList.toggle("story-new", list.length>0 && unseen);
+      el.title = list.length ? "Voir la story du cabinet" : "";
+    });
+  },
+  onStoryMark(){
+    if(this.activeStories().length) return this.openStories();
+    if(this.isAdmin()) return this.pickStory();
+  },
+  pickStory(){
+    if(!this.isAdmin()) return;
+    if(!(CLOUD_ON && window.Cloud && window.Cloud.enabled && window.Cloud.addStory)) return this.toast("Connexion Internet requise.","err");
+    const f=document.getElementById("story-file"); if(f){ f.value=""; f.click(); }
+  },
+  onStoryFile(inp){
+    const file=inp.files && inp.files[0]; if(!file) return;
+    this.readPhoto(file, d=>{
+      if(!d) return this.toast("Image illisible ou trop lourde. Essayez une autre photo.","err");
+      this._storyImg=d;
+      const body=`<div class="story-prev"><img class="flou" src="${d}" alt="" aria-hidden="true"><img src="${d}" alt=""></div>
+        <div class="field mt"><label>Texte sur la story (optionnel)</label>
+          <input class="input" id="st-cap" maxlength="140" placeholder="Ex : Journée vaccination samedi" dir="auto"></div>
+        <div class="hint">Visible par tous les clients pendant 24 heures, puis elle disparaît automatiquement.</div>`;
+      const foot=`<button class="btn btn-primary btn-block btn-lg" id="st-go" onclick="App.publishStory()">✨ Publier la story (24 h)</button>`;
+      this.openSheet("Nouvelle story", body, foot);
+    }, 1080, 450000);
+  },
+  async publishStory(){
+    if(!this._storyImg || this._storyBusy) return;
+    const cap=((document.getElementById("st-cap")||{}).value||"").trim().slice(0,140);
+    const btn=document.getElementById("st-go"); if(btn){ btn.disabled=true; btn.textContent="Publication…"; }
+    this._storyBusy=true;
+    try{ await window.Cloud.addStory(this._storyImg, cap); }
+    catch(e){
+      this._storyBusy=false;
+      if(e && e.message==="delai"){
+        this._storyImg=null; this.closeSheet();
+        return this.toast("Connexion lente : la story sera publiée dès que le réseau le permet.","warn");
+      }
+      if(btn){ btn.disabled=false; btn.textContent="✨ Publier la story (24 h)"; }
+      return this.toast("Échec de la publication. Vérifiez la connexion et réessayez.","err");
+    }
+    this._storyBusy=false; this._storyImg=null;
+    this.closeSheet(); this.toast("Story publiée ! Elle disparaîtra dans 24 h. ✨","ok");
+    this.renderStoryRings();
+  },
+  _agoText(ts){
+    const min=Math.max(1, Math.round((Date.now()-ts)/60000)), ar=this.lang==="ar";
+    if(min<60) return ar?("منذ "+min+" د"):("il y a "+min+" min");
+    const h=Math.round(min/60); return ar?("منذ "+h+" س"):("il y a "+h+" h");
+  },
+  _leftText(ts){
+    const min=Math.max(1, Math.round((ts-Date.now())/60000)), ar=this.lang==="ar";
+    if(min<60) return ar?("تنتهي بعد "+min+" د"):("expire dans "+min+" min");
+    const h=Math.round(min/60); return ar?("تنتهي بعد "+h+" س"):("expire dans "+h+" h");
+  },
+  openStories(startId){
+    const list=this.activeStories(); if(!list.length) return;
+    const seen=this._storySeen();
+    let i = startId ? list.findIndex(s=>s.id===startId) : list.findIndex(s=>!seen[s.id]);
+    if(i<0) i=0;
+    this._sv={ list, i, start:0, elapsed:0, paused:false, raf:0 };
+    const v=document.getElementById("story-viewer");
+    v.classList.add("show"); v.setAttribute("aria-hidden","false");
+    document.body.style.overflow="hidden";
+    this._svBind();
+    this._svShow();
+  },
+  closeStories(){
+    const sv=this._sv; if(sv && sv.raf) cancelAnimationFrame(sv.raf);
+    this._sv=null;
+    const v=document.getElementById("story-viewer");
+    if(v){ v.classList.remove("show"); v.setAttribute("aria-hidden","true"); }
+    document.body.style.overflow="";
+    this.renderStoryRings();
+  },
+  _svShow(){
+    const sv=this._sv; if(!sv) return;
+    const s=sv.list[sv.i]; if(!s) return this.closeStories();
+    const bars=document.getElementById("sv-bars");
+    bars.innerHTML=sv.list.map((x,k)=>`<div class="sv-bar"><i style="width:${k<sv.i?100:0}%"></i></div>`).join("");
+    const img=document.getElementById("sv-img"); img.src=s.img;
+    const flou=document.getElementById("sv-blur"); if(flou) flou.src=s.img;   // fond flou (comme Instagram)
+    document.getElementById("sv-cap").textContent=s.caption||"";
+    const adm=this.isAdmin();
+    document.getElementById("sv-time").textContent=this._agoText(s.createdAt||Date.now())+(adm?" · "+this._leftText(s.expiresAt):"");
+    document.getElementById("sv-stage").classList.toggle("is-admin", adm);
+    this._markStorySeen(s.id);
+    if(sv.raf) cancelAnimationFrame(sv.raf);
+    sv.elapsed=0; sv.start=performance.now(); sv.paused=false;
+    const tick=(t)=>{
+      if(this._sv!==sv) return;
+      if(!sv.paused){
+        const p=Math.min(1, (sv.elapsed + t - sv.start)/this.STORY_MS);
+        const bar=bars.children[sv.i] && bars.children[sv.i].firstChild;
+        if(bar) bar.style.width=(p*100)+"%";
+        if(p>=1) return this._svStep(1);
+      }
+      sv.raf=requestAnimationFrame(tick);
+    };
+    sv.raf=requestAnimationFrame(tick);
+  },
+  _svStep(d){
+    const sv=this._sv; if(!sv) return;
+    const n=sv.i+d;
+    if(n>=sv.list.length) return this.closeStories();
+    sv.i=Math.max(0,n); this._svShow();
+  },
+  _svPause(on){
+    const sv=this._sv; if(!sv || sv.paused===on) return;
+    const now=performance.now();
+    if(on){ sv.elapsed += now - sv.start; sv.paused=true; }
+    else { sv.start=now; sv.paused=false; }
+  },
+  // Gestes : toucher à droite = suivante, à gauche = précédente, appui long =
+  // pause, glisser vers le bas = fermer.
+  _svBind(){
+    if(this._svBound) return; this._svBound=true;
+    const st=document.getElementById("sv-stage");
+    let x0=0, y0=0, t0=0, actif=false;
+    st.addEventListener("pointerdown", e=>{
+      if(e.target.closest("button")) return;
+      actif=true; x0=e.clientX; y0=e.clientY; t0=Date.now(); this._svPause(true);
+    });
+    const fin=e=>{
+      if(!actif) return; actif=false;
+      const dx=e.clientX-x0, dy=e.clientY-y0, dt=Date.now()-t0;
+      if(dy>90 && Math.abs(dy)>Math.abs(dx)) return this.closeStories();
+      this._svPause(false);
+      if(dt<300 && Math.abs(dx)<25 && Math.abs(dy)<25){
+        const r=st.getBoundingClientRect();
+        let avant=(e.clientX-r.left) < r.width*0.33;
+        if(document.documentElement.dir==="rtl") avant=!avant;
+        this._svStep(avant?-1:1);
+      } else if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)){
+        let suiv = dx<0; if(document.documentElement.dir==="rtl") suiv=!suiv;
+        this._svStep(suiv?1:-1);
+      }
+    };
+    st.addEventListener("pointerup", fin);
+    st.addEventListener("pointercancel", ()=>{ actif=false; this._svPause(false); });
+    document.addEventListener("visibilitychange", ()=>{ if(this._sv) this._svPause(document.hidden); });
+    document.addEventListener("keydown", e=>{
+      if(!this._sv) return;
+      if(e.key==="Escape") this.closeStories();
+      else if(e.key==="ArrowRight") this._svStep(document.documentElement.dir==="rtl"?-1:1);
+      else if(e.key==="ArrowLeft") this._svStep(document.documentElement.dir==="rtl"?1:-1);
+    });
+  },
+  // Les stories ont changé pendant que la visionneuse est ouverte.
+  refreshStoryViewer(){
+    const sv=this._sv; if(!sv) return;
+    const cur=sv.list[sv.i], list=this.activeStories();
+    if(!list.length) return this.closeStories();
+    const k=cur ? list.findIndex(s=>s.id===cur.id) : -1;
+    sv.list=list;
+    if(k>=0){ sv.i=k; const bars=document.getElementById("sv-bars");
+      bars.innerHTML=list.map((x,j)=>`<div class="sv-bar"><i style="width:${j<k?100:0}%"></i></div>`).join(""); }
+    else { sv.i=Math.min(sv.i, list.length-1); this._svShow(); }
+  },
+  async deleteCurrentStory(){
+    const sv=this._sv; if(!sv || !this.isAdmin()) return;
+    const s=sv.list[sv.i]; if(!s) return;
+    this._svPause(true);
+    const q="Supprimer cette story ?";
+    if(!confirm(this.lang==="ar" && AR_DICT[q] ? AR_DICT[q] : q)){ this._svPause(false); return; }
+    try{ await window.Cloud.deleteStory(s.id); }
+    catch(e){ this._svPause(false); return this.toast("Suppression impossible. Vérifiez la connexion.","err"); }
+    this.toast("Story supprimée.","ok");
+    if(window.Cloud && window.Cloud.stories) window.Cloud.stories=window.Cloud.stories.filter(x=>x.id!==s.id);
+    sv.list=sv.list.filter(x=>x.id!==s.id);
+    if(!sv.list.length) return this.closeStories();
+    sv.i=Math.min(sv.i, sv.list.length-1); this._svShow();
+  },
+
+  pickPostPhoto(inp){ this.readPhoto(inp.files[0], d=>{ this._postImg=d; const pv=document.getElementById("post-pv"); if(pv) pv.innerHTML=d?`<img src="${d}">`:"🖼️"; const rm=document.getElementById("post-rm"); if(rm) rm.style.display=d?"inline-flex":"none"; }, 800, 260000); },
   removePostPhoto(){ this._postImg=null; const pv=document.getElementById("post-pv"); if(pv) pv.innerHTML="🖼️"; const rm=document.getElementById("post-rm"); if(rm) rm.style.display="none"; const f=document.getElementById("post-file"); if(f) f.value=""; },
   savePost(){
     const titre=(document.getElementById("po-titre").value||"").trim();
@@ -3918,17 +4411,22 @@ const App = {
     const patch={status};
     if(status==="livree") patch.deliveredAt=Date.now();   // date d'encaissement pour la caisse
     DB.update("orders",id,patch);
+    if(status==="annulee") this._scheduleAdminSync();       // remet le stock déduit à la commande
     const o=DB.find("orders",id);
     if(o){ const st=ORDER_STATUS[status];
       this.notify(o.clientId,"order_up","Commande mise à jour",`#${o.id.slice(-4).toUpperCase()} · ${st.label}`); }
     this.toast("Statut mis à jour. Le client est prévenu ✓","ok"); this.renderAll();
   },
-  deleteOrder(id){
+  async deleteOrder(id){
     const o=DB.find("orders",id); if(!o) return;
     const msg = o.status==="livree"
       ? "Supprimer cette commande livrée ?\n\nElle sera aussi retirée du total de la caisse. Cette action est irréversible."
       : "Supprimer cette commande ?\n\nCette action est irréversible.";
     if(!confirm(msg)) return;
+    // Commande pas encore livrée dont le stock avait été déduit : on le remet.
+    if(o.stockDeduit && !o.stockRendu && o.status!=="livree" && window.Cloud && window.Cloud.restoreOrderStock){
+      try{ await window.Cloud.restoreOrderStock(id); }catch(e){ console.warn("stock", e); }
+    }
     DB.del("orders", id);
     this.toast("Commande supprimée.","ok"); this.renderAll();
   },
@@ -3936,8 +4434,10 @@ const App = {
     const o=DB.find("orders",id); if(!o) return;
     if(o.status!=="attente" && o.status!=="preparation"){ this.toast("Cette commande ne peut plus être annulée.","err"); return; }
     if(!confirm("Annuler cette commande ?")) return;
-    // on restaure le stock des produits commandés
-    (o.items||[]).forEach(it=>{ const p=DB.find("products", it.id); if(p && p.stock!=null) DB.update("products", it.id, {stock:(+p.stock||0)+(+it.qty||0)}); });
+    // Le stock est remis automatiquement par l'appareil de la vétérinaire (ou
+    // par le robot GitHub) : un client n'a pas le droit d'augmenter un stock.
+    if(!(CLOUD_ON && window.Cloud && window.Cloud.enabled) || this.isAdmin())
+      (o.items||[]).forEach(it=>{ const p=DB.find("products", it.id); if(p && p.stock!=null && !o.stockDeduit) DB.update("products", it.id, {stock:(+p.stock||0)+(+it.qty||0)}); });
     DB.update("orders", id, {status:"annulee"});
     this.notify("admin","order_up","Commande annulée par le client",`${o.clientNom||"Client"} · ${this.money(o.total)}`);
     this.toast("Commande annulée.","ok"); this.renderAll();
@@ -4148,6 +4648,9 @@ const App = {
     DB.set("advices", DB.get("advices",[]).filter(a=>a.clientId!==clientId));
     DB.set("notifs", DB.get("notifs",[]).filter(n=>n.target!==clientId));
     DB.set("users", DB.get("users",[]).filter(u=>u.id!==clientId));
+    // Ce que la vétérinaire ne garde pas en mémoire : notifications du client,
+    // créneaux réservés, téléphones enregistrés pour les notifications.
+    try{ if(window.Cloud && window.Cloud.purgeClient) window.Cloud.purgeClient(clientId); }catch(e){}
     // Libère son numéro dans l'annuaire de connexion.
     try{ if(window.Cloud && window.Cloud.removeLoginIndex) window.Cloud.removeLoginIndex(this.phoneKey(c.tel), clientId); }catch(e){}
     this.closeSheet(); this.toast("Compte supprimé.","ok"); this.renderAll();
@@ -4443,6 +4946,11 @@ const App = {
     try{
       // Firebase re-vérifie l'ancien mot de passe puis applique le nouveau (haché).
       await window.Cloud.changePassword(oldP, newP);
+      // L'annuaire « numéro → e-mail » est chiffré avec le mot de passe : on le rechiffre.
+      try{
+        const u=this.currentUser();
+        if(u && u.role==="client" && window.Cloud.syncLoginIndex) await window.Cloud.syncLoginIndex(this.phoneKey(u.tel), newP);
+      }catch(e){ console.warn("annuaire", e); }
       ["-old","-new","-conf"].forEach(x=>{ const e=document.getElementById(pre+x); if(e) e.value=""; });
       this.toast("Mot de passe modifié ✓","ok");
     }catch(err){
@@ -4564,8 +5072,9 @@ document.addEventListener("DOMContentLoaded", function(){
   document.addEventListener("click", function(e){
     const t=e.target;
     if(!t || t.tagName!=="IMG") return;
-    if(t.closest(".photo-pick") || t.closest(".pet-photos")) return;      // aperçu de formulaire → ouvre le sélecteur, pas le zoom
+    if(t.closest(".photo-pick") || t.closest(".pet-photos") || t.closest(".story-prev")) return;      // aperçu de formulaire → pas de zoom
     if(t.closest("#img-viewer")) return;      // déjà dans la visionneuse
+    if(t.closest("#story-viewer")) return;    // stories : les gestes sont gérés par la visionneuse
     const src=t.getAttribute("src")||"";
     if(!/^data:|^https?:/.test(src)) return;   // vraies photos uniquement
     if(/logo-mark\.png/i.test(src)) return;    // on n'agrandit pas le logo
@@ -4634,7 +5143,8 @@ document.addEventListener("DOMContentLoaded", function(){
      ===================================================================== -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, doc, getDocs, getDoc, setDoc, deleteDoc, onSnapshot, query, where }
+  import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where,
+           writeBatch, runTransaction, increment, deleteField }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import { getMessaging, getToken, deleteToken, onMessage, isSupported as messagingSupported }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
@@ -4660,10 +5170,17 @@ document.addEventListener("DOMContentLoaded", function(){
   const CONFIG_KEYS = ["settings"];
   const CFG_DOC = "_config"; // collection Firestore contenant les documents de config
 
-  // Petit pont vers le localStorage (le module ne partage pas la portée du script principal).
+  // Pont vers la couche DB du script principal (copie de travail en mémoire +
+  // sauvegarde localStorage). Repli direct sur le localStorage si DB manque.
   const LS = {
-    write(key, val){ try{ localStorage.setItem("ad_"+key, JSON.stringify(val)); }catch(e){} },
-    read(key, def){ try{ const r=localStorage.getItem("ad_"+key); return r==null?def:JSON.parse(r); }catch(e){ return def; } }
+    write(key, val){
+      try{ if(typeof DB !== "undefined" && DB && DB._raw){ DB._raw(key, val); return; } }catch(e){}
+      try{ localStorage.setItem("ad_"+key, JSON.stringify(val)); }catch(e){}
+    },
+    read(key, def){
+      try{ if(typeof DB !== "undefined" && DB && DB.get) return DB.get(key, def); }catch(e){}
+      try{ const r=localStorage.getItem("ad_"+key); return r==null?def:JSON.parse(r); }catch(e){ return def; }
+    }
   };
 
   let db=null, fbApp=null, auth=null, resolveReady;
@@ -4812,13 +5329,14 @@ document.addEventListener("DOMContentLoaded", function(){
   window.Push = Push;
 
   /* =====================================================================
-     REQUÊTES FILTRÉES PAR PROPRIÉTAIRE
+     LECTURES FILTRÉES PAR PROPRIÉTAIRE
      ---------------------------------------------------------------------
      Chaque collection indique dans quel champ se trouve l'identifiant du
      propriétaire. Un client ne demande que les documents qui lui
      appartiennent : c'est exactement ce que les règles de sécurité
      autorisent. Les collections publiques (boutique, publications) ne sont
-     pas filtrées. L'administratrice n'est jamais filtrée.
+     pas filtrées. La vétérinaire voit tout, SAUF les notifications des
+     clients : elle ne lit que les siennes (target = "admin").
      ===================================================================== */
   const CHAMP_PROPRIETAIRE = {
     animals:   "ownerId",
@@ -4833,127 +5351,195 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function scopedQuery(coll, sc){
     const c = collection(db, coll);
-    if(!sc || sc.admin || !sc.uid) return c;          // admin : tout
+    if(sc && sc.admin) return coll === "notifs" ? query(c, where("target", "==", "admin")) : c;
+    if(!sc || !sc.uid) return c;
     const champ = CHAMP_PROPRIETAIRE[coll];
     return champ ? query(c, where(champ, "==", sc.uid)) : c;
+  }
+
+  const ACTIF = s => s === "attente" || s === "confirme";
+  const idCreneau = (date, time) => String(date) + "_" + String(time);
+  const aujourdHui = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+  const avecDelai = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("delai")), ms))]);
+  const codeErr = e => (e && (e.code || e.message)) || String(e);
+
+  /* ---------------------------------------------------------------------
+     ÉCOUTES TEMPS RÉEL
+     ---------------------------------------------------------------------
+     v1.2 : une SEULE lecture au démarrage. Les écoutes (onSnapshot) livrent
+     d'abord l'état complet, puis seulement les changements. Avant, l'app
+     lisait tout une première fois (pullAll) puis une seconde fois en
+     démarrant les écoutes : chaque ouverture coûtait le double.
+     --------------------------------------------------------------------- */
+  let ecoutes = [], ecouteCle = null, premierChargement = null, surChangement = null;
+
+  function arreterEcoutes(){
+    ecoutes.forEach(u => { try{ u(); }catch(e){} });
+    ecoutes = []; ecouteCle = null; premierChargement = null;
+    Cloud.slots = []; Cloud.stories = []; Cloud._slotsLoaded = false;
+  }
+  const signaler = (cle) => { try{ surChangement && surChangement(cle); }catch(e){ console.warn("affichage", e); } };
+
+  // Champs modifiés entre deux versions d'un document (null si identiques).
+  function champsModifies(avant, apres){
+    const patch = {}; let n = 0;
+    Object.keys(apres).forEach(k => {
+      if(JSON.stringify(avant[k]) !== JSON.stringify(apres[k])){ patch[k] = apres[k]; n++; }
+    });
+    Object.keys(avant).forEach(k => { if(!(k in apres)){ patch[k] = deleteField(); n++; } });
+    return n ? patch : null;
+  }
+  // Nouveau document : setDoc (fusion) ; document existant : updateDoc, qui
+  // n'envoie QUE les champs modifiés et échoue proprement si le document a
+  // été supprimé entre-temps (au lieu de le recréer à moitié).
+  function ecrire(coll, id, data, nouveau){
+    const ref = doc(db, coll, String(id));
+    const p = nouveau ? setDoc(ref, data, { merge:true }) : updateDoc(ref, data);
+    return p.catch(e => console.warn("écriture " + coll + "/" + id, codeErr(e)));
+  }
+  // Libère le créneau d'un rendez-vous annulé, refusé ou supprimé.
+  function libererCreneau(r){
+    if(!r || !r.date || !r.time || !db) return;
+    const id = idCreneau(r.date, r.time);
+    const s = (Cloud.slots || []).find(x => x.id === id);
+    if(!s || String(s.rdvId) !== String(r.id)) return;      // créneau d'un autre RDV : on n'y touche pas
+    Cloud.slots = Cloud.slots.filter(x => x.id !== id);
+    deleteDoc(doc(db, "creneaux", id)).catch(e => console.warn("créneau", codeErr(e)));
   }
 
   // Objet global consommé par la couche DB du script principal.
   const Cloud = {
     enabled: false,          // devient true si l'initialisation réussit
     ready: readyPromise,     // résolue quand Firestore est prêt
+    slots: [],               // créneaux réservés à venir (tous clients, sans donnée personnelle)
+    stories: [],             // stories en ligne (jamais copiées dans le localStorage)
+    _slotsLoaded: false,
 
-    /* -------------------------------------------------------------------
-       ÉTENDUE DES DONNÉES (scope)
-       -------------------------------------------------------------------
-       • La vétérinaire (admin) voit tout.
-       • Un client ne charge QUE ses propres documents. C'est indispensable :
-         les règles de sécurité refusent une lecture de collection entière,
-         donc chaque requête doit être filtrée sur son identifiant.
-       Le champ qui porte le propriétaire change selon la collection, d'où
-       le tableau ci-dessous.
-       ------------------------------------------------------------------- */
     scope: { uid:null, admin:false },
     setScope(s){ this.scope = { uid:(s&&s.uid)||null, admin:!!(s&&s.admin) }; },
 
-    // Écrit / met à jour un document (fusion) dans une collection.
+    // Compatibilité : écriture complète d'un document / suppression.
     pushDoc(coll, item){
       if(!db || !item || !item.id) return;
       let data = item;
-      // Le rôle ne se décide JAMAIS depuis l'application : il est posé à la
-      // main dans la console Firebase. On le retire de toute écriture pour
-      // qu'un cache périmé ne puisse pas l'écraser — et pour que les règles
-      // de sécurité (qui exigent un rôle inchangé) ne refusent pas
-      // l'écriture entière du nom ou du téléphone.
       if(coll === "users"){ data = Object.assign({}, item); delete data.role; }
-      setDoc(doc(db, coll, String(item.id)), data, { merge:true })
-        .catch(e=>console.warn("pushDoc", coll, e));
+      ecrire(coll, item.id, data, true);
     },
-    // Supprime un document.
     removeDoc(coll, id){
       if(!db || id==null) return;
-      deleteDoc(doc(db, coll, String(id))).catch(e=>console.warn("removeDoc", coll, e));
+      deleteDoc(doc(db, coll, String(id))).catch(e=>console.warn("removeDoc", coll, codeErr(e)));
     },
-    // Remplace l'état d'une collection : écrit tous les éléments et supprime
-    // ceux qui ont disparu (prevIds − ids actuels).
-    replaceCollection(coll, arr, prevIds){
-      const ids=new Set();
-      (arr||[]).forEach(it=>{ if(it && it.id){ ids.add(String(it.id)); this.pushDoc(coll, it); } });
-      (prevIds||[]).forEach(id=>{ if(!ids.has(String(id))) this.removeDoc(coll, id); });
+
+    /* -------------------------------------------------------------------
+       Synchronisation d'une collection après une modification locale.
+       On compare l'ancienne et la nouvelle liste : seuls les documents
+       ajoutés, modifiés (champs changés uniquement) ou supprimés sont
+       envoyés. Avant la v1.2, TOUTE la collection était réécrite à chaque
+       action (ex. confirmer 1 RDV = réécrire tous les RDV + toutes les
+       notifications) : les quotas gratuits auraient vite été dépassés.
+       ------------------------------------------------------------------- */
+    syncCollection(coll, arr, prevArr){
+      if(!db) return;
+      let apres, avant;
+      try{ apres = JSON.parse(JSON.stringify(arr || [])); avant = JSON.parse(JSON.stringify(prevArr || [])); }
+      catch(e){ console.warn("syncCollection", coll, e); return; }
+      const anciens = new Map();
+      avant.forEach(it => { if(it && it.id != null) anciens.set(String(it.id), it); });
+      const vus = new Set();
+      apres.forEach(it => {
+        if(!it || it.id == null) return;
+        const id = String(it.id); vus.add(id);
+        const old = anciens.get(id);
+        if(!old){
+          let data = it;
+          // Le rôle ne se décide JAMAIS depuis l'application (console Firebase).
+          if(coll === "users"){ data = Object.assign({}, it); delete data.role; }
+          ecrire(coll, id, data, true);
+          return;
+        }
+        const patch = champsModifies(old, it);
+        if(!patch) return;
+        if(coll === "users") delete patch.role;
+        if(!Object.keys(patch).length) return;
+        ecrire(coll, id, patch, false);
+        if(coll === "rdv" && ACTIF(old.status) && !ACTIF(it.status)) libererCreneau(old);
+      });
+      anciens.forEach((old, id) => {
+        if(vus.has(id)) return;
+        deleteDoc(doc(db, coll, id)).catch(e => console.warn("suppression " + coll + "/" + id, codeErr(e)));
+        if(coll === "rdv" && ACTIF(old.status)) libererCreneau(old);
+      });
     },
+    // Ancien nom (compatibilité).
+    replaceCollection(coll, arr, prev){ this.syncCollection(coll, arr, Array.isArray(prev) && prev.length && typeof prev[0] === "object" ? prev : LS.read(coll, [])); },
+
     // Écrit un document de configuration (ex. settings).
     setConfig(name, obj){
       if(!db) return;
       setDoc(doc(db, CFG_DOC, name), { value: obj }, { merge:true })
-        .catch(e=>console.warn("setConfig", name, e));
+        .catch(e=>console.warn("setConfig", name, codeErr(e)));
     },
 
-    // Récupère TOUT le cloud vers le localStorage (au démarrage).
-    async pullAll(){
-      if(!db) return;
+    // Démarre les écoutes pour le compte connecté et attend le premier état
+    // complet de chaque collection (10 s maximum, sinon on continue hors ligne).
+    pullAll(){
+      if(!db) return Promise.resolve();
       const sc = this.scope;
-      // Collections
-      await Promise.all(COLLECTIONS.map(async (coll)=>{
-        try{
-          // Cas particulier : un client ne lit que SON document dans "users"
-          // (lecture d'un document précis, et non de la collection entière).
-          if(coll==="users" && !sc.admin){
-            if(!sc.uid) return;
-            const d = await getDoc(doc(db, "users", sc.uid));
-            LS.write("users", d.exists() ? [d.data()] : []);
-            return;
-          }
-          const snap = await getDocs(scopedQuery(coll, sc));
-          const arr=[]; snap.forEach(d=> arr.push(d.data()));
-          // Pour un client, la réponse fait autorité (même vide).
-          // Pour l'admin, on garde l'ancienne prudence : on n'écrase pas
-          // le local avec un résultat vide (tout premier lancement).
-          if(arr.length || !sc.admin) LS.write(coll, arr);
-        }catch(e){ console.warn("pullAll "+coll, e); }
-      }));
-      // Documents de configuration (lecture publique)
-      await Promise.all(CONFIG_KEYS.map(async (name)=>{
-        try{
-          const snap = await getDocs(collection(db, CFG_DOC));
-          snap.forEach(d=>{ if(d.id===name && d.data() && d.data().value!=null) LS.write(name, d.data().value); });
-        }catch(e){ console.warn("pullAll config "+name, e); }
-      }));
-    },
+      const cle = (sc.admin ? "A:" : "C:") + (sc.uid || "");
+      if(ecouteCle === cle && premierChargement) return premierChargement;
+      arreterEcoutes(); ecouteCle = cle;
+      const attentes = [];
+      const ecouter = (cible, surDonnees, nom) => {
+        let premier; attentes.push(new Promise(r => { premier = r; }));
+        const un = onSnapshot(cible,
+          (snap) => { try{ surDonnees(snap); }catch(e){ console.warn("écoute " + nom, e); } premier(); },
+          (e) => { console.warn("écoute " + nom, codeErr(e)); premier(); });
+        ecoutes.push(un);
+      };
 
-    // Écoute les changements en temps réel ; appelle onChange(key) quand une
-    // collection ou la config change réellement (comparaison JSON anti-boucle).
-    watchAll(onChange){
-      if(!db) return;
-      const sc = this.scope;
-      COLLECTIONS.forEach(coll=>{
+      COLLECTIONS.forEach(coll => {
         // Client : son seul document dans "users".
-        if(coll==="users" && !sc.admin){
+        if(coll === "users" && !sc.admin){
           if(!sc.uid) return;
-          onSnapshot(doc(db, "users", sc.uid), (d)=>{
+          ecouter(doc(db, "users", sc.uid), (d) => {
+            if(d.metadata.fromCache && !d.exists()) return;
             const arr = d.exists() ? [d.data()] : [];
-            const before = JSON.stringify(LS.read("users", []));
-            const after  = JSON.stringify(arr);
-            if(before!==after){ LS.write("users", arr); try{ onChange && onChange("users"); }catch(e){} }
-          }, (e)=>console.warn("watch users", e));
+            if(JSON.stringify(LS.read("users", [])) !== JSON.stringify(arr)){ LS.write("users", arr); signaler("users"); }
+          }, "users");
           return;
         }
-        onSnapshot(scopedQuery(coll, sc), (snap)=>{
-          const arr=[]; snap.forEach(d=> arr.push(d.data()));
-          const before = JSON.stringify(LS.read(coll, []));
-          const after  = JSON.stringify(arr);
-          if(before!==after){ LS.write(coll, arr); try{ onChange && onChange(coll); }catch(e){} }
-        }, (e)=>console.warn("watch "+coll, e));
+        ecouter(scopedQuery(coll, sc), (snap) => {
+          if(snap.metadata.fromCache && snap.empty) return;   // hors ligne : on garde la copie locale
+          const arr = []; snap.forEach(d => arr.push(d.data()));
+          if(JSON.stringify(LS.read(coll, [])) !== JSON.stringify(arr)){ LS.write(coll, arr); signaler(coll); }
+        }, coll);
       });
-      onSnapshot(collection(db, CFG_DOC), (snap)=>{
-        snap.forEach(d=>{
-          if(CONFIG_KEYS.indexOf(d.id)>=0 && d.data() && d.data().value!=null){
-            const before=JSON.stringify(LS.read(d.id, null));
-            const after =JSON.stringify(d.data().value);
-            if(before!==after){ LS.write(d.id, d.data().value); try{ onChange && onChange(d.id); }catch(e){} }
+      // Réglages du cabinet (lecture publique).
+      ecouter(collection(db, CFG_DOC), (snap) => {
+        snap.forEach(d => {
+          if(CONFIG_KEYS.indexOf(d.id) >= 0 && d.data() && d.data().value != null){
+            if(JSON.stringify(LS.read(d.id, null)) !== JSON.stringify(d.data().value)){ LS.write(d.id, d.data().value); signaler(d.id); }
           }
         });
-      }, (e)=>console.warn("watch config", e));
-    }
+      }, "config");
+      if(sc.uid){
+        // Créneaux réservés à venir : visibles par tous les clients (aucune donnée personnelle).
+        ecouter(query(collection(db, "creneaux"), where("date", ">=", aujourdHui())), (snap) => {
+          const arr = []; snap.forEach(d => arr.push(Object.assign({ id: d.id }, d.data())));
+          Cloud.slots = arr; Cloud._slotsLoaded = true; signaler("creneaux");
+        }, "creneaux");
+        // Stories en ligne (gardées en mémoire seulement).
+        ecouter(query(collection(db, "stories"), where("expiresAt", ">", Date.now())), (snap) => {
+          const arr = []; snap.forEach(d => arr.push(Object.assign({ id: d.id }, d.data())));
+          Cloud.stories = arr; signaler("stories");
+        }, "stories");
+      }
+      premierChargement = Promise.race([Promise.all(attentes), new Promise(r => setTimeout(r, 10000))]);
+      return premierChargement;
+    },
+    // Branche le rafraîchissement de l'écran sur les écoutes en cours.
+    watchAll(onChange){ surChangement = onChange; if(!ecouteCle) this.pullAll(); },
+    stopAll(){ surChangement = null; arreterEcoutes(); }
   };
   window.Cloud = Cloud;
 
@@ -4976,7 +5562,7 @@ document.addEventListener("DOMContentLoaded", function(){
     const arr = LS.read("users", []).filter(x => x && x.id !== prof.id);
     arr.push(prof); LS.write("users", arr);
     try{ await setDoc(doc(db, "users", String(prof.id)), prof, { merge:true }); }
-    catch(e){ console.warn("saveUser", e); }
+    catch(e){ console.warn("saveUser", codeErr(e)); }
   };
   // Changement de mot de passe : re-vérifie l'ancien puis applique le nouveau.
   Cloud.changePassword = async (oldPass, newPass) => {
@@ -4988,42 +5574,279 @@ document.addEventListener("DOMContentLoaded", function(){
   };
 
   /* -------------------------------------------------------------------
+     RENDEZ-VOUS : VERROU DE CRÉNEAU (anti double réservation)
+     -------------------------------------------------------------------
+     creneaux/{date_heure} = { date, time, rdvId, uid, ts }
+     Le document est créé dans une transaction : si un autre client a pris
+     le créneau une fraction de seconde avant, la transaction échoue et le
+     client est prévenu. Les règles interdisent à un client de modifier un
+     créneau existant.
+     ------------------------------------------------------------------- */
+  Cloud.lockSlot = async (date, time, rdvId) => {
+    const user = auth && auth.currentUser;
+    if(!db || !user) throw new Error("hors-ligne");
+    const ref = doc(db, "creneaux", idCreneau(date, time));
+    const data = { date:String(date), time:String(time), rdvId:String(rdvId), uid:user.uid, ts:Date.now() };
+    try{
+      await avecDelai(runTransaction(db, async (tx) => {
+        let d;
+        try{ d = await tx.get(ref); }
+        catch(e){ if(e && e.code === "permission-denied") throw new Error("regles"); throw e; }
+        if(d.exists()) throw new Error("pris");
+        tx.set(ref, data);
+      }), 12000);
+    }catch(e){
+      if(e && e.message === "regles"){
+        // Règles Firestore v1.2 pas encore publiées : on ne bloque pas les réservations.
+        console.warn("Collection « creneaux » refusée : publiez les règles Firestore v1.2.");
+        return;
+      }
+      if(e && (e.message === "pris" || e.code === "permission-denied" || e.code === "already-exists")) throw new Error("pris");
+      throw e;
+    }
+    if(!(Cloud.slots || []).some(x => x.id === ref.id)) Cloud.slots = (Cloud.slots || []).concat([Object.assign({ id: ref.id }, data)]);
+  };
+
+  // Vétérinaire : remet d'aplomb les créneaux (anciens RDV sans créneau,
+  // créneaux orphelins de RDV annulés ou jamais créés).
+  Cloud.reconcileSlots = (rdvList, today) => {
+    if(!db || !Cloud.scope.admin || !Cloud._slotsLoaded) return;
+    today = today || aujourdHui();
+    const actifs = (rdvList || []).filter(r => r && r.id && ACTIF(r.status) && r.date >= today && r.time);
+    const pris = new Set((Cloud.slots || []).map(s => s.id));
+    actifs.forEach(r => {
+      const id = idCreneau(r.date, r.time);
+      if(pris.has(id)) return;
+      pris.add(id);
+      setDoc(doc(db, "creneaux", id), { date:String(r.date), time:String(r.time), rdvId:String(r.id), uid:String(r.clientId || ""), ts:Date.now() })
+        .catch(e => console.warn("créneau", codeErr(e)));
+    });
+    const idsActifs = new Set(actifs.map(r => String(r.id)));
+    const limite = Date.now() - 10 * 60 * 1000;
+    (Cloud.slots || []).forEach(s => {
+      if(!s || s.date < today) return;                    // passé : le robot GitHub nettoie
+      if(idsActifs.has(String(s.rdvId))) return;
+      if((+s.ts || 0) > limite) return;                   // tout juste réservé : le RDV est peut-être en route
+      deleteDoc(doc(db, "creneaux", s.id)).catch(() => {});
+    });
+  };
+
+  /* -------------------------------------------------------------------
+     BOUTIQUE : COMMANDE + BAISSE DU STOCK EN UN SEUL ENVOI
+     -------------------------------------------------------------------
+     La commande et la baisse du stock de chaque produit partent ensemble
+     (tout ou rien). Les règles n'autorisent un client qu'à BAISSER un stock,
+     jamais sous 0, et seulement avec une commande créée dans le même envoi.
+     ------------------------------------------------------------------- */
+  Cloud.placeOrder = async (order) => {
+    const user = auth && auth.currentUser;
+    if(!db || !user) throw new Error("hors-ligne");
+    const o = JSON.parse(JSON.stringify(order));
+    const produits = LS.read("products", []) || [];
+    const suivis = (o.items || []).filter(it => {
+      if(!it || !it.id || !(+it.qty > 0)) return false;
+      const p = produits.find(x => x && String(x.id) === String(it.id));
+      return !!(p && p.stock != null && p.stock !== "");
+    });
+    o.stockDeduit = suivis.length > 0; o.stockRendu = false;
+    const envoyer = async (avecStock) => {
+      const b = writeBatch(db);
+      b.set(doc(db, "orders", String(o.id)), avecStock ? o : Object.assign({}, o, { stockDeduit:false }));
+      if(avecStock) suivis.forEach(it => b.update(doc(db, "products", String(it.id)),
+        { stock: increment(-Math.abs(Math.round(+it.qty) || 0)), lastOrder: String(o.id) }));
+      await avecDelai(b.commit(), 15000);
+    };
+    try{ await envoyer(true); return o; }
+    catch(e){
+      if(!(e && e.code === "permission-denied") || !suivis.length) throw e;
+      // Refus : stock devenu insuffisant… ou règles Firestore pas encore publiées.
+      for(const it of suivis){
+        try{
+          const d = await getDoc(doc(db, "products", String(it.id)));
+          const st = d.exists() ? d.data().stock : null;
+          if(st != null && +st < (+it.qty || 0)) throw new Error("stock");
+        }catch(err){ if(err && err.message === "stock") throw err; }
+      }
+      console.warn("Règles Firestore v1.2 non publiées ? Commande enregistrée sans baisse du stock.");
+      await envoyer(false);
+      o.stockDeduit = false; return o;
+    }
+  };
+
+  // Vétérinaire (ou robot) : remet en stock une commande annulée, une seule fois.
+  const remisesEnCours = new Set();
+  Cloud.restoreOrderStock = async (orderId) => {
+    if(!db || !orderId || remisesEnCours.has(String(orderId))) return;
+    remisesEnCours.add(String(orderId));
+    const ref = doc(db, "orders", String(orderId));
+    try{
+      await runTransaction(db, async (tx) => {
+        const d = await tx.get(ref);
+        if(!d.exists()) return;
+        const o = d.data();
+        if(!o.stockDeduit || o.stockRendu) return;
+        const lignes = (o.items || []).filter(it => it && it.id && +it.qty > 0);
+        const lus = [];
+        for(const it of lignes){ const pr = doc(db, "products", String(it.id)); lus.push([pr, await tx.get(pr), it]); }
+        lus.forEach(([pr, pd, it]) => { if(pd.exists() && pd.data().stock != null) tx.update(pr, { stock: increment(Math.round(+it.qty) || 0) }); });
+        tx.update(ref, { stockRendu: true });
+      });
+    }catch(e){ console.warn("remise en stock", codeErr(e)); }
+    finally{ remisesEnCours.delete(String(orderId)); }
+  };
+
+  // Vétérinaire : efface ce qu'elle ne garde pas en mémoire pour un client supprimé.
+  Cloud.purgeClient = async (clientId) => {
+    if(!db || !clientId) return;
+    for(const [coll, champ] of [["notifs","target"], ["creneaux","uid"], ["pushTokens","userId"]]){
+      try{
+        const snap = await getDocs(query(collection(db, coll), where(champ, "==", String(clientId))));
+        await Promise.allSettled(snap.docs.map(d => deleteDoc(d.ref)));
+      }catch(e){ console.warn("purge " + coll, codeErr(e)); }
+    }
+  };
+
+  /* -------------------------------------------------------------------
+     STORIES (24 h) — écriture réservée à la vétérinaire (règles Firestore)
+     ------------------------------------------------------------------- */
+  Cloud.addStory = async (img, caption) => {
+    const user = auth && auth.currentUser;
+    if(!db || !user) throw new Error("hors-ligne");
+    const now = Date.now();
+    const id = "st" + now.toString(36) + Math.random().toString(36).slice(2, 6);
+    const data = { id, img, caption: String(caption || ""), createdAt: now, expiresAt: now + 24 * 3600 * 1000, by: user.uid };
+    await avecDelai(setDoc(doc(db, "stories", id), data), 45000);
+    if(!(Cloud.stories || []).some(s => s.id === id)) Cloud.stories = (Cloud.stories || []).concat([data]);
+  };
+  Cloud.deleteStory = async (id) => { await avecDelai(deleteDoc(doc(db, "stories", String(id))), 15000); };
+  Cloud.cleanupStories = async () => {
+    if(!db || !Cloud.scope.admin) return;
+    try{
+      const snap = await getDocs(query(collection(db, "stories"), where("expiresAt", "<=", Date.now())));
+      await Promise.allSettled(snap.docs.map(d => deleteDoc(d.ref)));
+    }catch(e){ console.warn("stories", codeErr(e)); }
+  };
+
+  /* -------------------------------------------------------------------
      E-MAIL DE CONNEXION, MOT DE PASSE OUBLIÉ, ANNUAIRE TÉLÉPHONE → E-MAIL
      -------------------------------------------------------------------
      • Nouveaux comptes : Firebase Auth utilise la vraie adresse e-mail.
      • Anciens comptes : adresse interne numéro@dabordanimaux.app (aucun
        courrier possible) jusqu'à ce que le client ajoute son e-mail.
-     • loginIndex/{numéro} = { email, uid } permet de se connecter avec son
-       numéro. Lecture document par document seulement (aucune liste) :
-       voir les règles Firestore fournies avec cette version.
+     • loginIndex/{numéro} permet de se connecter avec son numéro.
+       v1.2 : { uid, ts, v:2, mask, salt, enc, pend? }
+         - enc  : l'e-mail CHIFFRÉ (AES-GCM) avec une clé tirée du mot de passe
+                  (PBKDF2) → illisible sans le mot de passe ;
+         - mask : indice affiché (ja•••@gmail.com) ;
+         - pend : nouvelle adresse en attente de confirmation (chiffrée).
+       Avant la v1.2 l'e-mail y était en clair : n'importe qui connaissant
+       un numéro pouvait lire l'adresse. Les anciennes entrées sont converties.
      ------------------------------------------------------------------- */
   const IDX = "loginIndex";
   const langueMail = () => { try{ return localStorage.getItem("ad_lang")==="ar" ? "ar" : "fr"; }catch(e){ return "fr"; } };
-  const avecDelai = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("delai")), ms))]);
+  const te = new TextEncoder(), td = new TextDecoder();
+  const enB64 = (buf) => { const b = new Uint8Array(buf); let s = ""; for(let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s); };
+  const deB64 = (s) => Uint8Array.from(atob(String(s || "")), c => c.charCodeAt(0));
+  const masquer = (email) => {
+    const e = String(email || "").toLowerCase(), i = e.indexOf("@");
+    if(i < 1 || /@dabordanimaux\.app$/i.test(e)) return "";
+    const u = e.slice(0, i); return u.slice(0, Math.min(2, u.length)) + "•••" + e.slice(i);
+  };
+  const cryptoOK = () => !!(window.crypto && window.crypto.subtle);
+  async function cleDe(pass, sel){
+    const base = await crypto.subtle.importKey("raw", te.encode(String(pass)), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({ name:"PBKDF2", salt: sel, iterations: 120000, hash: "SHA-256" },
+      base, { name:"AES-GCM", length:256 }, false, ["encrypt", "decrypt"]);
+  }
+  async function chiffrer(cle, texte){
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name:"AES-GCM", iv }, cle, te.encode(String(texte)));
+    return { iv: enB64(iv), ct: enB64(ct) };
+  }
+  async function dechiffrer(cle, o){
+    if(!o || !o.iv || !o.ct) return "";
+    const pt = await crypto.subtle.decrypt({ name:"AES-GCM", iv: deB64(o.iv) }, cle, deB64(o.ct));
+    return td.decode(pt);
+  }
+  // Entrée d'annuaire v2 (l'e-mail n'y figure jamais en clair).
+  async function entreeChiffree(uid, email, pass, pending){
+    const mail = String(email || "").toLowerCase();
+    const sel = crypto.getRandomValues(new Uint8Array(16));
+    const cle = await cleDe(pass, sel);
+    const out = { uid: String(uid), ts: Date.now(), v: 2, salt: enB64(sel), enc: await chiffrer(cle, mail) };
+    const m = masquer(mail); if(m) out.mask = m;
+    const pd = String(pending || "").toLowerCase();
+    if(pd && pd !== mail) out.pend = await chiffrer(cle, pd);
+    return out;
+  }
+  // Entrée sans e-mail lisible, en gardant ce qui est déjà chiffré.
+  function entreeSansClair(uid, cur, email){
+    const e = { uid: String(uid), ts: Date.now(), v: 2 };
+    const m = masquer(email) || masquer(cur && cur.email) || (cur && cur.mask) || "";
+    if(m) e.mask = m;
+    ["salt", "enc", "pend"].forEach(k => { if(cur && cur[k]) e[k] = cur[k]; });
+    return e;
+  }
 
   Cloud.authEmail = () => (auth && auth.currentUser && auth.currentUser.email) || "";
 
-  // Numéro -> { email, uid, pending? } ; null si inconnu, refusé ou hors ligne.
+  // Numéro -> entrée de l'annuaire ; null si inconnu, refusé ou hors ligne.
   Cloud.lookupPhone = async (key) => {
     if(!db || !key) return null;
     try{
       const d = await avecDelai(getDoc(doc(db, IDX, String(key))), 6000);
       return d.exists() ? d.data() : null;
-    }catch(e){ console.warn("loginIndex lecture", e); return null; }
+    }catch(e){ console.warn("loginIndex lecture", codeErr(e)); return null; }
+  };
+  // Adresses à essayer pour cette entrée avec ce mot de passe.
+  Cloud.indexEmails = async (ent, pass) => {
+    const out = [];
+    if(!ent) return out;
+    if(ent.email) out.push(String(ent.email));          // ancien format (avant v1.2)
+    if(ent.pending) out.push(String(ent.pending));
+    if(ent.enc && ent.salt && pass && cryptoOK()){
+      try{
+        const cle = await cleDe(pass, deB64(ent.salt));
+        try{ out.push(await dechiffrer(cle, ent.enc)); }catch(e){}   // échoue si mauvais mot de passe
+        try{ if(ent.pend) out.push(await dechiffrer(cle, ent.pend)); }catch(e){}
+      }catch(e){}
+    }
+    return out.filter(Boolean);
   };
 
   // Après connexion : rattache le numéro du client à son e-mail de connexion.
-  Cloud.syncLoginIndex = async (key) => {
+  // Avec le mot de passe (connexion / inscription / changement) → entrée chiffrée.
+  // Sans (ouverture automatique) → on réserve le numéro et on efface tout
+  // e-mail resté en clair.
+  Cloud.syncLoginIndex = async (key, pass) => {
     const user = auth && auth.currentUser;
     if(!db || !user || !key) return;
     const ref = doc(db, IDX, String(key));
     try{
       const d = await getDoc(ref);
       const cur = d.exists() ? d.data() : null;
-      if(cur && cur.uid !== user.uid) return;          // numéro rattaché à un autre compte
-      if(cur && cur.email === user.email) return;      // à jour (on garde un éventuel « pending »)
-      await setDoc(ref, { email: user.email, uid: user.uid, ts: Date.now() });
-    }catch(e){ console.warn("loginIndex", e); }
+      if(cur && cur.uid !== user.uid) return;            // numéro rattaché à un autre compte
+      const mail = String(user.email || "").toLowerCase();
+      const enClair = !!(cur && (cur.email !== undefined || cur.pending !== undefined));
+      if(pass && cryptoOK()){
+        let encOK = false, pend = "";
+        if(cur && cur.enc && cur.salt){
+          try{
+            const cle = await cleDe(pass, deB64(cur.salt));
+            try{ encOK = (await dechiffrer(cle, cur.enc)) === mail; }catch(e){}
+            try{ if(cur.pend) pend = await dechiffrer(cle, cur.pend); }catch(e){}
+          }catch(e){}
+        }
+        if(!pend && cur && cur.pending) pend = String(cur.pending).toLowerCase();
+        if(pend === mail) pend = "";                      // changement d'adresse confirmé
+        const aJour = encOK && !enClair && (!cur.pend || !!pend) && (cur.mask || "") === masquer(mail);
+        if(aJour) return;
+        await setDoc(ref, await entreeChiffree(user.uid, mail, pass, pend));
+        return;
+      }
+      if(!cur){ await setDoc(ref, entreeSansClair(user.uid, null, mail)); return; }
+      if(enClair) await setDoc(ref, entreeSansClair(user.uid, cur, mail));
+    }catch(e){ console.warn("loginIndex", codeErr(e)); }
   };
 
   // Libère un numéro (suppression de compte).
@@ -5033,10 +5856,11 @@ document.addEventListener("DOMContentLoaded", function(){
       const ref = doc(db, IDX, String(key));
       const d = await getDoc(ref);
       if(d.exists() && (!uid || d.data().uid === uid)) await deleteDoc(ref);
-    }catch(e){ console.warn("loginIndex suppression", e); }
+    }catch(e){ console.warn("loginIndex suppression", codeErr(e)); }
   };
 
-  // Administratrice : indexe une fois les clients inscrits avant cette version.
+  // Administratrice : réserve une fois les numéros des clients inscrits avant
+  // l'annuaire (sans jamais y écrire d'e-mail).
   Cloud.backfillLoginIndex = async (users, app) => {
     if(!db) return;
     try{ if(localStorage.getItem("ad_idxBackfill") === "1") return; }catch(e){}
@@ -5049,12 +5873,33 @@ document.addEventListener("DOMContentLoaded", function(){
         const ref = doc(db, IDX, key);
         const d = await getDoc(ref);
         if(d.exists()) continue;
-        const email = (u.email && !app.isInternalMail(u.email)) ? String(u.email).toLowerCase() : app.credEmail(key);
-        await setDoc(ref, { email, uid: String(u.id), ts: Date.now() });
+        await setDoc(ref, entreeSansClair(String(u.id), null, u.email));
       }catch(e){ refus++; }
     }
     if(!refus){ try{ localStorage.setItem("ad_idxBackfill", "1"); }catch(e){} }
     else console.warn("loginIndex : " + refus + " écriture(s) refusée(s) — règles Firestore à jour ?");
+  };
+
+  // Administratrice : convertit une fois les entrées d'avant la v1.2 (e-mail en
+  // clair) en entrées sans e-mail lisible.
+  Cloud.migrateLoginIndex = async (users, app) => {
+    if(!db || !Cloud.scope.admin) return;
+    try{ if(localStorage.getItem("ad_idxV2") === "1") return; }catch(e){}
+    let echecs = 0;
+    for(const u of (users || [])){
+      if(!u || u.role !== "client" || !u.tel) continue;
+      const key = app.phoneKey(u.tel); if(!key) continue;
+      try{
+        const ref = doc(db, IDX, key);
+        const d = await getDoc(ref);
+        if(!d.exists()) continue;
+        const cur = d.data();
+        if(cur.email === undefined && cur.pending === undefined) continue;
+        await setDoc(ref, entreeSansClair(cur.uid || u.id, cur, cur.email));
+      }catch(e){ echecs++; }
+    }
+    if(!echecs){ try{ localStorage.setItem("ad_idxV2", "1"); }catch(e){} }
+    else console.warn("loginIndex v2 : " + echecs + " conversion(s) refusée(s) — règles Firestore à jour ?");
   };
 
   // Ajoute un champ au profil (ex. l'e-mail) sans toucher au reste.
@@ -5064,28 +5909,24 @@ document.addEventListener("DOMContentLoaded", function(){
       await setDoc(doc(db, "users", String(uid)), fields, { merge: true });
       const arr = LS.read("users", []).map(x => (x && x.id === uid) ? Object.assign({}, x, fields) : x);
       LS.write("users", arr);
-    }catch(e){ console.warn("profil e-mail", e); }
+    }catch(e){ console.warn("profil e-mail", codeErr(e)); }
   };
 
-  // Le client change son numéro : le nouveau numéro est rattaché à son e-mail
-  // de connexion, puis l'ancien est libéré.
+  // Le client change son numéro : l'entrée (déjà chiffrée) passe au nouveau
+  // numéro, puis l'ancien est libéré.
   Cloud.movePhone = async (oldKey, newKey) => {
     const user = auth && auth.currentUser;
     if(!db || !user || !newKey || oldKey === newKey) return;
     try{
-      let pending = null;
       const oref = oldKey ? doc(db, IDX, String(oldKey)) : null;
       const od = oref ? await getDoc(oref) : null;
       const ancienAMoi = !!(od && od.exists() && od.data().uid === user.uid);
-      if(ancienAMoi && od.data().pending) pending = od.data().pending;
       const nref = doc(db, IDX, String(newKey));
       const nd = await getDoc(nref);
       if(nd.exists() && nd.data().uid !== user.uid) return;   // numéro d'un autre compte
-      const data = { email: user.email, uid: user.uid, ts: Date.now() };
-      if(pending) data.pending = pending;
-      await setDoc(nref, data);
+      await setDoc(nref, entreeSansClair(user.uid, ancienAMoi ? od.data() : null, user.email));
       if(ancienAMoi) await deleteDoc(oref);
-    }catch(e){ console.warn("loginIndex changement de numéro", e); }
+    }catch(e){ console.warn("loginIndex changement de numéro", codeErr(e)); }
   };
 
   // Mot de passe oublié : Firebase envoie le lien de réinitialisation.
@@ -5103,15 +5944,15 @@ document.addEventListener("DOMContentLoaded", function(){
     await reauthenticateWithCredential(user, cred);    // échoue si le mot de passe est faux
     auth.languageCode = langueMail();
     await verifyBeforeUpdateEmail(user, newEmail);
-    // « pending » : la connexion par numéro essaiera aussi la nouvelle adresse
-    // dès qu'elle sera confirmée.
-    if(key && db){
+    // « pend » : la connexion par numéro essaiera aussi la nouvelle adresse
+    // dès qu'elle sera confirmée (chiffrée, comme l'adresse actuelle).
+    if(key && db && cryptoOK()){
       try{
         const ref = doc(db, IDX, String(key));
         const d = await getDoc(ref);
         if(!d.exists() || d.data().uid === user.uid)
-          await setDoc(ref, { email: user.email, uid: user.uid, pending: newEmail, ts: Date.now() });
-      }catch(e){ console.warn("loginIndex pending", e); }
+          await setDoc(ref, await entreeChiffree(user.uid, user.email, pass, newEmail));
+      }catch(e){ console.warn("loginIndex pending", codeErr(e)); }
     }
   };
 
@@ -5120,7 +5961,7 @@ document.addEventListener("DOMContentLoaded", function(){
      -------------------------------------------------------------------
      1. Le mot de passe est re-vérifié (Firebase l'exige avant une suppression).
      2. Tous les documents du client sont effacés (animaux, carnets, RDV,
-        commandes, questions, conseils, notifications, jetons push).
+        commandes, questions, conseils, notifications, créneaux, jetons push).
      3. Le cabinet reçoit une notification « compte supprimé » (écrite
         avant l'effacement du profil).
      4. Le profil « users » n'est effacé que si TOUT le reste a pu l'être :
@@ -5137,12 +5978,13 @@ document.addEventListener("DOMContentLoaded", function(){
     const uid = user.uid;
     let echecs = 0;
 
-    for(const coll of Object.keys(CHAMP_PROPRIETAIRE)){
+    const aEffacer = Object.keys(CHAMP_PROPRIETAIRE).map(c => [c, CHAMP_PROPRIETAIRE[c]]).concat([["creneaux", "uid"]]);
+    for(const [coll, champ] of aEffacer){
       try{
-        const snap = await getDocs(query(collection(db, coll), where(CHAMP_PROPRIETAIRE[coll], "==", uid)));
+        const snap = await getDocs(query(collection(db, coll), where(champ, "==", uid)));
         const res = await Promise.allSettled(snap.docs.map(d => deleteDoc(d.ref)));
         echecs += res.filter(r => r.status === "rejected").length;
-      }catch(e){ echecs++; console.warn("suppression " + coll, e); }
+      }catch(e){ echecs++; console.warn("suppression " + coll, codeErr(e)); }
     }
 
     // Jetons push : cet appareil, puis les autres appareils rattachés au compte.
@@ -5150,7 +5992,7 @@ document.addEventListener("DOMContentLoaded", function(){
     try{
       const snap = await getDocs(query(collection(db, TOKENS_COLL), where("userId", "==", uid)));
       await Promise.allSettled(snap.docs.map(d => deleteDoc(d.ref)));
-    }catch(e){ /* lecture refusée par les règles : sans conséquence */ }
+    }catch(e){ console.warn("suppression jetons", codeErr(e)); }
 
     // Annuaire de connexion : le numéro redevient libre.
     try{
@@ -5171,14 +6013,15 @@ document.addEventListener("DOMContentLoaded", function(){
           : qui + " — compte et données effacés.",
         ts: Date.now(), lu: false
       });
-    }catch(e){ console.warn("notif suppression", e); }
+    }catch(e){ console.warn("notif suppression", codeErr(e)); }
 
     // Profil : effacé seulement si tout le reste l'a été (sinon le cabinet termine).
     if(!echecs){
       try{ await deleteDoc(doc(db, "users", String(uid))); }
-      catch(e){ echecs++; console.warn("suppression users", e); }
+      catch(e){ echecs++; console.warn("suppression users", codeErr(e)); }
     }
 
+    try{ Cloud.stopAll(); }catch(e){}
     await deleteUser(user);                             // compte de connexion
     return { echecs };
   };
