@@ -726,31 +726,8 @@ html.rtl .mark-plus{right:auto;left:-4px}
 .ps-pick button:active{transform:scale(1.3)}
 .ps-pick button.on{background:var(--rose-tint)}
 .ps-fly{position:fixed;z-index:400;font-size:34px;line-height:1;pointer-events:none;animation:svFly 1.3s ease-out forwards}
-.cm-post{font-family:var(--display);font-weight:800;color:var(--ink);margin-bottom:12px;font-size:1.02rem}
-.cm-fil{margin-bottom:12px}
-.cm{display:flex;gap:9px;align-items:flex-start;margin-bottom:6px}
-.cm.is-rep{margin-inline-start:44px}
-.cm-av{width:36px;height:36px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font:800 .95rem var(--display);flex:none;overflow:hidden}
-.cm.is-rep .cm-av{width:28px;height:28px;font-size:.8rem}
-.cm-av img{width:100%;height:100%;object-fit:cover;background:#fff}
-.cm-main{flex:1;min-width:0}
-.cm-bulle{background:#fff;border:1px solid var(--line);border-radius:16px;padding:8px 12px;display:inline-block;max-width:100%}
-.cm.is-adm .cm-bulle{background:var(--rose-tint);border-color:var(--rose-soft)}
-.cm-bulle b{font-size:.86rem;color:var(--ink)}
-.cm-badge{display:inline-block;background:var(--rose-deep);color:#fff;border-radius:6px;font-size:.62rem;font-weight:800;padding:1px 6px;margin-inline-start:4px;vertical-align:1px}
-.cm-t{font-size:.92rem;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:1px}
-.cm-del{font-size:.86rem;color:var(--muted)}
-.cm-meta{font-size:.74rem;color:var(--muted);font-weight:700;padding:3px 10px 0}
-.cm-meta button{border:0;background:none;color:var(--ink-2);font:800 .74rem var(--body);cursor:pointer;padding:0}
-.cm-vide{text-align:center;color:var(--muted);font-weight:700;padding:24px 0}
-.cm-rep{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.8rem;color:var(--ink-2);font-weight:700;margin-bottom:8px}
-.cm-rep button{border:0;background:var(--rose-tint);color:var(--rose-deep);width:24px;height:24px;border-radius:50%;cursor:pointer}
-.cm-saisie{display:flex;gap:8px;align-items:flex-end}
-.cm-saisie textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:18px;padding:10px 14px;font:600 .95rem var(--body);background:#fff;color:var(--ink);max-height:120px;min-height:42px}
-.cm-env{flex:none;width:42px;height:42px;border:0;border-radius:50%;background:var(--grad);color:#fff;font-size:1rem;cursor:pointer}
-.cm-env:disabled{opacity:.5}
 .rx-l{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
-.rx-l .cm-av{width:34px;height:34px}
+.rx-l .cm-av{width:34px;height:34px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font:800 .9rem var(--display);flex:none}
 .rx-l b{flex:1;font-size:.92rem;color:var(--ink)}
 .rx-l span{font-size:1.3rem}
 
@@ -1337,7 +1314,7 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.3.3";
+const APP_VERSION = "1.3.4";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
 /* Conception et développement de l'application. */
@@ -1927,7 +1904,7 @@ const App = {
   _onCloudChange(key){
     if(key==="notifs"){ const n=this.unread(); if(n>0) this.ringBell && this.ringBell(); }
     if(key==="stories"){ this.renderStoryRings(); this.refreshStoryViewer(); this._planNettoyageStories(); return; }
-    if(key==="postReacs" || key==="postComs"){ this._majSocial(); if(this._comsPid) this._renderComs(false); if(this._reacsPid) this._renderReacsPost(); return; }
+    if(key==="postReacs"){ this._majSocial(); if(this._reacsPid) this._renderReacsPost(); return; }
     if(key==="users" && this.session && !this.isAdmin() && !DB.find("users", this.session.userId)){ this._verifierCompte(); return; }
     if(this.isAdmin() && (key==="orders" || key==="rdv" || key==="creneaux")) this._scheduleAdminSync();
     this.renderAll();   // renderAll est protégé : ne fait rien si personne n'est connecté
@@ -1942,6 +1919,12 @@ const App = {
     this._adminSync();
     try{ window.Cloud.cleanupStories && window.Cloud.cleanupStories(); }catch(e){}
     this._planNettoyageStories();
+    // v1.3.4 : commentaires des publications retirés → on efface ceux de la v1.3.3 (une fois).
+    try{
+      if(window.Cloud.purgePostComs && localStorage.getItem("ad_purgeComs134")!=="1"){
+        window.Cloud.purgePostComs().then(()=>{ try{ localStorage.setItem("ad_purgeComs134","1"); }catch(e){} }).catch(()=>{});
+      }
+    }catch(e){}
     try{ window.Cloud.migrateLoginIndex && window.Cloud.migrateLoginIndex(DB.get("users",[]), this); }catch(e){}
   },
   // Une story qui atteint ses 24 h est effacée de Firebase tout de suite
@@ -2523,7 +2506,7 @@ const App = {
     document.body.style.overflow="hidden";
   },
   closeSheet(){
-    this._comsPid=null; this._reacsPid=null; this._comRep=null;
+    this._reacsPid=null;
     document.getElementById("sheet-backdrop").classList.remove("show");
     document.body.style.overflow="";
   },
@@ -2723,7 +2706,7 @@ const App = {
     this.closeNotifs();
     const admin=this.isAdmin();
     const go=(t,n)=>this.showTab(t,n);
-    if(kind==="com" || kind==="com_rep"){ admin?go("atab-home","admin-nav"):go("tab-home","client-nav"); if(ref && DB.find("posts", ref)) setTimeout(()=>this.openComs(ref), 250); return; }
+    if(kind==="com" || kind==="com_rep"){ admin?go("atab-home","admin-nav"):go("tab-home","client-nav"); return; }   // anciennes notifications (v1.3.3)
     if(kind==="rdv") admin?go("atab-rdv","admin-nav"):go("tab-rdv","client-nav");
     else if(kind==="rdv_ok"||kind==="rdv_no") go("tab-rdv","client-nav");
     else if(kind==="order") go("atab-orders","admin-nav");
@@ -4665,24 +4648,21 @@ const App = {
     return nom || "Client";
   },
   _reacsPost(pid){ const d=((window.Cloud && window.Cloud.postReacs) || {})[pid]; return (d && d.r) || {}; },
-  _comsPost(pid){ const d=((window.Cloud && window.Cloud.postComs) || {})[pid]; return (d && d.c) || {}; },
+  // v1.3.4 : réactions seulement (pas de commentaires). Les clients voient le
+  // total ; seule la vétérinaire voit qui a réagi.
   _socialHTML(pid){
-    const r=this._reacsPost(pid), c=this._comsPost(pid), moi=this._monUid(), P=this.escape(pid);
+    const r=this._reacsPost(pid), moi=this._monUid(), P=this.escape(pid), adm=this.isAdmin();
     const tot={}; Object.keys(r).forEach(u=>{ const k=r[u]; if(this._emo(k)) tot[k]=(tot[k]||0)+1; });
     const ordre=Object.keys(tot).sort((a,b)=>tot[b]-tot[a]);
     const nR=ordre.reduce((n,k)=>n+tot[k],0);
-    const nC=Object.keys(c).filter(id=>c[id] && !c[id].del).length;
     const mien=moi && r[moi], rr=mien && this.REACTIONS.find(x=>x[0]===mien);
     let h="";
-    if(nR || nC){
-      h+=`<div class="ps-sum">`+
-        (nR ? `<button type="button" class="ps-lk" onclick="App.openReacsPost('${P}')"><span class="ps-emos" data-i18n="off">${ordre.slice(0,3).map(k=>this._emo(k)).join("")}</span><span data-i18n="off">${nR}</span></button>` : `<span></span>`)+
-        (nC ? `<button type="button" class="ps-lk" onclick="App.openComs('${P}')"><span data-i18n="off">${nC}</span><span>${nC>1?"commentaires":"commentaire"}</span></button>` : "")+
-        `</div>`;
+    if(nR){
+      const resume=`<span class="ps-emos" data-i18n="off">${ordre.slice(0,3).map(k=>this._emo(k)).join("")}</span><span data-i18n="off">${nR}</span>`;
+      h+=`<div class="ps-sum">`+(adm ? `<button type="button" class="ps-lk" onclick="App.openReacsPost('${P}')">${resume}</button>` : `<span class="ps-lk">${resume}</span>`)+`</div>`;
     }
     h+=`<div class="ps-act">
         <button type="button" class="ps-b${rr?" on":""}" onclick="App.pickReacPost(this)"><span data-i18n="off">${rr?rr[1]:"🙂"}</span><span>${rr?rr[2]:"Réagir"}</span></button>
-        <button type="button" class="ps-b" onclick="App.openComs('${P}')"><span data-i18n="off">💬</span><span>Commenter</span></button>
       </div>
       <div class="ps-pick">${this.REACTIONS.map(x=>`<button type="button" class="${mien===x[0]?"on":""}" onclick="App.reagirPost('${P}','${x[0]}',this)" title="${x[2]}" aria-label="${x[2]}" data-i18n="off">${x[1]}</button>`).join("")}</div>`;
     return h;
@@ -4724,7 +4704,8 @@ const App = {
     catch(e){ console.warn("réaction", e); this.toast("Réaction non envoyée. Vérifiez la connexion.","err"); }
   },
   openReacsPost(pid){
-    this._reacsPid=pid; this._comsPid=null;
+    if(!this.isAdmin()) return;
+    this._reacsPid=pid;
     this.openSheet("Réactions", `<div id="rx-liste"></div>`, "");
     this._renderReacsPost();
   },
@@ -4737,103 +4718,6 @@ const App = {
       const nom=this._nomAffiche(u, n[u], false);
       return `<div class="rx-l"><div class="cm-av" data-i18n="off">${this.escape(String(nom).charAt(0).toUpperCase())}</div><b data-i18n="off">${this.escape(nom)}</b><span data-i18n="off">${this._emo(r[u])}</span></div>`;
     }).join("") : `<div class="cm-vide">Aucune réaction pour le moment.</div>`;
-  },
-  // Commentaires : fil de discussion (réponses sous chaque commentaire).
-  openComs(pid){
-    const p=DB.find("posts", pid); if(!p) return;
-    this._comsPid=pid; this._reacsPid=null; this._comRep=null;
-    const foot=`<div class="cm-rep" id="cm-rep" style="display:none"></div>
-      <div class="cm-saisie"><textarea id="cm-in" rows="1" maxlength="500" placeholder="Écrire un commentaire…" dir="auto"></textarea>
-        <button type="button" class="cm-env" id="cm-env" onclick="App.envoyerCom()" aria-label="Envoyer">➤</button></div>`;
-    this.openSheet("Commentaires", `<div class="cm-post" data-i18n="off" dir="auto">${this.escape(p.titre)}</div><div id="cm-liste"></div>`, foot);
-    this._comsPid=pid;
-    const ta=document.getElementById("cm-in");
-    if(ta) ta.addEventListener("input", ()=>{ ta.style.height="auto"; ta.style.height=Math.min(120, ta.scrollHeight)+"px"; });
-    this._renderComs(true);
-  },
-  _renderComs(enBas){
-    const pid=this._comsPid, w=document.getElementById("cm-liste"); if(!pid || !w) return;
-    const c=this._comsPost(pid), moi=this._monUid(), adm=this.isAdmin(), P=this.escape(pid);
-    const tous=Object.keys(c).map(id=>Object.assign({ id }, c[id])).filter(x=>x && x.uid);
-    const tops=tous.filter(x=>!x.p || !c[x.p]).sort((a,b)=>(a.ts||0)-(b.ts||0));
-    const reps=id=>tous.filter(x=>x.p===id && c[id]).sort((a,b)=>(a.ts||0)-(b.ts||0));
-    const un=(x, top)=>{
-      const nom=this._nomAffiche(x.uid, x.nom, x.adm), mien=x.uid===moi, id=this.escape(x.id), tid=this.escape(top.id);
-      let act="";
-      if(!x.del){
-        act=`<button type="button" onclick="App.repondreCom('${tid}','${id}')">Répondre</button>`;
-        if(mien || adm) act+=` · <button type="button" onclick="App.supprimerCom('${id}')">Supprimer</button>`;
-      }
-      return `<div class="cm${x.adm?" is-adm":""}${x.id===top.id?"":" is-rep"}">
-        <div class="cm-av" data-i18n="off">${x.adm?`<img src="logo-mark.png" alt="">`:this.escape(String(nom).charAt(0).toUpperCase())}</div>
-        <div class="cm-main">
-          <div class="cm-bulle">${x.del ? `<i class="cm-del">Commentaire supprimé</i>` :
-            `<b data-i18n="off">${this.escape(nom)}</b>${x.adm?`<span class="cm-badge">Cabinet</span>`:""}<div class="cm-t" data-i18n="off" dir="auto">${this.escape(x.t)}</div>`}</div>
-          <div class="cm-meta"><span>${this.ago(x.ts||Date.now())}</span>${act?" · "+act:""}</div>
-        </div></div>`;
-    };
-    const corps=document.getElementById("sheet-body");
-    const etaitEnBas = corps ? (corps.scrollHeight - corps.scrollTop - corps.clientHeight < 60) : false;
-    w.innerHTML = tops.length ? tops.map(t=>`<div class="cm-fil">${un(t,t)}${reps(t.id).map(r=>un(r,t)).join("")}</div>`).join("")
-      : `<div class="cm-vide">Soyez le premier à commenter.</div>`;
-    if(corps && (enBas || etaitEnBas)) corps.scrollTop=corps.scrollHeight;
-  },
-  repondreCom(topId, cid){
-    const x=this._comsPost(this._comsPid)[cid]; if(!x) return;
-    const nom=this._nomAffiche(x.uid, x.nom, x.adm);
-    this._comRep={ p:topId, cible:cid, uid:x.uid, adm:!!x.adm, nom };
-    const r=document.getElementById("cm-rep");
-    if(r){ r.style.display="flex"; r.innerHTML=`<span><span>Réponse à</span> <b data-i18n="off">${this.escape(nom)}</b></span><button type="button" onclick="App.annulerRep()" aria-label="Annuler">✕</button>`; }
-    const ta=document.getElementById("cm-in");
-    if(ta){ if(cid!==topId && !ta.value.trim()) ta.value="@"+nom+" "; ta.focus(); }
-  },
-  annulerRep(){ this._comRep=null; const r=document.getElementById("cm-rep"); if(r){ r.style.display="none"; r.innerHTML=""; } },
-  async envoyerCom(){
-    const pid=this._comsPid, ta=document.getElementById("cm-in"); if(!pid || !ta || this._comEnvoi) return;
-    const t=ta.value.trim().slice(0,500); if(!t) return;
-    if(!(CLOUD_ON && window.Cloud && window.Cloud.enabled && window.Cloud.commentPost)) return this.toast("Connexion Internet requise.","err");
-    this._comEnvoi=true;
-    const btn=document.getElementById("cm-env"); if(btn) btn.disabled=true;
-    const rep=this._comRep, id="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    const e={ uid:this._monUid(), nom:this._nomPublic(), t, ts:Date.now() };
-    if(rep) e.p=rep.p;
-    if(this.isAdmin()) e.adm=true;
-    try{
-      await window.Cloud.commentPost(pid, id, e);
-      const C=window.Cloud.postComs=window.Cloud.postComs||{}, d=C[pid]=Object.assign({ c:{} }, C[pid]);
-      d.c=Object.assign({}, d.c, { [id]: e });
-      if(this._comsPid===pid){ ta.value=""; ta.style.height="auto"; this.annulerRep(); this._renderComs(true); }
-      this._majSocial();
-      this._notifCom(pid, e, rep);
-    }catch(err){ console.warn("commentaire", err); this.toast("Commentaire non envoyé. Vérifiez la connexion.","err"); }
-    finally{ this._comEnvoi=false; if(btn) btn.disabled=false; }
-  },
-  // Prévient la vétérinaire d'un nouveau commentaire, et l'auteur d'un commentaire
-  // quand quelqu'un lui répond.
-  _notifCom(pid, e, rep){
-    const N=window.Cloud && window.Cloud.addNotifDirect; if(!N) return;
-    const extrait=e.t.length>90 ? e.t.slice(0,90)+"…" : e.t, adm=this.isAdmin(), moi=this._monUid();
-    const envoyer=(target, kind, title, body)=>N({ id:this.uid("n"), target, kind, title, body:String(body).slice(0,200), ts:Date.now(), lu:false, ref:String(pid) }).catch(err=>console.warn("notification", err));
-    if(!adm){
-      const u=this.currentUser();
-      envoyer("admin", "com", rep ? "Nouvelle réponse à un commentaire" : "Nouveau commentaire", `${(u && u.nom) || e.nom} : ${extrait}`);
-    }
-    if(rep && rep.uid && rep.uid!==moi){
-      if(rep.adm){ if(!adm) return; }               // la vétérinaire est déjà prévenue
-      else envoyer(rep.uid, "com_rep", "Nouvelle réponse à votre commentaire", `${e.nom} : ${extrait}`);
-    }
-  },
-  async supprimerCom(cid){
-    const pid=this._comsPid, c=this._comsPost(pid), x=c[cid]; if(!x) return;
-    const q="Supprimer ce commentaire ?";
-    if(!confirm(this.lang==="ar" && AR_DICT[q] ? AR_DICT[q] : q)) return;
-    const avecReponses=Object.keys(c).some(id=>c[id] && c[id].p===cid);
-    const rempl = avecReponses ? Object.assign({}, x, { t:"", del:true }) : null;
-    try{ await window.Cloud.deleteComment(pid, cid, rempl); }
-    catch(e){ return this.toast("Suppression impossible. Vérifiez la connexion.","err"); }
-    const C=window.Cloud.postComs||{}, d=C[pid];
-    if(d){ d.c=Object.assign({}, d.c); if(rempl) d.c[cid]=rempl; else delete d.c[cid]; }
-    this._renderComs(false); this._majSocial();
   },
   // Toucher un client dans la liste : ses réactions retombent (autant que ses clics).
   rejouerReac(uid){
@@ -6984,10 +6868,6 @@ document.addEventListener("DOMContentLoaded", function(){
           const m = {}; snap.forEach(d => { m[d.id] = d.data(); });
           Cloud.postReacs = m; signaler("postReacs");
         }, "postReacs");
-        ecouter(collection(db, "postComs"), (snap) => {
-          const m = {}; snap.forEach(d => { m[d.id] = d.data(); });
-          Cloud.postComs = m; signaler("postComs");
-        }, "postComs");
         // Stories en ligne (gardées en mémoire seulement).
         ecouter(query(collection(db, "stories"), where("expiresAt", ">", Date.now())), (snap) => {
           const arr = []; snap.forEach(d => arr.push(Object.assign({ id: d.id }, d.data())));
@@ -7226,9 +7106,8 @@ document.addEventListener("DOMContentLoaded", function(){
       (snap) => cb(snap.docs.map(d => d.data())),
       (e) => { console.warn("vues", codeErr(e)); cb([]); });
   };
-  // v1.3.3 : publications — une réaction par personne (postReacs/{id}) et
-  // commentaires en fil (postComs/{id}) ; un seul document par publication.
-  Cloud.postReacs = {}; Cloud.postComs = {};
+  // Publications : une réaction par personne (postReacs/{id}, un document par publication).
+  Cloud.postReacs = {};
   Cloud.reactPost = async (pid, k, nom) => {
     const user = auth && auth.currentUser;
     if(!db || !user) throw new Error("hors-ligne");
@@ -7237,18 +7116,13 @@ document.addEventListener("DOMContentLoaded", function(){
                    : { r: { [uid]: deleteField() }, n: { [uid]: deleteField() } };
     await avecDelai(setDoc(doc(db, "postReacs", String(pid)), data, { merge: true }), 15000);
   };
-  Cloud.commentPost = async (pid, cid, entree) => {
-    const user = auth && auth.currentUser;
-    if(!db || !user) throw new Error("hors-ligne");
-    await avecDelai(setDoc(doc(db, "postComs", String(pid)), { c: { [cid]: entree }, last: String(cid) }, { merge: true }), 15000);
-  };
-  Cloud.deleteComment = async (pid, cid, remplacement) => {
-    if(!db) throw new Error("hors-ligne");
-    await avecDelai(setDoc(doc(db, "postComs", String(pid)), { c: { [cid]: remplacement || deleteField() }, last: String(cid) }, { merge: true }), 15000);
-  };
-  Cloud.addNotifDirect = async (n) => {
-    if(!db) throw new Error("hors-ligne");
-    await setDoc(doc(db, "notifs", String(n.id)), n);
+  // v1.3.4 : les commentaires sont retirés ; la vétérinaire efface une fois
+  // ceux qui restent dans Firebase.
+  Cloud.purgePostComs = async () => {
+    if(!db || !Cloud.scope.admin) return 0;
+    const snap = await getDocs(collection(db, "postComs"));
+    await Promise.allSettled(snap.docs.map(d => deleteDoc(d.ref)));
+    return snap.size;
   };
   Cloud.deletePostSocial = async (pid) => {
     if(!db) return;
