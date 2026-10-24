@@ -12,7 +12,8 @@
 
    v1.2 — il fait aussi l'entretien de la base (fin du fichier) :
      notifications de plus de 60 jours, traces d'envoi expirées, créneaux
-     passés, stories expirées, remise en stock des commandes annulées.
+     passés, stories expirées (v1.3.2 : avec leurs vues et réactions),
+     remise en stock des commandes annulées.
 
    Chaque rappel est mémorisé dans la collection « pushLog » : relancer le
    script dix fois dans la journée n'enverra jamais deux fois le même
@@ -251,7 +252,12 @@ try {
   const nNotifs   = await supprimer(db.collection("notifs").where("ts", "<", maintenant - NOTIFS_JOURS * 86400000), "notification(s) ancienne(s)");
   const nLogs     = await supprimer(db.collection("pushLog").where("expireAt", "<", new Date()), "trace(s) d'envoi expirée(s)");
   const nCreneaux = await supprimer(db.collection("creneaux").where("date", "<", AUJOURD_HUI), "créneau(x) passé(s)");
-  const nStories  = await supprimer(db.collection("stories").where("expiresAt", "<=", maintenant), "story(s) expirée(s)");
+  // v1.3.2 : une story est effacée AVEC ses vues et réactions (sous-collection).
+  let nStories = 0;
+  for (const d of (await db.collection("stories").where("expiresAt", "<=", maintenant).get()).docs) {
+    if (DRY_RUN) { console.log(`  [test] story ${d.id} à effacer`); nStories++; continue; }
+    await db.recursiveDelete(d.ref); nStories++;
+  }
 
   // Commandes annulées dont le stock avait été déduit : on le remet (une seule fois).
   let nStock = 0;
