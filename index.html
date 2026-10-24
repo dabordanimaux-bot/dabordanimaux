@@ -682,7 +682,7 @@ html.rtl .mark-plus{right:auto;left:-4px}
 .sv-btn.ic{flex:1;max-width:84px;padding:9px 0;font-size:1.25rem;line-height:1.2}
 .sv-stage.is-admin .sv-admin{justify-content:center}
 /* réactions reçues : elles tombent quand la vétérinaire ouvre sa story */
-.sv-drop{position:absolute;top:-56px;z-index:5;pointer-events:none;line-height:1;animation:svDrop 3s linear forwards}
+.sv-drop{position:absolute;top:-56px;z-index:8;pointer-events:none;line-height:1;animation:svDrop 3s linear forwards}
 @keyframes svDrop{0%{transform:translate(0,0) rotate(0deg);opacity:0}8%{opacity:1}85%{opacity:1}100%{transform:translate(var(--dx),var(--h)) rotate(var(--rot));opacity:0}}
 /* v1.3.1 : réactions des clients (comme Facebook) */
 .sv-reac{display:none;position:absolute;left:0;right:0;bottom:0;z-index:4;justify-content:center;gap:4px;padding:26px 8px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.55))}
@@ -703,6 +703,8 @@ html.rtl .mark-plus{right:auto;left:-4px}
 .sv-tot span{background:rgba(255,255,255,.1);border-radius:999px;padding:5px 10px;font:800 .84rem var(--body)}
 .sv-liste{overflow:auto;margin:0 -4px;padding:0 4px}
 .sv-v{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.08)}
+.sv-v.a-reac{cursor:pointer}
+.sv-v.a-reac:active{background:rgba(255,255,255,.06)}
 .sv-v-av{width:38px;height:38px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font:800 1rem var(--display);flex:none}
 .sv-v-t{flex:1;min-width:0}
 .sv-v-t b{display:block;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -710,6 +712,47 @@ html.rtl .mark-plus{right:auto;left:-4px}
 .sv-v-r{flex:none;font-size:.95rem;font-weight:800;white-space:nowrap}
 .sv-v-r i{font-style:normal;font-size:.7rem;opacity:.75;margin-inline-end:4px}
 .sv-vide{padding:22px 0;text-align:center;opacity:.7;font-weight:700;font-size:.9rem}
+/* v1.3.3 : réactions et commentaires des publications */
+.pc-soc{margin-top:12px;border-top:1px solid var(--line);position:relative}
+.ps-sum{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 2px 2px;font-size:.84rem;color:var(--ink-2);font-weight:700}
+.ps-lk{border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:2px 0;display:inline-flex;align-items:center;gap:4px}
+.ps-emos{letter-spacing:-1px}
+.ps-act{display:flex;gap:8px;padding-top:8px}
+.ps-b{flex:1;border:1px solid var(--line);background:#fff;color:var(--ink-2);border-radius:12px;padding:9px 8px;font:800 .86rem var(--body);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.ps-b.on{background:var(--rose-tint);border-color:var(--rose-soft);color:var(--rose-deep)}
+.ps-pick{display:none;position:absolute;left:0;bottom:52px;z-index:5;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 8px;gap:2px;box-shadow:0 10px 30px rgba(120,40,70,.2)}
+.ps-pick.show{display:flex;animation:tabIn .18s ease}
+.ps-pick button{border:0;background:transparent;font-size:28px;line-height:1;width:42px;height:42px;border-radius:50%;cursor:pointer;transition:transform .12s ease}
+.ps-pick button:active{transform:scale(1.3)}
+.ps-pick button.on{background:var(--rose-tint)}
+.ps-fly{position:fixed;z-index:400;font-size:34px;line-height:1;pointer-events:none;animation:svFly 1.3s ease-out forwards}
+.cm-post{font-family:var(--display);font-weight:800;color:var(--ink);margin-bottom:12px;font-size:1.02rem}
+.cm-fil{margin-bottom:12px}
+.cm{display:flex;gap:9px;align-items:flex-start;margin-bottom:6px}
+.cm.is-rep{margin-inline-start:44px}
+.cm-av{width:36px;height:36px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font:800 .95rem var(--display);flex:none;overflow:hidden}
+.cm.is-rep .cm-av{width:28px;height:28px;font-size:.8rem}
+.cm-av img{width:100%;height:100%;object-fit:cover;background:#fff}
+.cm-main{flex:1;min-width:0}
+.cm-bulle{background:#fff;border:1px solid var(--line);border-radius:16px;padding:8px 12px;display:inline-block;max-width:100%}
+.cm.is-adm .cm-bulle{background:var(--rose-tint);border-color:var(--rose-soft)}
+.cm-bulle b{font-size:.86rem;color:var(--ink)}
+.cm-badge{display:inline-block;background:var(--rose-deep);color:#fff;border-radius:6px;font-size:.62rem;font-weight:800;padding:1px 6px;margin-inline-start:4px;vertical-align:1px}
+.cm-t{font-size:.92rem;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:1px}
+.cm-del{font-size:.86rem;color:var(--muted)}
+.cm-meta{font-size:.74rem;color:var(--muted);font-weight:700;padding:3px 10px 0}
+.cm-meta button{border:0;background:none;color:var(--ink-2);font:800 .74rem var(--body);cursor:pointer;padding:0}
+.cm-vide{text-align:center;color:var(--muted);font-weight:700;padding:24px 0}
+.cm-rep{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.8rem;color:var(--ink-2);font-weight:700;margin-bottom:8px}
+.cm-rep button{border:0;background:var(--rose-tint);color:var(--rose-deep);width:24px;height:24px;border-radius:50%;cursor:pointer}
+.cm-saisie{display:flex;gap:8px;align-items:flex-end}
+.cm-saisie textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:18px;padding:10px 14px;font:600 .95rem var(--body);background:#fff;color:var(--ink);max-height:120px;min-height:42px}
+.cm-env{flex:none;width:42px;height:42px;border:0;border-radius:50%;background:var(--grad);color:#fff;font-size:1rem;cursor:pointer}
+.cm-env:disabled{opacity:.5}
+.rx-l{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.rx-l .cm-av{width:34px;height:34px}
+.rx-l b{flex:1;font-size:.92rem;color:var(--ink)}
+.rx-l span{font-size:1.3rem}
 
 /* ---------- v1.3 : visionneuse — musique ---------- */
 .sv-who{flex:1;min-width:0}
@@ -1294,7 +1337,7 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.3.2";
+const APP_VERSION = "1.3.3";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
 /* Conception et développement de l'application. */
@@ -1637,6 +1680,32 @@ const AR_DICT = {
   "vue":"مشاهدة",
   "Personne n'a encore vu cette story.":"لم يشاهد أحد هذه القصة بعد.",
   "Vues et réactions":"المشاهدات والتفاعلات",
+  "J'aime":"أعجبني",
+  "J'adore":"أحببته",
+  "Solidaire":"أدعمه",
+  "Haha":"هههه",
+  "Wouah":"واو",
+  "Triste":"أحزنني",
+  "Grrr":"أغضبني",
+  "Réagir":"تفاعل",
+  "Commenter":"تعليق",
+  "commentaire":"تعليق",
+  "commentaires":"تعليقات",
+  "Commentaires":"التعليقات",
+  "Réactions":"التفاعلات",
+  "Répondre":"ردّ",
+  "Réponse à":"ردّ على",
+  "Écrire un commentaire…":"اكتب تعليقًا…",
+  "Soyez le premier à commenter.":"كن أول من يعلّق.",
+  "Commentaire supprimé":"تم حذف التعليق",
+  "Supprimer ce commentaire ?":"حذف هذا التعليق؟",
+  "Aucune réaction pour le moment.":"لا توجد تفاعلات بعد.",
+  "Cabinet":"العيادة",
+  "Nouveau commentaire":"تعليق جديد",
+  "Nouvelle réponse à un commentaire":"ردّ جديد على تعليق",
+  "Nouvelle réponse à votre commentaire":"ردّ جديد على تعليقك",
+  "Réaction non envoyée. Vérifiez la connexion.":"لم يُرسل التفاعل. تحقّق من الاتصال.",
+  "Commentaire non envoyé. Vérifiez la connexion.":"لم يُرسل التعليق. تحقّق من الاتصال.",
   "Début":"البداية",
   "Fin":"النهاية",
   "Faites glisser la piste pour choisir le passage. Le cercle change la durée.":"اسحب المقطع لاختيار الجزء المطلوب. الدائرة تغيّر المدة.",
@@ -1858,6 +1927,7 @@ const App = {
   _onCloudChange(key){
     if(key==="notifs"){ const n=this.unread(); if(n>0) this.ringBell && this.ringBell(); }
     if(key==="stories"){ this.renderStoryRings(); this.refreshStoryViewer(); this._planNettoyageStories(); return; }
+    if(key==="postReacs" || key==="postComs"){ this._majSocial(); if(this._comsPid) this._renderComs(false); if(this._reacsPid) this._renderReacsPost(); return; }
     if(key==="users" && this.session && !this.isAdmin() && !DB.find("users", this.session.userId)){ this._verifierCompte(); return; }
     if(this.isAdmin() && (key==="orders" || key==="rdv" || key==="creneaux")) this._scheduleAdminSync();
     this.renderAll();   // renderAll est protégé : ne fait rien si personne n'est connecté
@@ -2453,6 +2523,7 @@ const App = {
     document.body.style.overflow="hidden";
   },
   closeSheet(){
+    this._comsPid=null; this._reacsPid=null; this._comRep=null;
     document.getElementById("sheet-backdrop").classList.remove("show");
     document.body.style.overflow="";
   },
@@ -2636,22 +2707,23 @@ const App = {
     DB.set("notifs", DB.get("notifs",[]).filter(n=>n.target!==tg));
     this.renderNotifsPanel(); this.renderBell();
   },
-  notifIcon(k){ return ({rdv:"📅",rdv_ok:"✅",rdv_no:"❌",order:"📦",order_up:"📦",question:"💬",answer:"💬",advice:"💡",record:"🩺",vax:"💉",stock:"⚠️",account_del:"🗑️"}[k])||"🔔"; },
+  notifIcon(k){ return ({rdv:"📅",rdv_ok:"✅",rdv_no:"❌",order:"📦",order_up:"📦",question:"💬",answer:"💬",advice:"💡",record:"🩺",vax:"💉",stock:"⚠️",account_del:"🗑️",com:"💬",com_rep:"↩️"}[k])||"🔔"; },
   renderNotifsPanel(){
     const w=document.getElementById("notif-list"); if(!w) return;
     const list=this.myNotifs();
     if(!list.length){ w.innerHTML=`<div class="empty"><span class="ic">🔔</span><div class="et">Aucune notification</div><div class="hint">Vous serez prévenu ici.</div></div>`; return; }
     w.innerHTML=list.map(n=>`
-      <div class="notif-item ${n.lu?"":"unread"}" onclick="App.onNotifClick('${n.kind}')">
+      <div class="notif-item ${n.lu?"":"unread"}" onclick="App.onNotifClick('${this.escape(n.kind)}','${this.escape(n.ref||"")}')">
         <div class="ni-ic">${this.notifIcon(n.kind)}</div>
         <div class="ni-txt"><div class="ni-main"><b>${this.escape(n.title)}</b></div>
           <div class="ni-sub">${this.escape(n.body||"")} · ${this.ago(n.ts)}</div></div>
       </div>`).join("");
   },
-  onNotifClick(kind){
+  onNotifClick(kind, ref){
     this.closeNotifs();
     const admin=this.isAdmin();
     const go=(t,n)=>this.showTab(t,n);
+    if(kind==="com" || kind==="com_rep"){ admin?go("atab-home","admin-nav"):go("tab-home","client-nav"); if(ref && DB.find("posts", ref)) setTimeout(()=>this.openComs(ref), 250); return; }
     if(kind==="rdv") admin?go("atab-rdv","admin-nav"):go("tab-rdv","client-nav");
     else if(kind==="rdv_ok"||kind==="rdv_no") go("tab-rdv","client-nav");
     else if(kind==="order") go("atab-orders","admin-nav");
@@ -2867,6 +2939,7 @@ const App = {
       html+=blogs.map(p=>this.postCardHTML(p, false)).join("");
     }
     this._setHTML(w, html);
+    this._majSocial(w);
   },
   // N'écrit le HTML que s'il a changé : l'accueil est recalculé toutes les
   // 30 s, et réécrire des images (publications) à chaque fois les ferait clignoter.
@@ -2888,6 +2961,7 @@ const App = {
           <span class="pc-date">${date}</span></div>
         <h3 class="pc-title" data-i18n="off" dir="auto">${this.escape(p.titre)}</h3>
         <div class="pc-text" data-i18n="off" dir="auto">${this.escape(p.contenu)}</div>
+        <div class="pc-soc" data-pid="${this.escape(p.id)}"></div>
         ${admin?`<div class="pc-actions">
           <button class="btn btn-soft btn-sm" onclick="App.openPostForm('${p.id}')">✏️ Modifier</button>
           <button class="btn btn-danger btn-sm" onclick="App.deletePost('${p.id}')">🗑️ Supprimer</button></div>`:""}
@@ -4246,6 +4320,7 @@ const App = {
       html+=posts.map(p=>this.postCardHTML(p, true)).join("");
     }
     this._setHTML(w, html);
+    this._majSocial(w);
   },
   openPostForm(id){
     const p=id?DB.find("posts",id):null; this._postEdit=id||null; this._postImg=p?(p.image||null):null;
@@ -4471,7 +4546,6 @@ const App = {
   /* ---------- v1.3.1 : réactions (comme Facebook) et vues des stories ---------- */
   REACTIONS:[ ["jaime","👍","J'aime"], ["coeur","❤️","J'adore"], ["soutien","🥰","Solidaire"], ["haha","😂","Haha"],
               ["wouah","😮","Wouah"], ["triste","😢","Triste"], ["grrr","😡","Grrr"] ],
-  REAC_MAX:5,
   _emo(k){ const r=this.REACTIONS.find(x=>x[0]===k); return r ? r[1] : ""; },
   _lsMap(cle){ try{ return JSON.parse(localStorage.getItem(cle)||"{}")||{}; }catch(e){ return {}; } },
   _lsSave(cle, m){
@@ -4484,30 +4558,25 @@ const App = {
     const m=this._lsMap("ad_storyVue"); if(m[s.id]) return;
     window.Cloud.viewStory(s.id, this._monNom()).then(()=>{ const m2=this._lsMap("ad_storyVue"); m2[s.id]=Date.now(); this._lsSave("ad_storyVue", m2); }).catch(()=>{});
   },
-  _mesReac(sid){ const m=this._lsMap("ad_storyReac"); return (m[sid] && m[sid].r) || {}; },
   _majReacBar(sid){
     const bar=document.getElementById("sv-reac"); if(!bar) return;
     if(!bar.childNodes.length){
       bar.innerHTML=this.REACTIONS.map(r=>`<button type="button" class="sv-r" data-k="${r[0]}" onclick="App.storyReact('${r[0]}')" title="${r[2]}" aria-label="${r[2]}" data-i18n="off">${r[1]}</button>`).join("");
     }
-    // Pas de compteur affiché : au-delà de 5, l'émoji tremble et ne part plus.
-    const mes=this._mesReac(sid);
-    bar.querySelectorAll(".sv-r").forEach(b=>b.classList.toggle("max", (mes[b.dataset.k]||0)>=this.REAC_MAX));
   },
-  // Toucher un émoji : il s'envoie (5 fois au maximum par émoji et par story).
+  // Toucher un émoji : il s'envoie, autant de fois que le client veut (v1.3.3).
   storyReact(k){
     const sv=this._sv; if(!sv || this.isAdmin()) return;
     const s=sv.list[sv.i]; if(!s) return;
     const btn=document.querySelector(`#sv-reac [data-k="${k}"]`);
-    const m=this._lsMap("ad_storyReac"), e=m[s.id] || { r:{}, t:Date.now() }, n=e.r[k]||0;
-    if(n>=this.REAC_MAX){ if(btn){ btn.classList.remove("refus"); void btn.offsetWidth; btn.classList.add("refus"); } return; }
-    e.r[k]=n+1; e.t=Date.now(); m[s.id]=e; this._lsSave("ad_storyReac", m);
     if(this._reacPend && this._reacPend.sid!==s.id) this._flushReac();
-    this._reacPend=this._reacPend || { sid:s.id, d:{} };
+    this._reacPend=this._reacPend || { sid:s.id, d:{}, t0:Date.now() };
     this._reacPend.d[k]=(this._reacPend.d[k]||0)+1;
-    clearTimeout(this._reacT); this._reacT=setTimeout(()=>this._flushReac(), 1200);
+    clearTimeout(this._reacT);
+    // Envoi groupé : 1,2 s après le dernier toucher, et au moins toutes les 3 s.
+    if(Date.now()-this._reacPend.t0>3000) this._flushReac();
+    else this._reacT=setTimeout(()=>this._flushReac(), 1200);
     this._envolEmoji(btn, this._emo(k));
-    this._majReacBar(s.id);
   },
   _flushReac(){
     clearTimeout(this._reacT); this._reacT=0;
@@ -4550,7 +4619,7 @@ const App = {
   },
   _pluie(emojis){
     const st=document.getElementById("sv-stage"); if(!st || !emojis.length) return;
-    const H=st.clientHeight+90, n=Math.min(60, emojis.length), etal=Math.min(3200, 300+n*120);
+    const H=st.clientHeight+90, n=Math.min(150, emojis.length), etal=Math.min(6500, 300+n*90);
     for(let i=0;i<n;i++){
       const emo=emojis[i];
       setTimeout(()=>{
@@ -4571,15 +4640,207 @@ const App = {
     const pan=document.getElementById("sv-vues"); if(!pan || !pan.classList.contains("show")) return;
     document.getElementById("sv-vues-titre").textContent=l.length;
     document.getElementById("sv-vues-mot").textContent = l.length>1 ? "vues" : "vue";
-    document.getElementById("sv-tot").innerHTML = ordre.map(k=>`<span>${this._emo(k)} ${tot[k]}</span>`).join("");
+    document.getElementById("sv-tot").innerHTML = "";
     const tri=l.slice().sort((a,b)=>Math.max(+b.ts||0,+b.rts||0)-Math.max(+a.ts||0,+a.rts||0));
     document.getElementById("sv-liste").innerHTML = tri.length ? tri.map(v=>{
       const r=v.reac||{}, nom=String(v.nom||"Client");
-      const reac=this.REACTIONS.filter(x=>+r[x[0]]>0).map(x=>x[1]+(+r[x[0]]>1?`<i>×${+r[x[0]]}</i>`:"")).join(" ");
-      return `<div class="sv-v"><div class="sv-v-av" data-i18n="off">${this.escape(nom.trim().charAt(0).toUpperCase()||"?")}</div>
+      const reac=this.REACTIONS.filter(x=>+r[x[0]]>0).map(x=>x[1]).join(" ");
+      return `<div class="sv-v${reac?" a-reac":""}"${reac?` onclick="App.rejouerReac('${this.escape(v.uid||"")}')"`:""}><div class="sv-v-av" data-i18n="off">${this.escape(nom.trim().charAt(0).toUpperCase()||"?")}</div>
         <div class="sv-v-t"><b data-i18n="off">${this.escape(nom)}</b><small>${this._agoText(Math.max(+v.ts||0,+v.rts||0)||Date.now())}</small></div>
         <div class="sv-v-r" data-i18n="off">${reac}</div></div>`;
     }).join("") : `<div class="sv-vide">Personne n'a encore vu cette story.</div>`;
+  },
+  /* ---------- v1.3.3 : réactions et commentaires sur les publications ---------- */
+  _monUid(){ return this.session && this.session.userId; },
+  _nomCourt(nom){
+    const m=String(nom||"").trim().split(/\s+/).filter(Boolean);
+    if(!m.length) return "Client";
+    return (m[0]+(m[1] ? " "+m[1].charAt(0).toUpperCase()+"." : "")).slice(0,40);
+  },
+  // Nom montré aux autres : prénom + initiale (la vétérinaire voit le nom complet).
+  _nomPublic(){ if(this.isAdmin()) return "Animaux d'abord"; const u=this.currentUser(); return this._nomCourt(u && u.nom); },
+  _nomAffiche(uid, nom, adm){
+    if(adm) return "Animaux d'abord";
+    if(this.isAdmin()){ const u=DB.find("users", uid); if(u && u.nom) return u.nom; }
+    return nom || "Client";
+  },
+  _reacsPost(pid){ const d=((window.Cloud && window.Cloud.postReacs) || {})[pid]; return (d && d.r) || {}; },
+  _comsPost(pid){ const d=((window.Cloud && window.Cloud.postComs) || {})[pid]; return (d && d.c) || {}; },
+  _socialHTML(pid){
+    const r=this._reacsPost(pid), c=this._comsPost(pid), moi=this._monUid(), P=this.escape(pid);
+    const tot={}; Object.keys(r).forEach(u=>{ const k=r[u]; if(this._emo(k)) tot[k]=(tot[k]||0)+1; });
+    const ordre=Object.keys(tot).sort((a,b)=>tot[b]-tot[a]);
+    const nR=ordre.reduce((n,k)=>n+tot[k],0);
+    const nC=Object.keys(c).filter(id=>c[id] && !c[id].del).length;
+    const mien=moi && r[moi], rr=mien && this.REACTIONS.find(x=>x[0]===mien);
+    let h="";
+    if(nR || nC){
+      h+=`<div class="ps-sum">`+
+        (nR ? `<button type="button" class="ps-lk" onclick="App.openReacsPost('${P}')"><span class="ps-emos" data-i18n="off">${ordre.slice(0,3).map(k=>this._emo(k)).join("")}</span><span data-i18n="off">${nR}</span></button>` : `<span></span>`)+
+        (nC ? `<button type="button" class="ps-lk" onclick="App.openComs('${P}')"><span data-i18n="off">${nC}</span><span>${nC>1?"commentaires":"commentaire"}</span></button>` : "")+
+        `</div>`;
+    }
+    h+=`<div class="ps-act">
+        <button type="button" class="ps-b${rr?" on":""}" onclick="App.pickReacPost(this)"><span data-i18n="off">${rr?rr[1]:"🙂"}</span><span>${rr?rr[2]:"Réagir"}</span></button>
+        <button type="button" class="ps-b" onclick="App.openComs('${P}')"><span data-i18n="off">💬</span><span>Commenter</span></button>
+      </div>
+      <div class="ps-pick">${this.REACTIONS.map(x=>`<button type="button" class="${mien===x[0]?"on":""}" onclick="App.reagirPost('${P}','${x[0]}',this)" title="${x[2]}" aria-label="${x[2]}" data-i18n="off">${x[1]}</button>`).join("")}</div>`;
+    return h;
+  },
+  // Remplit le bas de chaque publication (sans réécrire les images).
+  _majSocial(root){
+    (root||document).querySelectorAll(".pc-soc[data-pid]").forEach(el=>{
+      const h=this._socialHTML(el.dataset.pid);
+      if(el._h!==h){ el._h=h; el.innerHTML=h; }
+    });
+  },
+  pickReacPost(btn){
+    const pk=btn.closest(".pc-soc").querySelector(".ps-pick"); if(!pk) return;
+    const ouvert=pk.classList.contains("show");
+    document.querySelectorAll(".ps-pick.show").forEach(x=>x.classList.remove("show"));
+    if(!ouvert){
+      pk.classList.add("show");
+      setTimeout(()=>{
+        const fermer=(e)=>{ if(!pk.contains(e.target)){ pk.classList.remove("show"); document.removeEventListener("pointerdown", fermer, true); } };
+        document.addEventListener("pointerdown", fermer, true);
+      }, 0);
+    }
+  },
+  // Une réaction par personne (comme Facebook) : toucher la même la retire.
+  async reagirPost(pid, k, btn){
+    const moi=this._monUid(); if(!moi) return;
+    if(!(CLOUD_ON && window.Cloud && window.Cloud.enabled && window.Cloud.reactPost)) return this.toast("Connexion Internet requise.","err");
+    const nouveau = this._reacsPost(pid)[moi]===k ? null : k;
+    if(nouveau && btn){
+      const b=btn.getBoundingClientRect(), f=document.createElement("span");
+      f.className="ps-fly"; f.textContent=this._emo(k); f.style.left=(b.left+b.width/2)+"px"; f.style.top=(b.top-4)+"px";
+      f.style.setProperty("--dx", Math.round(Math.random()*40-20)+"px");
+      document.body.appendChild(f); setTimeout(()=>f.remove(), 1400);
+    }
+    const P=window.Cloud.postReacs=window.Cloud.postReacs||{}, d=P[pid]=Object.assign({ r:{}, n:{} }, P[pid]);
+    d.r=Object.assign({}, d.r); if(nouveau) d.r[moi]=nouveau; else delete d.r[moi];
+    this._majSocial();
+    try{ await window.Cloud.reactPost(pid, nouveau, this._nomPublic()); }
+    catch(e){ console.warn("réaction", e); this.toast("Réaction non envoyée. Vérifiez la connexion.","err"); }
+  },
+  openReacsPost(pid){
+    this._reacsPid=pid; this._comsPid=null;
+    this.openSheet("Réactions", `<div id="rx-liste"></div>`, "");
+    this._renderReacsPost();
+  },
+  _renderReacsPost(){
+    const pid=this._reacsPid, w=document.getElementById("rx-liste"); if(!pid || !w) return;
+    const d=((window.Cloud && window.Cloud.postReacs) || {})[pid] || {}, r=d.r||{}, n=d.n||{};
+    const ordre=this.REACTIONS.map(x=>x[0]);
+    const l=Object.keys(r).filter(u=>this._emo(r[u])).sort((a,b)=>ordre.indexOf(r[a])-ordre.indexOf(r[b]));
+    w.innerHTML = l.length ? l.map(u=>{
+      const nom=this._nomAffiche(u, n[u], false);
+      return `<div class="rx-l"><div class="cm-av" data-i18n="off">${this.escape(String(nom).charAt(0).toUpperCase())}</div><b data-i18n="off">${this.escape(nom)}</b><span data-i18n="off">${this._emo(r[u])}</span></div>`;
+    }).join("") : `<div class="cm-vide">Aucune réaction pour le moment.</div>`;
+  },
+  // Commentaires : fil de discussion (réponses sous chaque commentaire).
+  openComs(pid){
+    const p=DB.find("posts", pid); if(!p) return;
+    this._comsPid=pid; this._reacsPid=null; this._comRep=null;
+    const foot=`<div class="cm-rep" id="cm-rep" style="display:none"></div>
+      <div class="cm-saisie"><textarea id="cm-in" rows="1" maxlength="500" placeholder="Écrire un commentaire…" dir="auto"></textarea>
+        <button type="button" class="cm-env" id="cm-env" onclick="App.envoyerCom()" aria-label="Envoyer">➤</button></div>`;
+    this.openSheet("Commentaires", `<div class="cm-post" data-i18n="off" dir="auto">${this.escape(p.titre)}</div><div id="cm-liste"></div>`, foot);
+    this._comsPid=pid;
+    const ta=document.getElementById("cm-in");
+    if(ta) ta.addEventListener("input", ()=>{ ta.style.height="auto"; ta.style.height=Math.min(120, ta.scrollHeight)+"px"; });
+    this._renderComs(true);
+  },
+  _renderComs(enBas){
+    const pid=this._comsPid, w=document.getElementById("cm-liste"); if(!pid || !w) return;
+    const c=this._comsPost(pid), moi=this._monUid(), adm=this.isAdmin(), P=this.escape(pid);
+    const tous=Object.keys(c).map(id=>Object.assign({ id }, c[id])).filter(x=>x && x.uid);
+    const tops=tous.filter(x=>!x.p || !c[x.p]).sort((a,b)=>(a.ts||0)-(b.ts||0));
+    const reps=id=>tous.filter(x=>x.p===id && c[id]).sort((a,b)=>(a.ts||0)-(b.ts||0));
+    const un=(x, top)=>{
+      const nom=this._nomAffiche(x.uid, x.nom, x.adm), mien=x.uid===moi, id=this.escape(x.id), tid=this.escape(top.id);
+      let act="";
+      if(!x.del){
+        act=`<button type="button" onclick="App.repondreCom('${tid}','${id}')">Répondre</button>`;
+        if(mien || adm) act+=` · <button type="button" onclick="App.supprimerCom('${id}')">Supprimer</button>`;
+      }
+      return `<div class="cm${x.adm?" is-adm":""}${x.id===top.id?"":" is-rep"}">
+        <div class="cm-av" data-i18n="off">${x.adm?`<img src="logo-mark.png" alt="">`:this.escape(String(nom).charAt(0).toUpperCase())}</div>
+        <div class="cm-main">
+          <div class="cm-bulle">${x.del ? `<i class="cm-del">Commentaire supprimé</i>` :
+            `<b data-i18n="off">${this.escape(nom)}</b>${x.adm?`<span class="cm-badge">Cabinet</span>`:""}<div class="cm-t" data-i18n="off" dir="auto">${this.escape(x.t)}</div>`}</div>
+          <div class="cm-meta"><span>${this.ago(x.ts||Date.now())}</span>${act?" · "+act:""}</div>
+        </div></div>`;
+    };
+    const corps=document.getElementById("sheet-body");
+    const etaitEnBas = corps ? (corps.scrollHeight - corps.scrollTop - corps.clientHeight < 60) : false;
+    w.innerHTML = tops.length ? tops.map(t=>`<div class="cm-fil">${un(t,t)}${reps(t.id).map(r=>un(r,t)).join("")}</div>`).join("")
+      : `<div class="cm-vide">Soyez le premier à commenter.</div>`;
+    if(corps && (enBas || etaitEnBas)) corps.scrollTop=corps.scrollHeight;
+  },
+  repondreCom(topId, cid){
+    const x=this._comsPost(this._comsPid)[cid]; if(!x) return;
+    const nom=this._nomAffiche(x.uid, x.nom, x.adm);
+    this._comRep={ p:topId, cible:cid, uid:x.uid, adm:!!x.adm, nom };
+    const r=document.getElementById("cm-rep");
+    if(r){ r.style.display="flex"; r.innerHTML=`<span><span>Réponse à</span> <b data-i18n="off">${this.escape(nom)}</b></span><button type="button" onclick="App.annulerRep()" aria-label="Annuler">✕</button>`; }
+    const ta=document.getElementById("cm-in");
+    if(ta){ if(cid!==topId && !ta.value.trim()) ta.value="@"+nom+" "; ta.focus(); }
+  },
+  annulerRep(){ this._comRep=null; const r=document.getElementById("cm-rep"); if(r){ r.style.display="none"; r.innerHTML=""; } },
+  async envoyerCom(){
+    const pid=this._comsPid, ta=document.getElementById("cm-in"); if(!pid || !ta || this._comEnvoi) return;
+    const t=ta.value.trim().slice(0,500); if(!t) return;
+    if(!(CLOUD_ON && window.Cloud && window.Cloud.enabled && window.Cloud.commentPost)) return this.toast("Connexion Internet requise.","err");
+    this._comEnvoi=true;
+    const btn=document.getElementById("cm-env"); if(btn) btn.disabled=true;
+    const rep=this._comRep, id="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    const e={ uid:this._monUid(), nom:this._nomPublic(), t, ts:Date.now() };
+    if(rep) e.p=rep.p;
+    if(this.isAdmin()) e.adm=true;
+    try{
+      await window.Cloud.commentPost(pid, id, e);
+      const C=window.Cloud.postComs=window.Cloud.postComs||{}, d=C[pid]=Object.assign({ c:{} }, C[pid]);
+      d.c=Object.assign({}, d.c, { [id]: e });
+      if(this._comsPid===pid){ ta.value=""; ta.style.height="auto"; this.annulerRep(); this._renderComs(true); }
+      this._majSocial();
+      this._notifCom(pid, e, rep);
+    }catch(err){ console.warn("commentaire", err); this.toast("Commentaire non envoyé. Vérifiez la connexion.","err"); }
+    finally{ this._comEnvoi=false; if(btn) btn.disabled=false; }
+  },
+  // Prévient la vétérinaire d'un nouveau commentaire, et l'auteur d'un commentaire
+  // quand quelqu'un lui répond.
+  _notifCom(pid, e, rep){
+    const N=window.Cloud && window.Cloud.addNotifDirect; if(!N) return;
+    const extrait=e.t.length>90 ? e.t.slice(0,90)+"…" : e.t, adm=this.isAdmin(), moi=this._monUid();
+    const envoyer=(target, kind, title, body)=>N({ id:this.uid("n"), target, kind, title, body:String(body).slice(0,200), ts:Date.now(), lu:false, ref:String(pid) }).catch(err=>console.warn("notification", err));
+    if(!adm){
+      const u=this.currentUser();
+      envoyer("admin", "com", rep ? "Nouvelle réponse à un commentaire" : "Nouveau commentaire", `${(u && u.nom) || e.nom} : ${extrait}`);
+    }
+    if(rep && rep.uid && rep.uid!==moi){
+      if(rep.adm){ if(!adm) return; }               // la vétérinaire est déjà prévenue
+      else envoyer(rep.uid, "com_rep", "Nouvelle réponse à votre commentaire", `${e.nom} : ${extrait}`);
+    }
+  },
+  async supprimerCom(cid){
+    const pid=this._comsPid, c=this._comsPost(pid), x=c[cid]; if(!x) return;
+    const q="Supprimer ce commentaire ?";
+    if(!confirm(this.lang==="ar" && AR_DICT[q] ? AR_DICT[q] : q)) return;
+    const avecReponses=Object.keys(c).some(id=>c[id] && c[id].p===cid);
+    const rempl = avecReponses ? Object.assign({}, x, { t:"", del:true }) : null;
+    try{ await window.Cloud.deleteComment(pid, cid, rempl); }
+    catch(e){ return this.toast("Suppression impossible. Vérifiez la connexion.","err"); }
+    const C=window.Cloud.postComs||{}, d=C[pid];
+    if(d){ d.c=Object.assign({}, d.c); if(rempl) d.c[cid]=rempl; else delete d.c[cid]; }
+    this._renderComs(false); this._majSocial();
+  },
+  // Toucher un client dans la liste : ses réactions retombent (autant que ses clics).
+  rejouerReac(uid){
+    const v=(this._vues||[]).find(x=>x.uid===uid); if(!v) return;
+    const r=v.reac||{}, out=[];
+    this.REACTIONS.forEach(x=>{ for(let i=0;i<(+r[x[0]]||0) && out.length<400;i++) out.push(x[1]); });
+    this._pluie(out.sort(()=>Math.random()-0.5));
   },
   openStoryViews(){
     if(!this._sv || !this.isAdmin()) return;
@@ -4629,6 +4890,7 @@ const App = {
   deletePost(id){
     if(!confirm("Supprimer cette publication ?")) return;
     DB.del("posts",id); this.closeSheet(); this.toast("Publication supprimée.","ok"); this.renderAll();
+    try{ window.Cloud && window.Cloud.deletePostSocial && window.Cloud.deletePostSocial(id); }catch(e){}
   },
 
   /* ============================================================
@@ -6717,6 +6979,15 @@ document.addEventListener("DOMContentLoaded", function(){
           const arr = []; snap.forEach(d => arr.push(Object.assign({ id: d.id }, d.data())));
           Cloud.slots = arr; Cloud._slotsLoaded = true; signaler("creneaux");
         }, "creneaux");
+        // v1.3.3 : réactions et commentaires des publications (petits documents).
+        ecouter(collection(db, "postReacs"), (snap) => {
+          const m = {}; snap.forEach(d => { m[d.id] = d.data(); });
+          Cloud.postReacs = m; signaler("postReacs");
+        }, "postReacs");
+        ecouter(collection(db, "postComs"), (snap) => {
+          const m = {}; snap.forEach(d => { m[d.id] = d.data(); });
+          Cloud.postComs = m; signaler("postComs");
+        }, "postComs");
         // Stories en ligne (gardées en mémoire seulement).
         ecouter(query(collection(db, "stories"), where("expiresAt", ">", Date.now())), (snap) => {
           const arr = []; snap.forEach(d => arr.push(Object.assign({ id: d.id }, d.data())));
@@ -6945,7 +7216,7 @@ document.addEventListener("DOMContentLoaded", function(){
     const user = auth && auth.currentUser;
     if(!db || !user) throw new Error("hors-ligne");
     const reac = {};
-    Object.keys(deltas || {}).forEach(k => { const n = Math.max(0, Math.min(5, +deltas[k] || 0)); if(n) reac[k] = increment(n); });
+    Object.keys(deltas || {}).forEach(k => { const n = Math.max(0, Math.min(500, Math.floor(+deltas[k] || 0))); if(n) reac[k] = increment(n); });
     if(!Object.keys(reac).length) return;
     await setDoc(doc(db, "stories", String(sid), "vues", user.uid), { uid: user.uid, nom: String(nom || "Client").slice(0, 60), rts: Date.now(), reac }, { merge: true });
   };
@@ -6954,6 +7225,34 @@ document.addEventListener("DOMContentLoaded", function(){
     return onSnapshot(collection(db, "stories", String(sid), "vues"),
       (snap) => cb(snap.docs.map(d => d.data())),
       (e) => { console.warn("vues", codeErr(e)); cb([]); });
+  };
+  // v1.3.3 : publications — une réaction par personne (postReacs/{id}) et
+  // commentaires en fil (postComs/{id}) ; un seul document par publication.
+  Cloud.postReacs = {}; Cloud.postComs = {};
+  Cloud.reactPost = async (pid, k, nom) => {
+    const user = auth && auth.currentUser;
+    if(!db || !user) throw new Error("hors-ligne");
+    const uid = user.uid;
+    const data = k ? { r: { [uid]: String(k) }, n: { [uid]: String(nom || "Client").slice(0, 60) } }
+                   : { r: { [uid]: deleteField() }, n: { [uid]: deleteField() } };
+    await avecDelai(setDoc(doc(db, "postReacs", String(pid)), data, { merge: true }), 15000);
+  };
+  Cloud.commentPost = async (pid, cid, entree) => {
+    const user = auth && auth.currentUser;
+    if(!db || !user) throw new Error("hors-ligne");
+    await avecDelai(setDoc(doc(db, "postComs", String(pid)), { c: { [cid]: entree }, last: String(cid) }, { merge: true }), 15000);
+  };
+  Cloud.deleteComment = async (pid, cid, remplacement) => {
+    if(!db) throw new Error("hors-ligne");
+    await avecDelai(setDoc(doc(db, "postComs", String(pid)), { c: { [cid]: remplacement || deleteField() }, last: String(cid) }, { merge: true }), 15000);
+  };
+  Cloud.addNotifDirect = async (n) => {
+    if(!db) throw new Error("hors-ligne");
+    await setDoc(doc(db, "notifs", String(n.id)), n);
+  };
+  Cloud.deletePostSocial = async (pid) => {
+    if(!db) return;
+    await Promise.allSettled([deleteDoc(doc(db, "postReacs", String(pid))), deleteDoc(doc(db, "postComs", String(pid)))]);
   };
   // Supprime aussi les vues/réactions (Firestore ne le fait pas tout seul).
   const effacerVues = async (sid) => {
