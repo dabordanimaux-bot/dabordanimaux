@@ -1,1 +1,41 @@
+# =====================================================================
+#  ANIMAUX D'ABORD — Nettoyage horaire de la base (v1.3.2)
+#  ---------------------------------------------------------------------
+#  Chaque heure, gratuitement :
+#   • efface les stories arrivées au bout de leurs 24 h (avec vues et réactions) ;
+#   • efface l'accès (e-mail + mot de passe) des comptes supprimés par le cabinet.
+#  Utilise le même secret que les rappels : FIREBASE_SERVICE_ACCOUNT.
+# =====================================================================
+name: Nettoyage (stories expirées, comptes supprimés)
 
+on:
+  schedule:
+    - cron: "7 * * * *"     # toutes les heures (à hh:07 UTC)
+  workflow_dispatch:         # bouton « Run workflow » pour lancer à la main
+
+concurrency:
+  group: nettoyage
+  cancel-in-progress: false
+
+jobs:
+  nettoyer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v5
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Installer les dépendances
+        working-directory: scripts
+        run: npm install --omit=dev --no-audit --no-fund
+
+      - name: Nettoyer
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node nettoyer.mjs
