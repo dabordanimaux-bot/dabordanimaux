@@ -679,6 +679,37 @@ html.rtl .mark-plus{right:auto;left:-4px}
 .sv-stage.is-admin .sv-admin{display:flex}
 .sv-stage.is-admin .sv-cap{bottom:calc(62px + env(safe-area-inset-bottom))}
 .sv-btn{flex:1;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font:800 .84rem var(--body);padding:10px 8px;border-radius:12px;cursor:pointer;white-space:nowrap}
+.sv-btn.ic{flex:1;max-width:84px;padding:9px 0;font-size:1.25rem;line-height:1.2}
+.sv-stage.is-admin .sv-admin{justify-content:center}
+/* réactions reçues : elles tombent quand la vétérinaire ouvre sa story */
+.sv-drop{position:absolute;top:-56px;z-index:5;pointer-events:none;line-height:1;animation:svDrop 3s linear forwards}
+@keyframes svDrop{0%{transform:translate(0,0) rotate(0deg);opacity:0}8%{opacity:1}85%{opacity:1}100%{transform:translate(var(--dx),var(--h)) rotate(var(--rot));opacity:0}}
+/* v1.3.1 : réactions des clients (comme Facebook) */
+.sv-reac{display:none;position:absolute;left:0;right:0;bottom:0;z-index:4;justify-content:center;gap:4px;padding:26px 8px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.55))}
+.sv-stage:not(.is-admin) .sv-reac{display:flex}
+.sv-stage:not(.is-admin) .sv-cap{bottom:calc(64px + env(safe-area-inset-bottom))}
+.sv-r{position:relative;flex:none;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);font-size:24px;line-height:1;cursor:pointer;display:grid;place-items:center;transition:transform .12s ease;-webkit-tap-highlight-color:transparent}
+.sv-r:active{transform:scale(1.25)}
+.sv-r.refus{animation:svRefus .35s ease}
+@keyframes svRefus{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.sv-fly{position:absolute;z-index:6;font-size:34px;line-height:1;pointer-events:none;animation:svFly 1.5s ease-out forwards}
+@keyframes svFly{0%{transform:translate(-50%,0) scale(.6);opacity:0}12%{opacity:1;transform:translate(-50%,-30px) scale(1.15)}100%{transform:translate(calc(-50% + var(--dx)),-300px) scale(1.4);opacity:0}}
+/* v1.3.1 : qui a vu la story (vétérinaire) */
+.sv-vues{position:absolute;left:0;right:0;bottom:0;z-index:7;max-height:62%;display:none;flex-direction:column;background:#1c1b20;color:#fff;border-radius:20px 20px 0 0;padding:14px 16px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.5)}
+.sv-vues.show{display:flex;animation:tabIn .22s ease}
+.sv-vues-h{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:1.08rem;margin-bottom:10px}
+.sv-vues-h .sv-x{margin-inline-start:auto!important;width:34px;height:34px;font-size:15px;background:rgba(255,255,255,.12)}
+.sv-tot{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.sv-tot span{background:rgba(255,255,255,.1);border-radius:999px;padding:5px 10px;font:800 .84rem var(--body)}
+.sv-liste{overflow:auto;margin:0 -4px;padding:0 4px}
+.sv-v{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.08)}
+.sv-v-av{width:38px;height:38px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font:800 1rem var(--display);flex:none}
+.sv-v-t{flex:1;min-width:0}
+.sv-v-t b{display:block;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sv-v-t small{font-size:.74rem;opacity:.6;font-weight:700}
+.sv-v-r{flex:none;font-size:.95rem;font-weight:800;white-space:nowrap}
+.sv-v-r i{font-style:normal;font-size:.7rem;opacity:.75;margin-inline-end:4px}
+.sv-vide{padding:22px 0;text-align:center;opacity:.7;font-weight:700;font-size:.9rem}
 
 /* ---------- v1.3 : visionneuse — musique ---------- */
 .sv-who{flex:1;min-width:0}
@@ -1010,9 +1041,16 @@ html.rtl .mark-plus{right:auto;left:-4px}
       </div>
       <div class="sv-cap" id="sv-cap" dir="auto" data-i18n="off"></div>
       <div class="sv-admin">
-        <button type="button" class="sv-btn" onclick="App.deleteCurrentStory()">🗑️ Supprimer</button>
-        <button type="button" class="sv-btn" onclick="App.editCurrentStory()">✏️ Modifier</button>
-        <button type="button" class="sv-btn" onclick="App.closeStories();App.pickStory()">＋ Nouvelle</button>
+        <button type="button" class="sv-btn ic" id="sv-vues-b" onclick="App.openStoryViews()" title="Vues et réactions" aria-label="Vues et réactions">👁</button>
+        <button type="button" class="sv-btn ic" onclick="App.editCurrentStory()" title="Modifier" aria-label="Modifier">✏️</button>
+        <button type="button" class="sv-btn ic" onclick="App.deleteCurrentStory()" title="Supprimer" aria-label="Supprimer">🗑️</button>
+        <button type="button" class="sv-btn ic" onclick="App.closeStories();App.pickStory()" title="Nouvelle story" aria-label="Nouvelle story">＋</button>
+      </div>
+      <div class="sv-reac" id="sv-reac"></div>
+      <div class="sv-vues" id="sv-vues">
+        <div class="sv-vues-h"><span>👁 <b id="sv-vues-titre" data-i18n="off">0</b> <span id="sv-vues-mot">vues</span></span><button type="button" class="sv-x" onclick="App.closeStoryViews()" aria-label="Fermer">✕</button></div>
+        <div class="sv-tot" id="sv-tot" data-i18n="off"></div>
+        <div class="sv-liste" id="sv-liste"></div>
       </div>
     </div>
   </div>
@@ -1256,7 +1294,7 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.3.1";
+const APP_VERSION = "1.3.2";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
 /* Conception et développement de l'application. */
@@ -1592,6 +1630,13 @@ const AR_DICT = {
   "Musique ajoutée ♪":"تمت إضافة الموسيقى ♪",
   "Musique retirée":"تمت إزالة الموسيقى",
   "Retirer la musique":"إزالة الموسيقى",
+  "vues":"مشاهدات",
+  "Ce compte a été supprimé par le cabinet. Contactez le cabinet pour plus d'informations.":"تم حذف هذا الحساب من طرف العيادة. اتصل بالعيادة لمزيد من المعلومات.",
+  "Connexion Internet requise pour supprimer un compte.":"يلزم الاتصال بالإنترنت لحذف حساب.",
+  "Suppression impossible. Vérifiez la connexion et réessayez.":"تعذّر الحذف. تحقّق من الاتصال وأعد المحاولة.",
+  "vue":"مشاهدة",
+  "Personne n'a encore vu cette story.":"لم يشاهد أحد هذه القصة بعد.",
+  "Vues et réactions":"المشاهدات والتفاعلات",
   "Début":"البداية",
   "Fin":"النهاية",
   "Faites glisser la piste pour choisir le passage. Le cercle change la durée.":"اسحب المقطع لاختيار الجزء المطلوب. الدائرة تغيّر المدة.",
@@ -1680,6 +1725,21 @@ const App = {
     setTimeout(()=>{ this.showBoot(false); this.route(); }, 650);
   },
 
+  // v1.3.2 : la vétérinaire a supprimé ce compte. On efface aussi l'accès
+  // (e-mail + mot de passe) quand Firebase le permet, puis on déconnecte.
+  async _compteSupprime(){
+    if(this._suppEnCours) return; this._suppEnCours=true;
+    try{ await window.Cloud.deleteAuthSelf(); }catch(e){ try{ await window.Cloud.signOut(); }catch(_){} }
+    try{ ["users","animals","records","rdv","orders","questions","advices","notifs"].forEach(k=>DB._raw(k, [])); }catch(e){}
+    this._suppEnCours=false;
+    setTimeout(()=>this.toast("Ce compte a été supprimé par le cabinet. Contactez le cabinet pour plus d'informations.","err",7000), 500);
+  },
+  // Client connecté dont le profil vient de disparaître : supprimé par le cabinet ?
+  async _verifierCompte(){
+    const uid=this.session && this.session.userId;
+    if(!uid || DB.find("users", uid) || !window.Cloud || !window.Cloud.isDeletedAccount) return;
+    try{ if(await window.Cloud.isDeletedAccount(uid)) await this._compteSupprime(); }catch(e){}
+  },
   // Appelé par Firebase Auth à chaque connexion / déconnexion.
   async _onAuthChanged(user){
     this._authReady = true;
@@ -1705,6 +1765,12 @@ const App = {
       // Compte réellement neuf : la lecture a abouti ET elle dit clairement
       // qu'aucun profil n'existe. Aucun mot de passe n'y est stocké —
       // Firebase Auth s'en charge.
+      // v1.3.2 : compte supprimé par le cabinet → on ne recrée PAS de profil.
+      if(lectureOK && !prof){
+        let supprime=false;
+        try{ supprime = await window.Cloud.isDeletedAccount(user.uid); }catch(e){ supprime=false; }
+        if(supprime){ await this._compteSupprime(); return; }
+      }
       if(lectureOK && !prof){
         const p = this._pendingRegFor(user.email);
         prof = { id:user.uid, role:"client",
@@ -1791,7 +1857,8 @@ const App = {
   // Appelé quand des données changent dans le cloud (ex. depuis un autre appareil).
   _onCloudChange(key){
     if(key==="notifs"){ const n=this.unread(); if(n>0) this.ringBell && this.ringBell(); }
-    if(key==="stories"){ this.renderStoryRings(); this.refreshStoryViewer(); return; }
+    if(key==="stories"){ this.renderStoryRings(); this.refreshStoryViewer(); this._planNettoyageStories(); return; }
+    if(key==="users" && this.session && !this.isAdmin() && !DB.find("users", this.session.userId)){ this._verifierCompte(); return; }
     if(this.isAdmin() && (key==="orders" || key==="rdv" || key==="creneaux")) this._scheduleAdminSync();
     this.renderAll();   // renderAll est protégé : ne fait rien si personne n'est connecté
   },
@@ -1804,7 +1871,19 @@ const App = {
     if(!this.isAdmin() || !window.Cloud || !window.Cloud.enabled) return;
     this._adminSync();
     try{ window.Cloud.cleanupStories && window.Cloud.cleanupStories(); }catch(e){}
+    this._planNettoyageStories();
     try{ window.Cloud.migrateLoginIndex && window.Cloud.migrateLoginIndex(DB.get("users",[]), this); }catch(e){}
+  },
+  // Une story qui atteint ses 24 h est effacée de Firebase tout de suite
+  // (si l'app de la vétérinaire est ouverte ; sinon le robot horaire s'en charge).
+  _planNettoyageStories(){
+    clearTimeout(this._nettT);
+    if(!this.isAdmin() || !window.Cloud || !window.Cloud.cleanupStories) return;
+    const fins=((window.Cloud.stories)||[]).map(x=>+x.expiresAt).filter(t=>t>0);
+    if(!fins.length) return;
+    const d=Math.max(5000, Math.min(...fins)-Date.now()+5000);
+    if(d>2e9) return;
+    this._nettT=setTimeout(()=>{ try{ window.Cloud.cleanupStories(); }catch(e){} }, d);
   },
   _scheduleAdminSync(){
     clearTimeout(this._adminSyncT);
@@ -2488,10 +2567,10 @@ const App = {
   },
 
   /* ---------- toast ---------- */
-  toast(msg, kind){
+  toast(msg, kind, ms){
     const el=document.getElementById("toast");
     el.textContent=msg; el.className="toast show"+(kind?(" "+kind):"");
-    clearTimeout(this._tt); this._tt=setTimeout(()=>el.classList.remove("show"),2800);
+    clearTimeout(this._tt); this._tt=setTimeout(()=>el.classList.remove("show"), ms||2800);
   },
 
   /* ---------- NOTIFICATIONS ---------- */
@@ -4270,6 +4349,7 @@ const App = {
     this._svShow();
   },
   closeStories(){
+    this._flushReac(); this._suivreVues(null); this.closeStoryViews(true);
     const sv=this._sv; if(sv && sv.raf) cancelAnimationFrame(sv.raf);
     this._sv=null; this._svStopAudio();
     const v=document.getElementById("story-viewer");
@@ -4289,6 +4369,10 @@ const App = {
     document.getElementById("sv-time").textContent=this._agoText(s.createdAt||Date.now())+(adm?" · "+this._leftText(s.expiresAt):"");
     document.getElementById("sv-stage").classList.toggle("is-admin", adm);
     this._markStorySeen(s.id);
+    // v1.3.1 : vues et réactions.
+    this._flushReac();
+    if(adm) this._suivreVues(s.id);
+    else { this._noterVue(s); this._majReacBar(s.id); }
     // Musique : extrait joué pendant la story (bouton pour couper le son).
     this._svStopAudio();
     const mus=document.getElementById("sv-music"), son=document.getElementById("sv-son");
@@ -4345,7 +4429,7 @@ const App = {
     const st=document.getElementById("sv-stage");
     let x0=0, y0=0, t0=0, actif=false;
     st.addEventListener("pointerdown", e=>{
-      if(e.target.closest("button")) return;
+      if(e.target.closest("button, .sv-reac, .sv-vues")) return;
       actif=true; x0=e.clientX; y0=e.clientY; t0=Date.now(); this._svPause(true);
     });
     const fin=e=>{
@@ -4383,6 +4467,130 @@ const App = {
     if(k>=0){ sv.i=k; const bars=document.getElementById("sv-bars");
       bars.innerHTML=list.map((x,j)=>`<div class="sv-bar"><i style="width:${j<k?100:0}%"></i></div>`).join(""); }
     else { sv.i=Math.min(sv.i, list.length-1); this._svShow(); }
+  },
+  /* ---------- v1.3.1 : réactions (comme Facebook) et vues des stories ---------- */
+  REACTIONS:[ ["jaime","👍","J'aime"], ["coeur","❤️","J'adore"], ["soutien","🥰","Solidaire"], ["haha","😂","Haha"],
+              ["wouah","😮","Wouah"], ["triste","😢","Triste"], ["grrr","😡","Grrr"] ],
+  REAC_MAX:5,
+  _emo(k){ const r=this.REACTIONS.find(x=>x[0]===k); return r ? r[1] : ""; },
+  _lsMap(cle){ try{ return JSON.parse(localStorage.getItem(cle)||"{}")||{}; }catch(e){ return {}; } },
+  _lsSave(cle, m){
+    try{ const lim=Date.now()-2*864e5; Object.keys(m).forEach(k=>{ if((m[k] && m[k].t || m[k])<lim) delete m[k]; }); localStorage.setItem(cle, JSON.stringify(m)); }catch(e){}
+  },
+  _monNom(){ const u=this.currentUser(); return String((u && u.nom) || "Client").slice(0,60); },
+  // Client : la vétérinaire voit qu'il a regardé (une seule écriture par story).
+  _noterVue(s){
+    if(!(CLOUD_ON && window.Cloud && window.Cloud.enabled && window.Cloud.viewStory)) return;
+    const m=this._lsMap("ad_storyVue"); if(m[s.id]) return;
+    window.Cloud.viewStory(s.id, this._monNom()).then(()=>{ const m2=this._lsMap("ad_storyVue"); m2[s.id]=Date.now(); this._lsSave("ad_storyVue", m2); }).catch(()=>{});
+  },
+  _mesReac(sid){ const m=this._lsMap("ad_storyReac"); return (m[sid] && m[sid].r) || {}; },
+  _majReacBar(sid){
+    const bar=document.getElementById("sv-reac"); if(!bar) return;
+    if(!bar.childNodes.length){
+      bar.innerHTML=this.REACTIONS.map(r=>`<button type="button" class="sv-r" data-k="${r[0]}" onclick="App.storyReact('${r[0]}')" title="${r[2]}" aria-label="${r[2]}" data-i18n="off">${r[1]}</button>`).join("");
+    }
+    // Pas de compteur affiché : au-delà de 5, l'émoji tremble et ne part plus.
+    const mes=this._mesReac(sid);
+    bar.querySelectorAll(".sv-r").forEach(b=>b.classList.toggle("max", (mes[b.dataset.k]||0)>=this.REAC_MAX));
+  },
+  // Toucher un émoji : il s'envoie (5 fois au maximum par émoji et par story).
+  storyReact(k){
+    const sv=this._sv; if(!sv || this.isAdmin()) return;
+    const s=sv.list[sv.i]; if(!s) return;
+    const btn=document.querySelector(`#sv-reac [data-k="${k}"]`);
+    const m=this._lsMap("ad_storyReac"), e=m[s.id] || { r:{}, t:Date.now() }, n=e.r[k]||0;
+    if(n>=this.REAC_MAX){ if(btn){ btn.classList.remove("refus"); void btn.offsetWidth; btn.classList.add("refus"); } return; }
+    e.r[k]=n+1; e.t=Date.now(); m[s.id]=e; this._lsSave("ad_storyReac", m);
+    if(this._reacPend && this._reacPend.sid!==s.id) this._flushReac();
+    this._reacPend=this._reacPend || { sid:s.id, d:{} };
+    this._reacPend.d[k]=(this._reacPend.d[k]||0)+1;
+    clearTimeout(this._reacT); this._reacT=setTimeout(()=>this._flushReac(), 1200);
+    this._envolEmoji(btn, this._emo(k));
+    this._majReacBar(s.id);
+  },
+  _flushReac(){
+    clearTimeout(this._reacT); this._reacT=0;
+    const p=this._reacPend; this._reacPend=null;
+    if(!p || !Object.keys(p.d).length) return;
+    if(window.Cloud && window.Cloud.reactStory) window.Cloud.reactStory(p.sid, p.d, this._monNom()).catch(()=>{});
+  },
+  _envolEmoji(btn, emo){
+    const st=document.getElementById("sv-stage"); if(!st || !btn) return;
+    const r=st.getBoundingClientRect(), b=btn.getBoundingClientRect();
+    const f=document.createElement("span"); f.className="sv-fly"; f.textContent=emo;
+    f.style.left=(b.left-r.left+b.width/2)+"px"; f.style.top=(b.top-r.top-6)+"px";
+    f.style.setProperty("--dx", Math.round(Math.random()*90-45)+"px");
+    st.appendChild(f); setTimeout(()=>f.remove(), 1600);
+  },
+  // Vétérinaire : liste des clients qui ont vu la story, mise à jour en direct.
+  _suivreVues(sid){
+    if(this._vuesSid===sid) return;
+    if(this._vuesStop){ try{ this._vuesStop(); }catch(e){} this._vuesStop=null; }
+    this._vuesSid=sid; this._vues=[]; this._vuesPrec=null; this._majVues();
+    if(!sid || !(window.Cloud && window.Cloud.enabled && window.Cloud.watchStoryViews)) return;
+    this._vuesStop=window.Cloud.watchStoryViews(sid, (liste)=>{
+      if(this._vuesSid!==sid) return;
+      this._vues=liste||[]; this._majVues(); this._pluieNouvelles(sid, this._vues);
+    });
+  },
+  // À l'ouverture : toutes les réactions reçues tombent ; ensuite, seulement
+  // celles qui arrivent pendant que la vétérinaire regarde.
+  _pluieNouvelles(sid, liste){
+    const prec=this._vuesPrec, cur={}, out=[];
+    liste.forEach(v=>{
+      const r=v.reac||{};
+      Object.keys(r).forEach(k=>{
+        const cle=(v.uid||"")+"|"+k, n=Math.max(0, +r[k]||0), avant=prec ? (prec[cle]||0) : 0;
+        cur[cle]=n; for(let i=avant;i<n;i++) out.push(this._emo(k));
+      });
+    });
+    this._vuesPrec=cur;
+    if(out.length && this._sv && this._vuesSid===sid) this._pluie(out.filter(Boolean).sort(()=>Math.random()-0.5));
+  },
+  _pluie(emojis){
+    const st=document.getElementById("sv-stage"); if(!st || !emojis.length) return;
+    const H=st.clientHeight+90, n=Math.min(60, emojis.length), etal=Math.min(3200, 300+n*120);
+    for(let i=0;i<n;i++){
+      const emo=emojis[i];
+      setTimeout(()=>{
+        if(!this._sv) return;
+        const f=document.createElement("span"); f.className="sv-drop"; f.textContent=emo;
+        const d=Math.round(2300+Math.random()*1300);
+        f.style.left=(3+Math.random()*86)+"%"; f.style.fontSize=Math.round(26+Math.random()*18)+"px";
+        f.style.setProperty("--h", H+"px"); f.style.setProperty("--dx", Math.round(Math.random()*70-35)+"px");
+        f.style.setProperty("--rot", Math.round(Math.random()*90-45)+"deg"); f.style.animationDuration=d+"ms";
+        st.appendChild(f); setTimeout(()=>f.remove(), d+120);
+      }, i===0 ? 150 : Math.round(150+Math.random()*etal));
+    }
+  },
+  _majVues(){
+    const l=this._vues||[], tot={};
+    l.forEach(v=>{ const r=v.reac||{}; Object.keys(r).forEach(k=>{ tot[k]=(tot[k]||0)+(+r[k]||0); }); });
+    const ordre=this.REACTIONS.map(r=>r[0]).filter(k=>tot[k]>0).sort((a,b)=>tot[b]-tot[a]);
+    const pan=document.getElementById("sv-vues"); if(!pan || !pan.classList.contains("show")) return;
+    document.getElementById("sv-vues-titre").textContent=l.length;
+    document.getElementById("sv-vues-mot").textContent = l.length>1 ? "vues" : "vue";
+    document.getElementById("sv-tot").innerHTML = ordre.map(k=>`<span>${this._emo(k)} ${tot[k]}</span>`).join("");
+    const tri=l.slice().sort((a,b)=>Math.max(+b.ts||0,+b.rts||0)-Math.max(+a.ts||0,+a.rts||0));
+    document.getElementById("sv-liste").innerHTML = tri.length ? tri.map(v=>{
+      const r=v.reac||{}, nom=String(v.nom||"Client");
+      const reac=this.REACTIONS.filter(x=>+r[x[0]]>0).map(x=>x[1]+(+r[x[0]]>1?`<i>×${+r[x[0]]}</i>`:"")).join(" ");
+      return `<div class="sv-v"><div class="sv-v-av" data-i18n="off">${this.escape(nom.trim().charAt(0).toUpperCase()||"?")}</div>
+        <div class="sv-v-t"><b data-i18n="off">${this.escape(nom)}</b><small>${this._agoText(Math.max(+v.ts||0,+v.rts||0)||Date.now())}</small></div>
+        <div class="sv-v-r" data-i18n="off">${reac}</div></div>`;
+    }).join("") : `<div class="sv-vide">Personne n'a encore vu cette story.</div>`;
+  },
+  openStoryViews(){
+    if(!this._sv || !this.isAdmin()) return;
+    this._svPause(true);
+    document.getElementById("sv-vues").classList.add("show");
+    this._majVues();
+  },
+  closeStoryViews(silencieux){
+    const pan=document.getElementById("sv-vues"); if(!pan || !pan.classList.contains("show")) return;
+    pan.classList.remove("show");
+    if(!silencieux) this._svPause(false);
   },
   // ✏️ Modifier : rouvre la story publiée dans l'éditeur (mêmes calques).
   editCurrentStory(){
@@ -4868,12 +5076,17 @@ const App = {
     DB.update("users",id,{nom, tel});
     this.closeSheet(); this.toast("Compte mis à jour ✓","ok"); this.renderAll();
   },
-  deleteClient(clientId){
+  async deleteClient(clientId){
     const c=DB.find("users",clientId); if(!c) return;
     if(c.role==="admin"){ this.toast("Impossible de supprimer un compte administrateur.","err"); return; }
     const animals=DB.get("animals",[]).filter(a=>a.ownerId===clientId);
     const animalIds=animals.map(a=>a.id);
-    if(!confirm(`Supprimer définitivement le compte de ${c.nom||"ce client"} ?\n\nSeront aussi effacés : ${animals.length} animal(aux), leurs carnets de santé, ses rendez-vous, commandes et questions.\n\nCette action est irréversible.`)) return;
+    if(!confirm(`Supprimer définitivement le compte de ${c.nom||"ce client"} ?\n\nSeront aussi effacés : ${animals.length} animal(aux), leurs carnets de santé, ses rendez-vous, commandes et questions. Il ne pourra plus se connecter.\n\nCette action est irréversible.`)) return;
+    // v1.3.2 : on marque d'abord le compte comme supprimé. Le client ne pourra
+    // plus se reconnecter (son accès e-mail + mot de passe est ensuite effacé).
+    if(!(window.Cloud && window.Cloud.enabled && window.Cloud.markDeleted)) return this.toast("Connexion Internet requise pour supprimer un compte.","err");
+    try{ await window.Cloud.markDeleted(clientId); }
+    catch(e){ return this.toast("Suppression impossible. Vérifiez la connexion et réessayez.","err"); }
     // Suppression en cascade (une écriture par collection).
     DB.set("records", DB.get("records",[]).filter(r=>animalIds.indexOf(r.animalId)<0));
     DB.set("animals", DB.get("animals",[]).filter(a=>a.ownerId!==clientId));
@@ -6705,12 +6918,59 @@ document.addEventListener("DOMContentLoaded", function(){
     await avecDelai(setDoc(doc(db, "stories", String(id)), data), 45000);
     Cloud.stories = (Cloud.stories || []).filter(s => s.id !== String(id)).concat([data]);
   };
-  Cloud.deleteStory = async (id) => { await avecDelai(deleteDoc(doc(db, "stories", String(id))), 15000); };
+  // v1.3.2 : comptes supprimés par la vétérinaire.
+  Cloud.markDeleted = async (uid) => {
+    if(!db) throw new Error("hors-ligne");
+    await avecDelai(setDoc(doc(db, "comptesSupprimes", String(uid)), { uid: String(uid), ts: Date.now() }), 15000);
+  };
+  Cloud.isDeletedAccount = async (uid) => {
+    if(!db || !uid) return false;
+    const d = await getDoc(doc(db, "comptesSupprimes", String(uid)));
+    return d.exists();
+  };
+  // Efface son propre accès Firebase Authentication (juste après la connexion).
+  Cloud.deleteAuthSelf = async () => {
+    const user = auth && auth.currentUser;
+    if(!user) return;
+    try{ await deleteUser(user); }
+    catch(e){ await signOut(auth); }
+  };
+  // v1.3.1 : vues et réactions — stories/{id}/vues/{uid} (une fiche par client).
+  Cloud.viewStory = async (sid, nom) => {
+    const user = auth && auth.currentUser;
+    if(!db || !user) throw new Error("hors-ligne");
+    await setDoc(doc(db, "stories", String(sid), "vues", user.uid), { uid: user.uid, nom: String(nom || "Client").slice(0, 60), ts: Date.now() }, { merge: true });
+  };
+  Cloud.reactStory = async (sid, deltas, nom) => {
+    const user = auth && auth.currentUser;
+    if(!db || !user) throw new Error("hors-ligne");
+    const reac = {};
+    Object.keys(deltas || {}).forEach(k => { const n = Math.max(0, Math.min(5, +deltas[k] || 0)); if(n) reac[k] = increment(n); });
+    if(!Object.keys(reac).length) return;
+    await setDoc(doc(db, "stories", String(sid), "vues", user.uid), { uid: user.uid, nom: String(nom || "Client").slice(0, 60), rts: Date.now(), reac }, { merge: true });
+  };
+  Cloud.watchStoryViews = (sid, cb) => {
+    if(!db) return () => {};
+    return onSnapshot(collection(db, "stories", String(sid), "vues"),
+      (snap) => cb(snap.docs.map(d => d.data())),
+      (e) => { console.warn("vues", codeErr(e)); cb([]); });
+  };
+  // Supprime aussi les vues/réactions (Firestore ne le fait pas tout seul).
+  const effacerVues = async (sid) => {
+    try{
+      const snap = await getDocs(collection(db, "stories", String(sid), "vues"));
+      await Promise.allSettled(snap.docs.map(d => deleteDoc(d.ref)));
+    }catch(e){ console.warn("vues", codeErr(e)); }
+  };
+  Cloud.deleteStory = async (id) => {
+    await effacerVues(id);
+    await avecDelai(deleteDoc(doc(db, "stories", String(id))), 15000);
+  };
   Cloud.cleanupStories = async () => {
     if(!db || !Cloud.scope.admin) return;
     try{
       const snap = await getDocs(query(collection(db, "stories"), where("expiresAt", "<=", Date.now())));
-      await Promise.allSettled(snap.docs.map(d => deleteDoc(d.ref)));
+      await Promise.allSettled(snap.docs.map(async d => { await effacerVues(d.id); await deleteDoc(d.ref); }));
     }catch(e){ console.warn("stories", codeErr(e)); }
   };
 
