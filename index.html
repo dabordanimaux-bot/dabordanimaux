@@ -561,6 +561,48 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .iv-nav:hover{background:rgba(255,255,255,.3)}
 .iv-prev{left:14px}.iv-next{right:14px}
 .iv-count{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);color:#fff;font-weight:700;font-size:.9rem;background:rgba(0,0,0,.45);padding:5px 15px;border-radius:999px;backdrop-filter:blur(4px)}
+/* v1.3.5 : zoom dans la visionneuse (pincer, double toucher, molette, déplacer) */
+.img-viewer.zoomable{touch-action:none;overflow:hidden}
+.img-viewer.zoomable img{transform-origin:center center;will-change:transform;cursor:zoom-in;user-select:none;-webkit-user-drag:none}
+.img-viewer.zoomed img{cursor:grab;border-radius:0;box-shadow:none}
+.img-viewer.zoomed .iv-nav,.img-viewer.zoomed .iv-count{opacity:0;pointer-events:none}
+.iv-zoom{position:absolute;bottom:22px;right:16px;display:none;gap:8px;z-index:2}
+.img-viewer.zoomable .iv-zoom{display:flex}
+.iv-zoom button{width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:22px;font-weight:800;cursor:pointer;display:grid;place-items:center;backdrop-filter:blur(4px);line-height:1}
+.iv-zoom button:hover{background:rgba(255,255,255,.3)}
+html.rtl .iv-zoom{right:auto;left:16px}
+.img-viewer.zoomed .iv-close,.img-viewer.zoomed .iv-zoom button{background:rgba(0,0,0,.5)}
+
+/* ---------- v1.3.5 : fiche produit (client) ---------- */
+.prod.p-open{cursor:pointer}
+.pd-gal{margin:-4px -2px 12px}
+.pd-main{position:relative}
+.pd-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:20px;background:var(--grad-soft);aspect-ratio:1;max-height:56vh}
+.pd-track::-webkit-scrollbar{display:none}
+.pd-slide{flex:0 0 100%;scroll-snap-align:center;display:grid;place-items:center;position:relative;overflow:hidden}
+.pd-slide img{width:100%;height:100%;object-fit:contain;cursor:zoom-in}
+.pd-slide .pd-emo{font-size:96px;line-height:1}
+.pd-zoom-hint{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.5);color:#fff;font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:999px;pointer-events:none;backdrop-filter:blur(3px)}
+html.rtl .pd-zoom-hint{right:auto;left:10px}
+.pd-load{position:absolute;left:10px;bottom:10px;background:rgba(255,255,255,.92);color:var(--rose-deep);font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:999px}
+html.rtl .pd-load{left:auto;right:10px}
+.pd-thumbs{display:flex;gap:8px;justify-content:center;margin-top:10px}
+.pd-thumbs button{width:58px;height:58px;border-radius:12px;overflow:hidden;border:2px solid transparent;padding:0;background:var(--rose-tint);cursor:pointer;flex:none}
+.pd-thumbs button.on{border-color:var(--rose)}
+.pd-thumbs img{width:100%;height:100%;object-fit:cover}
+.pd-cat{display:inline-block;font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--rose-tint);color:var(--rose-deep);margin-bottom:6px}
+.pd-nm{font-family:var(--display);font-weight:800;font-size:1.3rem;line-height:1.2;color:var(--ink)}
+.pd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 12px;flex-wrap:wrap}
+.pd-price{font-family:var(--display);font-weight:800;font-size:1.5rem;color:var(--rose-deep)}
+.pd-stock{font-size:.8rem;font-weight:800;padding:4px 10px;border-radius:999px;background:var(--ok-soft);color:var(--ok)}
+.pd-stock.low{background:var(--warn-soft);color:#B8651A}
+.pd-stock.out{background:var(--danger-soft);color:var(--danger)}
+.pd-desc{font-size:.95rem;color:var(--ink-2);font-weight:500;white-space:pre-wrap;line-height:1.6;word-break:break-word}
+.pd-desc-h{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--muted);margin:4px 0 4px}
+.pd-incart{font-size:.82rem;color:var(--ink-2);font-weight:700;text-align:center;margin-top:8px}
+/* Formulaire produit (vétérinaire) : jusqu'à 3 photos */
+.pp-cover{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:.55rem;font-weight:800;text-align:center;padding:1px 0;pointer-events:none}
+.pp-wait{font-size:.78rem;color:var(--muted);font-weight:700;padding:8px 0}
 .pet-card .pc-photo img,.lr-av img,.prod .p-img img,.post .cover img{cursor:zoom-in}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.ok{background:var(--ok)}.toast.err{background:var(--danger)}
@@ -682,7 +724,8 @@ html.rtl .mark-plus{right:auto;left:-4px}
 .sv-btn.ic{flex:1;max-width:84px;padding:9px 0;font-size:1.25rem;line-height:1.2}
 .sv-stage.is-admin .sv-admin{justify-content:center}
 /* réactions reçues : elles tombent quand la vétérinaire ouvre sa story */
-.sv-drop{position:absolute;top:-56px;z-index:8;pointer-events:none;line-height:1;animation:svDrop 3s linear forwards}
+/* v1.3.5 : émojis plus petits, et sous l'en-tête et la barre d'outils (z-index 2 < 3 et 4). */
+.sv-drop{position:absolute;top:-40px;z-index:2;pointer-events:none;line-height:1;opacity:.92;animation:svDrop 3s linear forwards}
 @keyframes svDrop{0%{transform:translate(0,0) rotate(0deg);opacity:0}8%{opacity:1}85%{opacity:1}100%{transform:translate(var(--dx),var(--h)) rotate(var(--rot));opacity:0}}
 /* v1.3.1 : réactions des clients (comme Facebook) */
 .sv-reac{display:none;position:absolute;left:0;right:0;bottom:0;z-index:4;justify-content:center;gap:4px;padding:26px 8px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.55))}
@@ -720,6 +763,13 @@ html.rtl .mark-plus{right:auto;left:-4px}
 .ps-act{display:flex;gap:8px;padding-top:8px}
 .ps-b{flex:1;border:1px solid var(--line);background:#fff;color:var(--ink-2);border-radius:12px;padding:9px 8px;font:800 .86rem var(--body);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
 .ps-b.on{background:var(--rose-tint);border-color:var(--rose-soft);color:var(--rose-deep)}
+/* v1.3.5 : icône d'émoji (à la place du bouton « Réagir ») */
+.ps-row{display:flex;align-items:center;gap:10px;padding-top:10px}
+.ps-ic{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;flex:none;padding:0;transition:transform .12s ease}
+.ps-ic:not(.on) span{filter:grayscale(1);opacity:.75}
+.ps-ic.on{background:var(--rose-tint);border-color:var(--rose-soft)}
+.ps-ic:active{transform:scale(1.15)}
+.ps-row .ps-lk{font-size:.84rem;color:var(--ink-2);font-weight:700}
 .ps-pick{display:none;position:absolute;left:0;bottom:52px;z-index:5;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 8px;gap:2px;box-shadow:0 10px 30px rgba(120,40,70,.2)}
 .ps-pick.show{display:flex;animation:tabIn .18s ease}
 .ps-pick button{border:0;background:transparent;font-size:28px;line-height:1;width:42px;height:42px;border-radius:50%;cursor:pointer;transition:transform .12s ease}
@@ -1039,12 +1089,16 @@ html.rtl .mark-plus{right:auto;left:-4px}
   <div class="toast" id="toast"></div>
 
   <!-- Visionneuse plein écran : agrandit n'importe quelle photo au clic -->
-  <div class="img-viewer" id="img-viewer" onclick="App.closeZoom()">
+  <div class="img-viewer" id="img-viewer" onclick="App._ivBackdrop()">
     <button class="iv-close" onclick="event.stopPropagation();App.closeZoom()" aria-label="Fermer">✕</button>
     <button class="iv-nav iv-prev" id="iv-prev" onclick="event.stopPropagation();App.zoomStep(-1)" aria-label="Précédent">‹</button>
     <img id="iv-img" src="" alt="Photo agrandie" onclick="event.stopPropagation()">
     <button class="iv-nav iv-next" id="iv-next" onclick="event.stopPropagation();App.zoomStep(1)" aria-label="Suivant">›</button>
     <div class="iv-count" id="iv-count"></div>
+    <div class="iv-zoom" onclick="event.stopPropagation()">
+      <button type="button" onclick="App.zoomBy(1/1.6)" aria-label="Dézoomer" title="Dézoomer">−</button>
+      <button type="button" onclick="App.zoomBy(1.6)" aria-label="Zoomer" title="Zoomer">＋</button>
+    </div>
   </div>
   <!-- Stories (24 h) : visionneuse plein écran -->
   <div class="story-viewer" id="story-viewer" aria-hidden="true">
@@ -1314,7 +1368,7 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.3.4";
+const APP_VERSION = "1.3.5";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
 /* Conception et développement de l'application. */
@@ -1701,6 +1755,28 @@ const AR_DICT = {
   "Urgences 24h/24":"طوارئ 24/24",
   "Vaccination":"تلقيح",
   "Nouveau en boutique":"جديد في المتجر",
+  /* --- v1.3.5 : fiche produit, photos des produits, zoom, réactions --- */
+  "Détails du produit":"تفاصيل المنتج",
+  "Aucune description.":"لا يوجد وصف.",
+  "En stock":"متوفّر",
+  "Rupture":"نفد",
+  "Rupture de stock":"نفد المخزون",
+  "Toucher pour zoomer":"المس للتكبير",
+  "Chargement des photos…":"جارٍ تحميل الصور…",
+  "Voir le panier":"عرض السلة",
+  "Zoomer":"تكبير",
+  "Dézoomer":"تصغير",
+  "Voir le produit":"عرض المنتج",
+  "Photos du produit (jusqu'à 3, optionnel)":"صور المنتج (حتى 3، اختياري)",
+  "Touchez une photo pour la mettre en couverture.":"المس صورة لجعلها صورة الغلاف.",
+  "Couverture":"الغلاف",
+  "Maximum 3 photos par produit : les photos en trop n'ont pas été ajoutées.":"3 صور كحدّ أقصى لكل منتج: لم تُضف الصور الزائدة.",
+  "Une photo n'a pas pu être lue. Essayez une autre photo.":"تعذّرت قراءة إحدى الصور. جرّب صورة أخرى.",
+  "Les photos n'ont pas pu être enregistrées. Vérifiez la connexion puis réessayez.":"تعذّر حفظ الصور. تحقّق من الاتصال ثم أعد المحاولة.",
+  "Photos non chargées : vérifiez la connexion.":"لم يتم تحميل الصور: تحقّق من الاتصال.",
+  "Remplacer les photos":"استبدال الصور",
+  "Réaction à votre story":"تفاعل مع قصتك",
+  "Réessayer":"أعد المحاولة",
 
 };
 const AR_TOKENS_LIST = [
@@ -2506,20 +2582,59 @@ const App = {
     document.body.style.overflow="hidden";
   },
   closeSheet(){
-    this._reacsPid=null;
+    this._reacsPid=null; this._pdId=null;
     document.getElementById("sheet-backdrop").classList.remove("show");
     document.body.style.overflow="";
   },
   // Visionneuse plein écran d'une photo (animaux, produits, publications…).
   zoomImage(src){ this.openZoom([src], 0); }, // rétrocompat : une seule image
-  openZoom(list, index){
+  // zoom (v1.3.5) : true pour les photos des produits (pincer, double toucher, ＋/−).
+  // Les autres photos s'affichent exactement comme avant.
+  openZoom(list, index, zoom){
     this._zoomList=(list&&list.length)?list.slice():[]; this._zoomIndex=index||0;
     if(!this._zoomList.length) return;
     const v=document.getElementById("img-viewer"); if(!v) return;
+    this._zoomOk=!!zoom; v.classList.toggle("zoomable", this._zoomOk);
+    const im=document.getElementById("iv-img"); if(im) im.style.animation="";   // animation d'ouverture
     this._renderZoom(); v.classList.add("show"); document.body.style.overflow="hidden";
   },
+  /* v1.3.5 : zoom dans la visionneuse — pincer à deux doigts, double toucher,
+     molette ou boutons ＋/− ; une photo zoomée se déplace au doigt (ou à la souris). */
+  _zs:1, _zx:0, _zy:0,
+  _zoomApply(anim){
+    const im=document.getElementById("iv-img"), v=document.getElementById("img-viewer"); if(!im) return;
+    const z=this._zs>1.001;
+    if(z) im.style.animation="none";      // l'animation d'ouverture ne doit pas écraser le zoom
+    im.style.transition = anim ? "transform .2s ease" : "none";
+    im.style.transform = z ? `translate(${this._zx}px,${this._zy}px) scale(${this._zs})` : "";
+    if(v) v.classList.toggle("zoomed", z);
+  },
+  _zoomClamp(){
+    const im=document.getElementById("iv-img"), v=document.getElementById("img-viewer"); if(!im || !v) return;
+    const s=this._zs, mx=Math.max(0,(im.offsetWidth*s-v.clientWidth)/2), my=Math.max(0,(im.offsetHeight*s-v.clientHeight)/2);
+    this._zx=Math.max(-mx, Math.min(mx, this._zx)); this._zy=Math.max(-my, Math.min(my, this._zy));
+  },
+  // Zoom autour d'un point de l'écran (le point sous le doigt ne bouge pas) ; sans point : le centre.
+  _zoomTo(s, px, py, anim){
+    const v=document.getElementById("img-viewer"); if(!v) return;
+    s=Math.max(1, Math.min(5, +s||1));
+    const r=v.getBoundingClientRect(), ox=r.left+r.width/2, oy=r.top+r.height/2;
+    const cx=(px==null?ox:px)-ox, cy=(py==null?oy:py)-oy, k=s/(this._zs||1);
+    this._zx=cx-(cx-this._zx)*k; this._zy=cy-(cy-this._zy)*k; this._zs=s;
+    if(s<=1.001){ this._zs=1; this._zx=0; this._zy=0; }
+    this._zoomClamp(); this._zoomApply(anim);
+  },
+  zoomBy(f){ if(this._zoomOk) this._zoomTo((this._zs||1)*f, null, null, true); },
+  _zoomReset(){
+    this._zs=1; this._zx=0; this._zy=0;
+    const im=document.getElementById("iv-img"); if(im){ im.style.transform=""; im.style.transition=""; }
+    const v=document.getElementById("img-viewer"); if(v) v.classList.remove("zoomed");
+  },
+  // Toucher le fond : ferme (sauf juste après avoir déplacé la photo à la souris).
+  _ivBackdrop(){ if(this._dragMoved){ this._dragMoved=false; return; } this.closeZoom(); },
   _renderZoom(){
     const im=document.getElementById("iv-img"); if(!im) return;
+    this._zoomReset();
     const n=this._zoomList.length, i=this._zoomIndex, multi=n>1;
     im.src=this._zoomList[i]||"";
     const prev=document.getElementById("iv-prev"), next=document.getElementById("iv-next"), cnt=document.getElementById("iv-count");
@@ -2533,6 +2648,7 @@ const App = {
   },
   closeZoom(){
     const v=document.getElementById("img-viewer"), im=document.getElementById("iv-img");
+    this._zoomReset();
     if(v) v.classList.remove("show");
     if(im) im.src="";
     const sh=document.getElementById("sheet-backdrop");
@@ -2690,7 +2806,7 @@ const App = {
     DB.set("notifs", DB.get("notifs",[]).filter(n=>n.target!==tg));
     this.renderNotifsPanel(); this.renderBell();
   },
-  notifIcon(k){ return ({rdv:"📅",rdv_ok:"✅",rdv_no:"❌",order:"📦",order_up:"📦",question:"💬",answer:"💬",advice:"💡",record:"🩺",vax:"💉",stock:"⚠️",account_del:"🗑️",com:"💬",com_rep:"↩️"}[k])||"🔔"; },
+  notifIcon(k){ return ({rdv:"📅",rdv_ok:"✅",rdv_no:"❌",order:"📦",order_up:"📦",question:"💬",answer:"💬",advice:"💡",record:"🩺",vax:"💉",stock:"⚠️",account_del:"🗑️",com:"💬",com_rep:"↩️",story:"🥰"}[k])||"🔔"; },
   renderNotifsPanel(){
     const w=document.getElementById("notif-list"); if(!w) return;
     const list=this.myNotifs();
@@ -2715,6 +2831,7 @@ const App = {
     else if(kind==="answer"||kind==="advice") go("tab-msg","client-nav");
     else if(kind==="record"||kind==="vax") go("tab-pets","client-nav");
     else if(kind==="account_del") go("atab-patients","admin-nav");
+    else if(kind==="story" && admin){ go("atab-home","admin-nav"); if(this.activeStories().length) this.openStories(); }   // v1.3.5
   },
 
   /* =====================================================================
@@ -3224,18 +3341,138 @@ const App = {
     if(!items.length){ g.innerHTML=`<div class="empty"><span class="ic">🔍</span><div class="et">Aucun produit</div><div class="hint">Essayez une autre recherche ou catégorie.</div></div>`; return; }
     g.innerHTML=`<div class="prod-grid stagger">`+items.map(p=>{
       const out = (p.stock!=null && +p.stock<=0);
-      return `<div class="prod">
+      // v1.3.5 : toucher la carte ouvre la fiche du produit (photos, description complète, zoom).
+      return `<div class="prod p-open" role="button" tabindex="0" title="Voir le produit" onclick="App.openProduct('${p.id}')" onkeydown="if(event.key==='Enter'&&event.target===this)App.openProduct('${p.id}')">
         <div class="p-img">${p.photo?`<img src="${p.photo}" alt="">`:(p.emo||"🛍️")}<span class="p-cat">${this.escape(p.cat||"")}</span></div>
         <div class="p-body">
           <div class="p-nm" data-i18n="off" dir="auto">${this.escape(p.nom)}</div>
           <div class="p-desc" data-i18n="off" dir="auto">${this.escape(p.desc||"")}</div>
           <div class="p-foot">
             <div class="p-price">${this.money(p.prix)}</div>
-            ${out?`<span class="p-out">Rupture</span>`:`<button class="p-add" onclick="App.addToCart('${p.id}')" title="Ajouter au panier">＋</button>`}
+            ${out?`<span class="p-out">Rupture</span>`:`<button class="p-add" onclick="event.stopPropagation();App.addToCart('${p.id}')" title="Ajouter au panier">＋</button>`}
           </div>
         </div>
       </div>`;
     }).join("")+`</div>`;
+  },
+  /* ============================================================
+     v1.3.5 — FICHE PRODUIT (client) : photos (jusqu'à 3), description
+     complète, stock, zoom. Les photos en grand sont rangées à part
+     (productPhotos/{id}) et lues seulement quand on ouvre la fiche :
+     la boutique reste légère (une petite vignette par produit).
+     ============================================================ */
+  _ppCache:{},     // id → { v, list } : photos en grand déjà chargées
+  _ppLocal:{},     // mode local (sans Firebase) uniquement
+  // Photos montrables tout de suite, sans réseau (cache ou vignette).
+  productPhotosSync(p){
+    if(!p) return [];
+    const c=this._ppCache[p.id];
+    if(c && c.v===(+p.phV||0) && c.list.length) return c.list.slice();
+    if(this._ppLocal[p.id] && this._ppLocal[p.id].length) return this._ppLocal[p.id].slice();
+    return p.photo ? [p.photo] : [];
+  },
+  _ppAJour(p){ const c=p && this._ppCache[p.id]; return !!(c && c.v===(+p.phV||0)); },
+  _ppEnCours:{},   // id → lecture en cours (une seule à la fois par produit)
+  // Photos en grand : { ok:true, list } si elles ont été lues (ou sont déjà en cache),
+  // { ok:false } si la lecture a échoué (hors ligne, document absent…).
+  // Une lecture Firebase par produit et par session au plus.
+  fetchProductPhotos(p){
+    if(!p) return Promise.resolve({ ok:false, list:[] });
+    if(this._ppAJour(p) && this._ppCache[p.id].list.length) return Promise.resolve({ ok:true, list:this._ppCache[p.id].list.slice() });
+    if(this._ppLocal[p.id] && this._ppLocal[p.id].length) return Promise.resolve({ ok:true, list:this._ppLocal[p.id].slice() });
+    if(!(+p.nPhotos>0)) return Promise.resolve({ ok:true, list:p.photo?[p.photo]:[] });
+    if(!(window.Cloud && window.Cloud.getProductPhotos)) return Promise.resolve({ ok:false, list:[] });
+    const cle=p.id+"|"+(+p.phV||0);
+    if(this._ppEnCours[cle]) return this._ppEnCours[cle];
+    const pr=(async()=>{
+      try{
+        const r=await window.Cloud.getProductPhotos(p.id);
+        if(r && r.list && r.list.length){
+          // On ne garde en cache que la version annoncée par le produit.
+          if(r.v===(+p.phV||0)) this._ppCache[p.id]={ v:r.v, list:r.list.slice() };
+          return { ok:true, list:r.list.slice() };
+        }
+      }catch(e){ console.warn("photos produit", e); }
+      return { ok:false, list:[] };
+    })();
+    this._ppEnCours[cle]=pr;
+    pr.finally(()=>{ delete this._ppEnCours[cle]; });
+    return pr;
+  },
+  // Pour l'affichage (fiche client) : en cas d'échec, la vignette suffit.
+  async loadProductPhotos(p){
+    const r=await this.fetchProductPhotos(p);
+    return (r.ok && r.list.length) ? r.list : this.productPhotosSync(p);
+  },
+  _pdStockHTML(p){
+    if(p.stock==null || p.stock==="") return "";
+    const n=+p.stock||0, ar=this.lang==="ar";
+    if(n<=0) return `<span class="pd-stock out">Rupture de stock</span>`;
+    if(n<=3) return `<span class="pd-stock low">${ar?("بقي "+n+" فقط في المخزون"):("Plus que "+n+" en stock")}</span>`;
+    return `<span class="pd-stock">En stock</span>`;
+  },
+  _pdFootHTML(p){
+    const out=(p.stock!=null && p.stock!=="" && +p.stock<=0);
+    const line=(this.cart||[]).find(l=>l.id===p.id), n=line?line.qty:0, ar=this.lang==="ar";
+    const btn = out
+      ? `<button class="btn btn-ghost btn-block btn-lg" disabled style="opacity:.6;cursor:not-allowed">Rupture de stock</button>`
+      : `<button class="btn btn-primary btn-block btn-lg" onclick="App.pdAdd()">🛒 Ajouter au panier · ${this.money(p.prix)}</button>`;
+    const panier = n ? `<div class="pd-incart"><span>${ar?("في سلتك: "+n):("Dans votre panier : "+n)}</span> · <button type="button" class="link-btn" onclick="App.openCart()">Voir le panier</button></div>` : "";
+    return btn+panier;
+  },
+  openProduct(id){
+    const p=DB.find("products",id); if(!p) return;
+    this._pdId=id; this._pdIdx=0;
+    this._pdPhotos=this.productPhotosSync(p);
+    this._pdLoading = +p.nPhotos>0 && !this._ppAJour(p) && !!(window.Cloud && window.Cloud.getProductPhotos);
+    const desc=(p.desc||"").trim();
+    const body=`<div class="pd-gal" id="pd-gal"></div>
+      ${p.cat?`<span class="pd-cat">${this.escape(p.cat)}</span>`:""}
+      <div class="pd-nm" data-i18n="off" dir="auto">${this.escape(p.nom)}</div>
+      <div class="pd-row"><div class="pd-price">${this.money(p.prix)}</div>${this._pdStockHTML(p)}</div>
+      <div class="pd-desc-h">Description</div>
+      ${desc?`<div class="pd-desc" data-i18n="off" dir="auto">${this.escape(desc)}</div>`:`<div class="pd-desc">Aucune description.</div>`}`;
+    this.openSheet("Détails du produit", body, this._pdFootHTML(p));
+    this._pdRenderGal(p);
+    if(this._pdLoading){
+      this.loadProductPhotos(p).then(list=>{
+        if(this._pdId!==id || !document.getElementById("pd-gal")) return;   // fiche fermée entre-temps
+        this._pdLoading=false;
+        if(list && list.length) this._pdPhotos=list;
+        this._pdRenderGal(p);
+      });
+    }
+  },
+  _pdRenderGal(p){
+    const g=document.getElementById("pd-gal"); if(!g) return;
+    const L=this._pdPhotos||[];
+    if(this._pdIdx>=L.length) this._pdIdx=0;
+    const slides = L.length
+      ? L.map((src,i)=>`<div class="pd-slide"><img src="${src}" alt="" draggable="false" onclick="App.pdZoom(${i})"></div>`).join("")
+      : `<div class="pd-slide"><span class="pd-emo" data-i18n="off">${this.escape(p.emo||"🛍️")}</span></div>`;
+    g.innerHTML=`<div class="pd-main"><div class="pd-track" id="pd-track">${slides}</div>`
+      + (L.length?`<span class="pd-zoom-hint">🔍 Toucher pour zoomer</span>`:"")
+      + (this._pdLoading?`<span class="pd-load">Chargement des photos…</span>`:"")
+      + `</div>`
+      + (L.length>1?`<div class="pd-thumbs">${L.map((src,i)=>`<button type="button" class="${i===this._pdIdx?"on":""}" onclick="App.pdGo(${i})" aria-label="Photo ${i+1}"><img src="${src}" alt=""></button>`).join("")}</div>`:"");
+    const tr=document.getElementById("pd-track"); if(!tr) return;
+    tr.addEventListener("scroll",()=>{
+      const i=Math.round(Math.abs(tr.scrollLeft)/Math.max(1,tr.clientWidth));
+      if(i!==this._pdIdx && i<L.length){ this._pdIdx=i; g.querySelectorAll(".pd-thumbs button").forEach((b,k)=>b.classList.toggle("on",k===i)); }
+    },{passive:true});
+    if(this._pdIdx){ const rtl=getComputedStyle(tr).direction==="rtl"; tr.scrollLeft=(rtl?-1:1)*this._pdIdx*tr.clientWidth; }
+  },
+  pdGo(i){
+    const tr=document.getElementById("pd-track"); if(!tr) return;
+    const rtl=getComputedStyle(tr).direction==="rtl";
+    tr.scrollTo({ left:(rtl?-1:1)*i*tr.clientWidth, behavior:"smooth" });
+  },
+  pdZoom(i){ const L=this._pdPhotos||[]; if(L.length) this.openZoom(L, i, true); },
+  pdAdd(){
+    const id=this._pdId; if(!id) return;
+    this.addToCart(id);
+    const p=DB.find("products",id), f=document.getElementById("sheet-foot");
+    if(p && f && document.getElementById("pd-gal")) f.innerHTML=this._pdFootHTML(p);
   },
   addToCart(id){
     const p=DB.find("products",id); if(!p) return;
@@ -4565,7 +4802,17 @@ const App = {
     clearTimeout(this._reacT); this._reacT=0;
     const p=this._reacPend; this._reacPend=null;
     if(!p || !Object.keys(p.d).length) return;
-    if(window.Cloud && window.Cloud.reactStory) window.Cloud.reactStory(p.sid, p.d, this._monNom()).catch(()=>{});
+    if(window.Cloud && window.Cloud.reactStory) window.Cloud.reactStory(p.sid, p.d, this._monNom()).then(()=>this._notifReacStory(p)).catch(()=>{});
+  },
+  // v1.3.5 : la vétérinaire est prévenue (🔔) quand un client RÉAGIT à sa story —
+  // une seule notification par client et par story ; rien pour une simple vue.
+  _notifReacStory(p){
+    if(this.isAdmin() || !p || !p.sid) return;
+    const u=this.currentUser(); if(!u) return;
+    const m=this._lsMap("ad_storyReacNotif"); if(m[p.sid]) return;
+    const emos=this.REACTIONS.filter(x=>(p.d||{})[x[0]]>0).map(x=>x[1]).join(" ");
+    this.notifyOnce("sr_"+p.sid+"_"+u.id, "admin", "story", "Réaction à votre story", this._monNom()+(emos?" · "+emos:""));
+    m[p.sid]=Date.now(); this._lsSave("ad_storyReacNotif", m);
   },
   _envolEmoji(btn, emo){
     const st=document.getElementById("sv-stage"); if(!st || !btn) return;
@@ -4594,7 +4841,8 @@ const App = {
       const r=v.reac||{};
       Object.keys(r).forEach(k=>{
         const cle=(v.uid||"")+"|"+k, n=Math.max(0, +r[k]||0), avant=prec ? (prec[cle]||0) : 0;
-        cur[cle]=n; for(let i=avant;i<n;i++) out.push(this._emo(k));
+        // v1.3.5 : un seul émoji par client et par sorte d'émoji, même s'il a touché 50 fois.
+        cur[cle]=n; if(n>avant) out.push(this._emo(k));
       });
     });
     this._vuesPrec=cur;
@@ -4602,14 +4850,15 @@ const App = {
   },
   _pluie(emojis){
     const st=document.getElementById("sv-stage"); if(!st || !emojis.length) return;
-    const H=st.clientHeight+90, n=Math.min(150, emojis.length), etal=Math.min(6500, 300+n*90);
+    // v1.3.5 : 15 émojis au plus, un peu plus petits et plus étalés dans le temps.
+    const H=st.clientHeight+60, n=Math.min(15, emojis.length), etal=Math.min(5200, 300+n*260);
     for(let i=0;i<n;i++){
       const emo=emojis[i];
       setTimeout(()=>{
         if(!this._sv) return;
         const f=document.createElement("span"); f.className="sv-drop"; f.textContent=emo;
         const d=Math.round(2300+Math.random()*1300);
-        f.style.left=(3+Math.random()*86)+"%"; f.style.fontSize=Math.round(26+Math.random()*18)+"px";
+        f.style.left=(3+Math.random()*88)+"%"; f.style.fontSize=Math.round(20+Math.random()*8)+"px";
         f.style.setProperty("--h", H+"px"); f.style.setProperty("--dx", Math.round(Math.random()*70-35)+"px");
         f.style.setProperty("--rot", Math.round(Math.random()*90-45)+"deg"); f.style.animationDuration=d+"ms";
         st.appendChild(f); setTimeout(()=>f.remove(), d+120);
@@ -4650,19 +4899,18 @@ const App = {
   _reacsPost(pid){ const d=((window.Cloud && window.Cloud.postReacs) || {})[pid]; return (d && d.r) || {}; },
   // v1.3.4 : réactions seulement (pas de commentaires). Les clients voient le
   // total ; seule la vétérinaire voit qui a réagi.
+  // v1.3.5 : plus de bouton « 🙂 Réagir » : une simple icône d'émoji ouvre la liste des émojis.
   _socialHTML(pid){
     const r=this._reacsPost(pid), moi=this._monUid(), P=this.escape(pid), adm=this.isAdmin();
     const tot={}; Object.keys(r).forEach(u=>{ const k=r[u]; if(this._emo(k)) tot[k]=(tot[k]||0)+1; });
     const ordre=Object.keys(tot).sort((a,b)=>tot[b]-tot[a]);
     const nR=ordre.reduce((n,k)=>n+tot[k],0);
     const mien=moi && r[moi], rr=mien && this.REACTIONS.find(x=>x[0]===mien);
-    let h="";
-    if(nR){
-      const resume=`<span class="ps-emos" data-i18n="off">${ordre.slice(0,3).map(k=>this._emo(k)).join("")}</span><span data-i18n="off">${nR}</span>`;
-      h+=`<div class="ps-sum">`+(adm ? `<button type="button" class="ps-lk" onclick="App.openReacsPost('${P}')">${resume}</button>` : `<span class="ps-lk">${resume}</span>`)+`</div>`;
-    }
-    h+=`<div class="ps-act">
-        <button type="button" class="ps-b${rr?" on":""}" onclick="App.pickReacPost(this)"><span data-i18n="off">${rr?rr[1]:"🙂"}</span><span>${rr?rr[2]:"Réagir"}</span></button>
+    const resume = nR ? `<span class="ps-emos" data-i18n="off">${ordre.slice(0,3).map(k=>this._emo(k)).join("")}</span><span data-i18n="off">${nR}</span>` : "";
+    const lib = rr ? rr[2] : "Réagir";
+    let h=`<div class="ps-row">
+        <button type="button" class="ps-ic${rr?" on":""}" onclick="App.pickReacPost(this)" title="${lib}" aria-label="${lib}"><span data-i18n="off">${rr?rr[1]:"🙂"}</span></button>
+        ${nR ? (adm ? `<button type="button" class="ps-lk" onclick="App.openReacsPost('${P}')">${resume}</button>` : `<span class="ps-lk">${resume}</span>`) : ""}
       </div>
       <div class="ps-pick">${this.REACTIONS.map(x=>`<button type="button" class="${mien===x[0]?"on":""}" onclick="App.reagirPost('${P}','${x[0]}',this)" title="${x[2]}" aria-label="${x[2]}" data-i18n="off">${x[1]}</button>`).join("")}</div>`;
     return h;
@@ -4723,7 +4971,7 @@ const App = {
   rejouerReac(uid){
     const v=(this._vues||[]).find(x=>x.uid===uid); if(!v) return;
     const r=v.reac||{}, out=[];
-    this.REACTIONS.forEach(x=>{ for(let i=0;i<(+r[x[0]]||0) && out.length<400;i++) out.push(x[1]); });
+    this.REACTIONS.forEach(x=>{ if(+r[x[0]]>0) out.push(x[1]); });   // v1.3.5 : un émoji par sorte
     this._pluie(out.sort(()=>Math.random()-0.5));
   },
   openStoryViews(){
@@ -4924,13 +5172,21 @@ const App = {
     }
     w.innerHTML=html;
   },
+  /* v1.3.5 : jusqu'à 3 photos par produit. La 1re sert de couverture ; une
+     petite vignette est gardée dans le produit (boutique légère) et les photos
+     en grand vont dans productPhotos/{id}, lues seulement à l'ouverture de la fiche. */
+  MAX_PROD_PHOTOS:3,
   openProdForm(id){
-    const p=id?DB.find("products",id):null; this._prodEdit=id||null; this._prodPhoto=p?(p.photo||null):null;
+    const p=id?DB.find("products",id):null; this._prodEdit=id||null;
+    this._prodForm=(this._prodForm||0)+1;          // jeton : identifie CE formulaire (évite les mélanges)
+    this._prodPhotos=p?this.productPhotosSync(p):[]; this._prodPhotosDirty=false; this._prodPhotosErreur=false;
+    this._prodPhotosLoading=!!(p && +p.nPhotos>0 && !this._ppAJour(p) && !(this._ppLocal[p.id]||[]).length);
     const catOpts=SHOP_CATS.map(c=>`<option ${p&&p.cat===c?"selected":""}>${c}</option>`).join("");
     const body=`
-      <div class="photo-pick"><label class="pv" id="prod-pv">${p&&p.photo?`<img src="${p.photo}">`:"📷"}
-        <input type="file" accept="image/*" style="display:none" onchange="App.pickProdPhoto(this)"></label>
-        <span class="hint">Photo du produit (optionnel)</span></div>
+      <div class="field"><label>Photos du produit (jusqu'à 3, optionnel)</label>
+        <div class="pet-photos prod-photos" id="prod-photos"></div>
+        <div class="hint" id="prod-photos-hint" style="margin-top:6px;display:none">Touchez une photo pour la mettre en couverture.</div>
+        <input type="file" accept="image/*" multiple style="display:none" id="prod-photo" onchange="App.pickProdPhotos(this)"></div>
       <div class="field"><label>Nom du produit</label><input class="input" id="pr-nom" value="${p?this.escape(p.nom):""}" placeholder="Ex : Croquettes chat 2kg"></div>
       <div class="two-col">
         <div class="field"><label>Prix (DT)</label><input class="input" type="number" step="0.5" id="pr-prix" value="${p?p.prix:""}" placeholder="Ex : 32"></div>
@@ -4941,26 +5197,144 @@ const App = {
         <div class="field"><label>Emoji</label><input class="input" id="pr-emo" maxlength="4" value="${p?this.escape(p.emo||""):""}" placeholder="🦴"></div>
       </div>
       <div class="field"><label>Description</label><textarea id="pr-desc" placeholder="Courte description du produit">${p?this.escape(p.desc||""):""}</textarea></div>`;
-    const foot=`<button class="btn btn-primary btn-block btn-lg" onclick="App.saveProd()">${id?"Enregistrer":"Ajouter le produit"} 🛍️</button>
+    const foot=`<button class="btn btn-primary btn-block btn-lg" id="pr-save" onclick="App.saveProd()">${id?"Enregistrer":"Ajouter le produit"} 🛍️</button>
       ${id?`<button class="btn btn-danger btn-block mt-s" onclick="App.deleteProd('${id}')">Supprimer</button>`:""}`;
     this.openSheet(id?"Modifier le produit":"Nouveau produit", body, foot);
+    this._renderProdPhotos();
+    if(this._prodPhotosLoading) this._chargerPhotosForm(p);
   },
-  pickProdPhoto(inp){ this.readPhoto(inp.files[0], d=>{ this._prodPhoto=d; const pv=document.getElementById("prod-pv"); if(pv) pv.innerHTML=d?`<img src="${d}">`:"📷"; }); },
-  saveProd(){
+  // Les photos en grand sont nécessaires pour les modifier : si elles ne se
+  // chargent pas, on bloque leur modification (sinon on les remplacerait par la
+  // petite vignette). Le reste du produit reste modifiable.
+  _chargerPhotosForm(p){
+    const jeton=this._prodForm;
+    this._prodPhotosLoading=true; this._prodPhotosErreur=false; this._renderProdPhotos();
+    this.fetchProductPhotos(p).then(r=>{
+      if(this._prodForm!==jeton || !document.getElementById("prod-photos")) return;   // formulaire fermé ou changé
+      this._prodPhotosLoading=false;
+      if(r.ok && r.list.length){ if(!this._prodPhotosDirty) this._prodPhotos=r.list.slice(0, this.MAX_PROD_PHOTOS); }
+      else this._prodPhotosErreur=true;
+      this._renderProdPhotos();
+    });
+  },
+  prodPhotosReessayer(){ const p=this._prodEdit && DB.find("products", this._prodEdit); if(p) this._chargerPhotosForm(p); },
+  // Recommencer les photos de zéro (si les anciennes sont introuvables).
+  prodPhotosRemplacer(){ this._prodPhotosErreur=false; this._prodPhotos=[]; this._prodPhotosDirty=true; this._renderProdPhotos(); },
+  _renderProdPhotos(){
+    const w=document.getElementById("prod-photos"); if(!w) return;
+    if(this._prodPhotosLoading){ w.innerHTML=`<div class="pp-wait">Chargement des photos…</div>`; return; }
+    if(this._prodPhotosErreur){
+      w.innerHTML=`<div class="pp-wait" style="width:100%">Photos non chargées : vérifiez la connexion.</div>
+        <button type="button" class="btn btn-soft btn-sm" onclick="App.prodPhotosReessayer()">Réessayer</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="App.prodPhotosRemplacer()">Remplacer les photos</button>`;
+      const h=document.getElementById("prod-photos-hint"); if(h) h.style.display="none";
+      return;
+    }
+    const L=this._prodPhotos||[];
+    const thumbs=L.map((src,i)=>`<div class="pp-thumb"><img src="${src}" alt="" onclick="App.prodPhotoCover(${i})" style="cursor:pointer">${i===0&&L.length>1?`<span class="pp-cover">Couverture</span>`:""}<button type="button" class="pp-x" onclick="App.removeProdPhoto(${i})" title="Retirer">✕</button></div>`).join("");
+    const plein=L.length>=this.MAX_PROD_PHOTOS;
+    w.innerHTML = thumbs + (plein?"":`<button type="button" class="pp-add" onclick="document.getElementById('prod-photo').click()"><span style="font-size:20px">📷</span><span style="font-size:.6rem;font-weight:800">Ajouter</span></button>`);
+    const h=document.getElementById("prod-photos-hint"); if(h) h.style.display=L.length>1?"block":"none";
+  },
+  async pickProdPhotos(inp){
+    const files=Array.from(inp.files||[]); inp.value="";       // permet de re-choisir la même photo
+    if(this._prodPhotosLoading || this._prodPhotosErreur || !files.length) return;
+    const jeton=this._prodForm;
+    const place=Math.max(0, this.MAX_PROD_PHOTOS-(this._prodPhotos||[]).length);
+    if(files.length>place) this.toast("Maximum 3 photos par produit : les photos en trop n'ont pas été ajoutées.","warn");
+    let rate=false;
+    for(const f of files.slice(0, place)){
+      // Grande photo pour le zoom : ≈ 1080 px, ≤ 240 000 caractères (3 photos < 1 Mo par document).
+      const d=await this._compressImg(f, 1080, 240000);
+      if(this._prodForm!==jeton) return;                          // formulaire fermé entre-temps
+      if(d && this._prodPhotos.length<this.MAX_PROD_PHOTOS){ this._prodPhotos.push(d); this._prodPhotosDirty=true; }
+      else if(!d) rate=true;
+      this._renderProdPhotos();
+    }
+    if(rate) this.toast("Une photo n'a pas pu être lue. Essayez une autre photo.","err");
+  },
+  removeProdPhoto(i){ if(this._prodPhotosLoading || this._prodPhotosErreur) return; this._prodPhotos.splice(i,1); this._prodPhotosDirty=true; this._renderProdPhotos(); },
+  prodPhotoCover(i){
+    if(this._prodPhotosLoading || this._prodPhotosErreur || !i) return;
+    const L=this._prodPhotos; L.unshift(L.splice(i,1)[0]); this._prodPhotosDirty=true; this._renderProdPhotos();
+  },
+  // Compression : réduit la qualité puis la taille jusqu'à tenir dans « limite » caractères.
+  _compressImg(src, max, limite){
+    return new Promise(res=>{
+      const go=(url)=>{
+        const img=new Image();
+        img.onload=()=>{
+          const w=img.naturalWidth||img.width, h=img.naturalHeight||img.height; if(!w || !h) return res(null);
+          let m=max;
+          for(let passe=0; passe<6; passe++){
+            const k=Math.min(1, m/Math.max(w,h)), cw=Math.max(1,Math.round(w*k)), ch=Math.max(1,Math.round(h*k));
+            const c=document.createElement("canvas"); c.width=cw; c.height=ch;
+            const x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,cw,ch); x.drawImage(img,0,0,cw,ch);
+            for(let q=0.82; q>=0.5; q-=0.08){
+              let out; try{ out=c.toDataURL("image/jpeg", q); }catch(e){ return res(null); }
+              if(out.length<=limite) return res(out);
+            }
+            m=Math.round(m*0.8);
+          }
+          res(null);
+        };
+        img.onerror=()=>res(null); img.src=url;
+      };
+      if(typeof src==="string") go(src);
+      else if(src){ const r=new FileReader(); r.onload=()=>go(r.result); r.onerror=()=>res(null); r.readAsDataURL(src); }
+      else res(null);
+    });
+  },
+  async saveProd(){
+    if(this._savingProd) return;
     const nom=(document.getElementById("pr-nom").value||"").trim();
     const prix=parseFloat(document.getElementById("pr-prix").value);
     if(!nom){ this.toast("Le nom est requis.","err"); return; }
     if(isNaN(prix)||prix<0){ this.toast("Indiquez un prix valide.","err"); return; }
     const stockV=document.getElementById("pr-stock").value;
     const data={ nom, prix, cat:document.getElementById("pr-cat").value, emo:(document.getElementById("pr-emo").value||"").trim(),
-      desc:(document.getElementById("pr-desc").value||"").trim(), stock: stockV===""?null:parseInt(stockV,10), photo:this._prodPhoto||null };
-    if(this._prodEdit){ DB.update("products",this._prodEdit,data); this.toast("Produit mis à jour ✓","ok"); }
-    else { DB.push("products",Object.assign({id:this.uid("p"),createdAt:Date.now()},data)); this.toast("Produit ajouté à la boutique ! 🛍️","ok"); }
-    this.closeSheet(); this.renderAll();
+      desc:(document.getElementById("pr-desc").value||"").trim(), stock: stockV===""?null:parseInt(stockV,10) };
+    // Tout ce qui décrit CE formulaire est figé ici, avant la moindre attente
+    // (la vétérinaire peut fermer la fiche et en ouvrir une autre pendant l'envoi).
+    const jeton=this._prodForm, edition=this._prodEdit, id=edition || this.uid("p");
+    const photos=(this._prodPhotosDirty && !this._prodPhotosLoading && !this._prodPhotosErreur)
+      ? (this._prodPhotos||[]).slice(0, this.MAX_PROD_PHOTOS) : null;   // null = photos inchangées
+    let photosRatees=false;
+    if(photos){
+      this._savingProd=true;
+      const btn=document.getElementById("pr-save"); if(btn) btn.disabled=true;
+      try{
+        const v=Date.now();
+        // 1) les photos en grand d'abord, 2) puis le produit (vignette + version).
+        if(CLOUD_ON && window.Cloud && window.Cloud.enabled && window.Cloud.saveProductPhotos){
+          try{ await window.Cloud.saveProductPhotos(id, photos, v); }
+          catch(e){
+            // « delai » : réseau lent, l'envoi partira tout seul. Autre erreur : anciennes photos gardées.
+            if(!(e && e.message==="delai")) throw e;
+          }
+        } else this._ppLocal[id]=photos.slice();
+        this._ppCache[id]={ v, list:photos.slice() };
+        data.photo = photos.length ? (await this._compressImg(photos[0], 420, 60000)) : null;
+        data.nPhotos = photos.length; data.phV = v;
+      }catch(e){
+        console.warn("photos produit", e);
+        photosRatees=true;                       // le reste du produit est quand même enregistré
+        delete data.photo; delete data.nPhotos; delete data.phV;
+      }
+      this._savingProd=false; if(btn) btn.disabled=false;
+    }
+    if(edition){ if(DB.find("products", edition)) DB.update("products", edition, data); }
+    else DB.push("products", Object.assign({ id, createdAt:Date.now() }, data));
+    if(photosRatees) this.toast("Les photos n'ont pas pu être enregistrées. Vérifiez la connexion puis réessayez.","err");
+    else this.toast(edition?"Produit mis à jour ✓":"Produit ajouté à la boutique ! 🛍️","ok");
+    if(this._prodForm===jeton && document.getElementById("pr-save")) this.closeSheet();   // seulement CE formulaire
+    this.renderAll();
   },
   deleteProd(id){
     if(!confirm("Supprimer ce produit de la boutique ?")) return;
     DB.del("products",id); this.closeSheet(); this.toast("Produit supprimé.","ok"); this.renderAll();
+    delete this._ppCache[id]; delete this._ppLocal[id];
+    try{ if(window.Cloud && window.Cloud.deleteProductPhotos) window.Cloud.deleteProductPhotos(id); }catch(e){}
   },
 
   /* ============================================================
@@ -6410,6 +6784,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if(t.closest(".photo-pick") || t.closest(".pet-photos") || t.closest(".story-prev")) return;      // aperçu de formulaire → pas de zoom
     if(t.closest("#img-viewer")) return;      // déjà dans la visionneuse
     if(t.closest("#story-viewer")) return;    // stories : les gestes sont gérés par la visionneuse
+    if(t.closest(".prod") || t.closest(".pd-gal") || t.closest(".prod-photos")) return;   // boutique (v1.3.5) : la fiche produit gère ses photos
     const src=t.getAttribute("src")||"";
     if(!/^data:|^https?:/.test(src)) return;   // vraies photos uniquement
     if(/logo-mark\.png/i.test(src)) return;    // on n'agrandit pas le logo
@@ -6435,14 +6810,57 @@ document.addEventListener("DOMContentLoaded", function(){
     if(e.key==="Escape") App.closeZoom();
     else if(open && e.key==="ArrowLeft") App.zoomStep(-1);
     else if(open && e.key==="ArrowRight") App.zoomStep(1);
+    else if(open && (e.key==="+" || e.key==="=")) App.zoomBy(1.6);
+    else if(open && e.key==="-") App.zoomBy(1/1.6);
   });
-  // Balayage tactile (mobile) pour changer de photo
+  // Gestes dans la visionneuse (v1.3.5) : balayer pour changer de photo (taille
+  // normale), pincer pour zoomer, double toucher (zoom / taille normale),
+  // glisser pour déplacer une photo zoomée. Molette et double clic à la souris.
   (function(){
     const v=document.getElementById("img-viewer"); if(!v) return;
-    let sx=0, sy=0;
-    v.addEventListener("touchstart",e=>{ sx=e.touches[0].clientX; sy=e.touches[0].clientY; },{passive:true});
-    v.addEventListener("touchend",e=>{ const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
-      if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)) App.zoomStep(dx<0?1:-1); },{passive:true});
+    let sx=0, sy=0, lx=0, ly=0, mode=null, d0=1, s0=1, moved=false, multi=false, lastTap=0;
+    const surBouton=(e)=>!!(e.target && e.target.closest && e.target.closest("button"));
+    const ecart=(t)=>Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY)||1;
+    v.addEventListener("touchstart",e=>{
+      if(surBouton(e)) return;
+      if(e.touches.length>=2 && App._zoomOk){ mode="pinch"; multi=true; d0=ecart(e.touches); s0=App._zs||1; return; }
+      const t=e.touches[0]; sx=lx=t.clientX; sy=ly=t.clientY; moved=false; multi=false;
+      mode=(App._zs>1.001) ? "pan" : "swipe";
+    },{passive:true});
+    v.addEventListener("touchmove",e=>{
+      if(mode==="pinch" && e.touches.length>=2){
+        const cx=(e.touches[0].clientX+e.touches[1].clientX)/2, cy=(e.touches[0].clientY+e.touches[1].clientY)/2;
+        App._zoomTo(s0*ecart(e.touches)/d0, cx, cy, false); e.preventDefault(); return;
+      }
+      const t=e.touches[0]; if(!t) return;
+      if(Math.abs(t.clientX-sx)>8 || Math.abs(t.clientY-sy)>8) moved=true;
+      if(mode==="pan"){ App._zx+=t.clientX-lx; App._zy+=t.clientY-ly; lx=t.clientX; ly=t.clientY; App._zoomClamp(); App._zoomApply(false); e.preventDefault(); }
+    },{passive:false});
+    v.addEventListener("touchend",e=>{
+      if(surBouton(e)) return;
+      if(mode==="pinch"){
+        if(e.touches.length===1){ mode="pan"; lx=e.touches[0].clientX; ly=e.touches[0].clientY; }
+        else if(!e.touches.length) mode=null;
+        return;
+      }
+      const t=e.changedTouches[0]; if(!t) return;
+      const dx=t.clientX-sx, dy=t.clientY-sy;
+      if(mode==="swipe" && !multi && Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)){ mode=null; App.zoomStep(dx<0?1:-1); return; }
+      if(!moved && !multi && App._zoomOk){
+        const now=Date.now();
+        if(now-lastTap<320){
+          lastTap=0; e.preventDefault();
+          if(App._zs>1.001) App._zoomTo(1, null, null, true); else App._zoomTo(2.5, t.clientX, t.clientY, true);
+        } else lastTap=now;
+      }
+      mode=null;
+    },{passive:false});
+    v.addEventListener("wheel",e=>{ if(!v.classList.contains("show") || !App._zoomOk) return; e.preventDefault(); App._zoomTo((App._zs||1)*(e.deltaY<0?1.2:1/1.2), e.clientX, e.clientY, false); },{passive:false});
+    v.addEventListener("dblclick",e=>{ if(surBouton(e) || !App._zoomOk) return; e.preventDefault(); if(App._zs>1.001) App._zoomTo(1, null, null, true); else App._zoomTo(2.5, e.clientX, e.clientY, true); });
+    let drag=null;
+    v.addEventListener("mousedown",e=>{ App._dragMoved=false; if(App._zs>1.001 && e.target && e.target.id==="iv-img"){ drag={x:e.clientX, y:e.clientY, m:false}; e.preventDefault(); } });
+    window.addEventListener("mousemove",e=>{ if(!drag) return; App._zx+=e.clientX-drag.x; App._zy+=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY; drag.m=true; App._zoomClamp(); App._zoomApply(false); });
+    window.addEventListener("mouseup",()=>{ if(drag){ App._dragMoved=drag.m; drag=null; } });
   })();
 
   // Langue (français / arabe) : observateur + application avant le rendu
@@ -7033,6 +7451,30 @@ document.addEventListener("DOMContentLoaded", function(){
       });
     }catch(e){ console.warn("remise en stock", codeErr(e)); }
     finally{ remisesEnCours.delete(String(orderId)); }
+  };
+
+  /* -------------------------------------------------------------------
+     v1.3.5 — PHOTOS DES PRODUITS : productPhotos/{id} = { p:[≤ 3 photos], v }
+     Lues seulement quand un client ouvre la fiche d'un produit ; écrites
+     par la vétérinaire (règles Firestore). « v » = version, identique au
+     champ phV du produit : une copie périmée n'est jamais gardée en cache.
+     ------------------------------------------------------------------- */
+  Cloud.getProductPhotos = async (id) => {
+    if(!db || !id) return null;
+    const d = await avecDelai(getDoc(doc(db, "productPhotos", String(id))), 20000);
+    if(!d.exists()) return null;
+    const x = d.data() || {};
+    return { list: (Array.isArray(x.p) ? x.p : []).filter(s => typeof s === "string" && s).slice(0, 3), v: +x.v || 0 };
+  };
+  Cloud.saveProductPhotos = async (id, list, v) => {
+    if(!db || !id) throw new Error("hors-ligne");
+    const ref = doc(db, "productPhotos", String(id));
+    if(!list || !list.length){ await avecDelai(deleteDoc(ref), 20000); return; }
+    await avecDelai(setDoc(ref, { p: list.slice(0, 3), v: +v || Date.now() }), 60000);
+  };
+  Cloud.deleteProductPhotos = async (id) => {
+    if(!db || !id) return;
+    try{ await deleteDoc(doc(db, "productPhotos", String(id))); }catch(e){ console.warn("photos produit", codeErr(e)); }
   };
 
   // Vétérinaire : efface ce qu'elle ne garde pas en mémoire pour un client supprimé.
