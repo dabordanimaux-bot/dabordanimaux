@@ -678,7 +678,7 @@ html.rtl .mark-plus{right:auto;left:-4px}
 .sv-admin{display:none;position:absolute;left:0;right:0;bottom:0;padding:10px 14px calc(14px + env(safe-area-inset-bottom));gap:10px;z-index:4;background:rgba(0,0,0,.55)}
 .sv-stage.is-admin .sv-admin{display:flex}
 .sv-stage.is-admin .sv-cap{bottom:calc(62px + env(safe-area-inset-bottom))}
-.sv-btn{flex:1;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font:800 .88rem var(--body);padding:10px 12px;border-radius:12px;cursor:pointer}
+.sv-btn{flex:1;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font:800 .84rem var(--body);padding:10px 8px;border-radius:12px;cursor:pointer;white-space:nowrap}
 
 /* ---------- v1.3 : visionneuse — musique ---------- */
 .sv-who{flex:1;min-width:0}
@@ -731,6 +731,12 @@ html.rtl .mark-plus{right:auto;left:-4px}
 .se-col.on{transform:scale(1.22);border-color:#fff;outline:2px solid rgba(0,0,0,.35)}
 /* édition d'un texte */
 .story-editor.is-texte .se-top,.story-editor.is-texte .se-bottom,.story-editor.is-texte .se-zoom{display:none}
+/* musique choisie : indiquée dans l'éditeur seulement (jamais dessinée sur l'image) */
+.se-mu-chip{position:absolute;top:calc(64px + env(safe-area-inset-top));left:12px;max-width:64%;z-index:3;display:none;align-items:center;gap:6px;background:rgba(0,0,0,.5);color:#fff;border-radius:999px;padding:5px 5px 5px 12px;font:800 .82rem var(--body);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.se-mu-chip.show{display:flex}
+.se-mu-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.se-mu-chip button{flex:none;border:0;background:rgba(255,255,255,.22);color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:.75rem;line-height:1}
+.story-editor.is-dessin .se-mu-chip,.story-editor.is-texte .se-mu-chip{display:none}
 #se-ta:focus{outline:0;box-shadow:none}
 .se-textedit{position:fixed;inset:0;z-index:230;background:rgba(0,0,0,.66);display:none;flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) 12px 12px;gap:10px}
 .se-textedit.show{display:flex}
@@ -767,6 +773,19 @@ html.rtl .mark-plus{right:auto;left:-4px}
 .se-mu-actions{display:flex;gap:10px;margin-top:16px}
 .se-mu-b{flex:1;border:0;border-radius:14px;padding:13px;font:800 .95rem var(--body);cursor:pointer;background:rgba(255,255,255,.14);color:#fff}
 .se-mu-b.is-ok{background:var(--grad)}
+/* sélection de l'extrait (comme Instagram) : on fait glisser la piste sous le cadre */
+.se-mu-temps{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:.78rem;font-weight:800;margin:16px 2px 8px}
+.se-mu-temps b{font-size:1rem;margin-inline-start:4px}
+.se-mu-temps .se-mu-tot{opacity:.6;font-weight:700;font-size:.74rem}
+.se-mu-wave{position:relative;height:70px;border-radius:14px;background:rgba(255,255,255,.06);touch-action:none;cursor:grab;overflow:hidden;user-select:none;-webkit-user-select:none}
+.se-mu-wave.drag{cursor:grabbing}
+.se-mu-wave canvas{display:block;width:100%;height:100%}
+.se-mu-hint{text-align:center;font-size:.72rem;opacity:.6;margin-top:7px;line-height:1.35}
+.se-mu-ctrl{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+.se-mu-dur{flex:none;width:50px;height:50px;border-radius:50%;border:2px solid #fff;background:transparent;color:#fff;font:800 1.05rem var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.se-mu-dur small{font-size:.6rem;opacity:.8;margin-top:2px}
+.se-mu-pp{flex:none;width:50px;height:50px;border-radius:50%;border:0;background:#fff;color:#111;font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.se-mu-chg{flex:1;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;border-radius:999px;padding:9px 10px;font:800 .8rem var(--body);cursor:pointer}
 .se-mu-b:disabled{opacity:.6}
 .se-mu-note{font-size:.74rem;opacity:.65;margin-top:12px;line-height:1.4}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -992,7 +1011,8 @@ html.rtl .mark-plus{right:auto;left:-4px}
       <div class="sv-cap" id="sv-cap" dir="auto" data-i18n="off"></div>
       <div class="sv-admin">
         <button type="button" class="sv-btn" onclick="App.deleteCurrentStory()">🗑️ Supprimer</button>
-        <button type="button" class="sv-btn" onclick="App.closeStories();App.pickStory()">＋ Nouvelle story</button>
+        <button type="button" class="sv-btn" onclick="App.editCurrentStory()">✏️ Modifier</button>
+        <button type="button" class="sv-btn" onclick="App.closeStories();App.pickStory()">＋ Nouvelle</button>
       </div>
     </div>
   </div>
@@ -1013,6 +1033,7 @@ html.rtl .mark-plus{right:auto;left:-4px}
           <button type="button" class="se-ic" onclick="StoryEd.choisirPhoto()" title="Photo">🖼️</button>
         </div>
       </div>
+      <div class="se-mu-chip" id="se-mu-chip"><span id="se-mu-chip-t" dir="auto" data-i18n="off" onclick="StoryEd.reglerMusique()"></span><button type="button" onclick="StoryEd.retirerMusique()" aria-label="Retirer la musique" title="Retirer la musique">✕</button></div>
       <div class="se-drawbar">
         <div class="se-drawrow">
           <button type="button" class="se-ic" onclick="StoryEd.annulerTrait()" title="Annuler le dernier trait">↶</button>
@@ -1235,7 +1256,7 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.3.1";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
 /* Conception et développement de l'application. */
@@ -1569,6 +1590,19 @@ const AR_DICT = {
   "Préparation de la musique…":"جارٍ تجهيز الموسيقى…",
   "Utilisez une musique libre de droits (ex. bibliothèque audio YouTube, Pixabay Music) : les chansons connues sont protégées.":"استعمل موسيقى خالية من حقوق النشر (مثل مكتبة YouTube الصوتية أو Pixabay Music): الأغاني المعروفة محمية.",
   "Musique ajoutée ♪":"تمت إضافة الموسيقى ♪",
+  "Musique retirée":"تمت إزالة الموسيقى",
+  "Retirer la musique":"إزالة الموسيقى",
+  "Début":"البداية",
+  "Fin":"النهاية",
+  "Faites glisser la piste pour choisir le passage. Le cercle change la durée.":"اسحب المقطع لاختيار الجزء المطلوب. الدائرة تغيّر المدة.",
+  "Changer de musique":"تغيير الموسيقى",
+  "Valider":"تأكيد",
+  "✏️ Modifier":"✏️ تعديل",
+  "＋ Nouvelle":"＋ جديدة",
+  "Enregistrer ›":"حفظ ›",
+  "Quitter sans enregistrer ?":"الخروج دون حفظ؟",
+  "Story modifiée ✨":"تم تعديل القصة ✨",
+  "Connexion lente : la story sera envoyée dès que le réseau le permet.":"اتصال بطيء: سيتم إرسال القصة عندما تسمح الشبكة.",
   "Musique indisponible : vérifiez la connexion Internet.":"الموسيقى غير متاحة: تحقّق من الاتصال بالإنترنت.",
   "Ajoutez une photo ou un texte.":"أضف صورة أو نصًا.",
   "Quitter sans publier ?":"الخروج دون نشر؟",
@@ -4172,6 +4206,8 @@ const App = {
       .sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
   },
   _storySeen(){ try{ return JSON.parse(localStorage.getItem("ad_storySeen")||"{}")||{}; }catch(e){ return {}; } },
+  // Pas encore vue, ou modifiée par la vétérinaire depuis la dernière visite.
+  _nonVue(s, seen){ return !seen[s.id] || (+s.updatedAt>0 && seen[s.id] < +s.updatedAt); },
   _markStorySeen(id){
     try{
       const m=this._storySeen(); m[id]=Date.now();
@@ -4181,7 +4217,7 @@ const App = {
   },
   renderStoryRings(){
     const list=this.activeStories(), seen=this._storySeen();
-    const unseen=list.some(s=>!seen[s.id]);
+    const unseen=list.some(s=>this._nonVue(s, seen));
     const sig=list.length+"|"+unseen;
     ["mark-c","mark-a"].forEach(id=>{
       const el=document.getElementById(id); if(!el || el._sig===sig) return;
@@ -4224,7 +4260,7 @@ const App = {
   openStories(startId){
     const list=this.activeStories(); if(!list.length) return;
     const seen=this._storySeen();
-    let i = startId ? list.findIndex(s=>s.id===startId) : list.findIndex(s=>!seen[s.id]);
+    let i = startId ? list.findIndex(s=>s.id===startId) : list.findIndex(s=>this._nonVue(s, seen));
     if(i<0) i=0;
     this._sv={ list, i, start:0, elapsed:0, paused:false, raf:0 };
     const v=document.getElementById("story-viewer");
@@ -4347,6 +4383,14 @@ const App = {
     if(k>=0){ sv.i=k; const bars=document.getElementById("sv-bars");
       bars.innerHTML=list.map((x,j)=>`<div class="sv-bar"><i style="width:${j<k?100:0}%"></i></div>`).join(""); }
     else { sv.i=Math.min(sv.i, list.length-1); this._svShow(); }
+  },
+  // ✏️ Modifier : rouvre la story publiée dans l'éditeur (mêmes calques).
+  editCurrentStory(){
+    const sv=this._sv; if(!sv || !this.isAdmin()) return;
+    const s=sv.list[sv.i]; if(!s) return;
+    if(!(CLOUD_ON && window.Cloud && window.Cloud.enabled && window.Cloud.updateStory)) return this.toast("Connexion Internet requise.","err");
+    this.closeStories();
+    StoryEd.ouvrir({ story:s });
   },
   async deleteCurrentStory(){
     const sv=this._sv; if(!sv || !this.isAdmin()) return;
@@ -5261,13 +5305,38 @@ const StoryEd = {
     const ed=this._el("story-editor"); ed.classList.add("show"); ed.setAttribute("aria-hidden","false");
     document.body.style.overflow="hidden";
     this._lier(); this._dim(); this._maj(); this.rendu();
-    if(opts.fichier){ await this.chargerPhoto(opts.fichier); }
+    const pub=this._el("se-pub"); if(pub) pub.textContent = opts.story ? "Enregistrer ›" : "Publier la story ›";
+    if(opts.story){ await this._restaurer(opts.story); }
+    else if(opts.fichier){ await this.chargerPhoto(opts.fichier); }
     else if(opts.texte){ this.ajouterTexte(); }
+  },
+  // Story déjà publiée : on retrouve photo, textes, stickers, dessins et musique.
+  async _restaurer(s){
+    const st=this.st; if(!st) return;
+    st.edit={ id:String(s.id), createdAt:+s.createdAt||Date.now(), expiresAt:+s.expiresAt||0, by:s.by||"" };
+    if(s.audio) st.musique={ data:s.audio, titre:s.audioTitle||"Musique", dur:+s.dur||15000 };
+    let ed=null; try{ ed = s.ed ? JSON.parse(s.ed) : null; }catch(e){ ed=null; }
+    if(ed && ed.v===1){
+      st.fond=+ed.fond||0; st.fondPhoto=ed.fondPhoto||"flou";
+      st.items=(Array.isArray(ed.items) ? ed.items : []).filter(x=>x && x.type && x.type!=="musique");
+      st.traits=(Array.isArray(ed.traits) ? ed.traits : []).filter(t=>t && Array.isArray(t.pts));
+      if(ed.photo && s.src){
+        try{ this._poserPhoto(await this._imageUrl(s.src)); Object.assign(st.photo, { x:+ed.photo.x, y:+ed.photo.y, s:+ed.photo.s||1, r:+ed.photo.r||0 }); }catch(e){}
+      }
+    } else {
+      // Story publiée avant la version 1.3.1 : l'image finale devient le fond,
+      // on peut ajouter par-dessus et changer la musique.
+      try{ this._poserPhoto(await this._imageUrl(s.img)); st.fondPhoto="noir"; }catch(e){}
+    }
+    this._maj(); this.rendu();
+  },
+  _imageUrl(url){
+    return new Promise((ok, ko)=>{ const im=new Image(); im.onload=()=>ok(im); im.onerror=()=>ko(new Error("image")); im.src=url; });
   },
   fermer(force){
     const st=this.st;
     if(!force && st && (st.photo || st.items.length || st.traits.length)){
-      const q="Quitter sans publier ?";
+      const q = st.edit ? "Quitter sans enregistrer ?" : "Quitter sans publier ?";
       if(!confirm(App.lang==="ar" && AR_DICT[q] ? AR_DICT[q] : q)) return;
     }
     this._stopEcoute();
@@ -5323,6 +5392,9 @@ const StoryEd = {
     ed.classList.toggle("a-photo", !!st.photo);
     this._el("se-zoom-r").value=st.photo ? Math.round(st.photo.s*100) : 100;
     const bm=this._el("se-b-musique"); if(bm) bm.classList.toggle("on", !!st.musique);
+    const ch=this._el("se-mu-chip"), ct=this._el("se-mu-chip-t");
+    if(ch) ch.classList.toggle("show", !!st.musique);
+    if(ct) ct.textContent = st.musique ? "♪ "+st.musique.titre : "";
     const dc=this._el("se-draw-cols");
     if(dc && !dc.childNodes.length){
       dc.innerHTML=this.COULEURS.map(c=>`<button type="button" class="se-col" style="background:${c}" onclick="StoryEd.coulTrait('${c}')"></button>`).join("");
@@ -5336,6 +5408,11 @@ const StoryEd = {
     let img;
     try{ img=await this._image(file); }catch(e){ return App.toast("Image illisible ou trop lourde. Essayez une autre photo.","err"); }
     if(!this.st) return;
+    this._poserPhoto(img);
+    this._maj(); this.rendu();
+  },
+  _poserPhoto(img){
+    if(!this.st) return;
     // Copie réduite (1600 px max) : rapide à redessiner pendant les gestes.
     const r=Math.min(1, 1600/Math.max(img.width, img.height));
     const w=Math.max(1, Math.round(img.width*r)), h=Math.max(1, Math.round(img.height*r));
@@ -5346,7 +5423,6 @@ const StoryEd = {
     const fx=fl.getContext("2d"); const sc=Math.max(27/w, 48/h);
     fx.drawImage(src, (27-w*sc)/2, (48-h*sc)/2, w*sc, h*sc);
     this.st.photo={ src, flou:fl, w, h, x:this.LW/2, y:this.LH/2, s:1, r:0 };
-    this._maj(); this.rendu();
   },
   _image(file){
     return new Promise((ok, ko)=>{
@@ -5652,8 +5728,29 @@ const StoryEd = {
      La vétérinaire choisit un fichier audio de son téléphone ; on garde un
      extrait de 10 à 20 s, converti en MP3 léger (64 kb/s, mono) avec la
      bibliothèque libre lamejs, chargée seulement à ce moment-là. */
-  choisirMusique(){ this._el("se-audio-in").click(); },
+  choisirMusique(){ this._debloquerAudio(); this._el("se-audio-in").click(); },
+  // Touchée dans le geste de l'utilisateur : autorise la lecture automatique ensuite.
+  _debloquerAudio(){
+    try{ const AC=window.AudioContext||window.webkitAudioContext; this._ac=this._ac||new AC(); if(this._ac.state==="suspended") this._ac.resume(); }catch(e){}
+  },
+  // Pastille ♪ : régler à nouveau le passage (ou choisir un autre fichier).
+  reglerMusique(){
+    const m=this.st && this.st.musique;
+    if(!(m && m.aud)) return this.choisirMusique();
+    this._debloquerAudio();
+    this._aud=m.aud; this._aud.debut=m.deb; this._aud.duree=m.dur/1000; this._aud.titre=m.titre;
+    this._el("se-music").classList.add("show");
+    this._uiMusique(); this.ecouter(true);
+  },
+  retirerMusique(){
+    const st=this.st; if(!st || !st.musique) return;
+    st.musique=null; st.items=st.items.filter(x=>x.type!=="musique");
+    this._maj(); this.rendu();
+    App.toast("Musique retirée","ok");
+  },
+  DUREES_MU:[5,10,15,20],
   async _fichierAudio(file){
+    this._stopEcoute();
     const pan=this._el("se-music"), corps=this._el("se-mu-corps");
     pan.classList.add("show");
     corps.innerHTML=`<div class="se-mu-info">Chargement de la musique…</div>`;
@@ -5664,45 +5761,142 @@ const StoryEd = {
       buf=await dec.decodeAudioData(await file.arrayBuffer());
     }catch(e){ corps.innerHTML=`<div class="se-mu-info">Fichier audio illisible.</div>`; return; }
     const titre=String(file.name||"Musique").replace(/\.[^.]+$/,"").replace(/[_-]+/g," ").trim().slice(0,40);
-    this._aud={ buf, titre, debut:0, duree:Math.min(15, Math.floor(buf.duration)) || 1 };
-    this._uiMusique();
+    this._aud={ buf, titre, debut:0, duree:15, peaks:this._pics(buf) };
+    const o=this._dureesMu(); if(!o.includes(15)) this._aud.duree=o[o.length-1];
+    this._uiMusique(); this.ecouter(true);
   },
+  // Enveloppe du morceau (20 valeurs par seconde) pour dessiner la piste.
+  _pics(buf){
+    const n=Math.max(1, Math.ceil(buf.duration*20)), pk=new Float32Array(n), pas=buf.sampleRate/20;
+    for(let c=0;c<Math.min(2, buf.numberOfChannels);c++){
+      const d=buf.getChannelData(c);
+      for(let b=0;b<n;b++){
+        const i0=Math.floor(b*pas), i1=Math.min(d.length, Math.floor((b+1)*pas)); let m=0;
+        for(let i=i0;i<i1;i+=3){ const v=d[i]<0?-d[i]:d[i]; if(v>m) m=v; }
+        if(m>pk[b]) pk[b]=m;
+      }
+    }
+    let mx=0; for(let b=0;b<n;b++) if(pk[b]>mx) mx=pk[b];
+    if(mx>0) for(let b=0;b<n;b++) pk[b]=Math.pow(pk[b]/mx, 0.75);
+    return pk;
+  },
+  _dureesMu(){
+    const m=Math.floor(this._aud.buf.duration), o=this.DUREES_MU.filter(d=>d<=m);
+    return o.length ? o : [Math.max(1, m)];
+  },
+  _fmt(x){ x=Math.max(0, x); return Math.floor(x/60)+":"+String(Math.floor(x%60)).padStart(2,"0"); },
   _uiMusique(){
     const a=this._aud, corps=this._el("se-mu-corps"); if(!a) return;
-    const max=Math.max(0, Math.floor(a.buf.duration - a.duree));
-    a.debut=Math.min(a.debut, max);
-    const f=s=>Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
+    if(!this._dureesMu().includes(a.duree)) a.duree=this._dureesMu().slice(-1)[0];
+    a.debut=Math.max(0, Math.min(a.debut, a.buf.duration - a.duree));
+    const regl = !!(this.st && this.st.musique && this.st.musique.aud===a);
     corps.innerHTML=`
       <label class="se-mu-l">Titre affiché</label>
       <input class="se-mu-in" id="se-mu-titre" maxlength="40" value="${App.escape(a.titre)}" dir="auto">
-      <label class="se-mu-l">Début de l'extrait : <b id="se-mu-pos" data-i18n="off">${f(a.debut)}</b> / <span data-i18n="off">${f(a.buf.duration)}</span></label>
-      <input type="range" id="se-mu-debut" min="0" max="${max}" step="1" value="${a.debut}" style="width:100%">
-      <label class="se-mu-l">Durée</label>
-      <div class="se-mu-durees">${[10,15,20].filter(d=>d<=Math.max(10,Math.ceil(a.buf.duration))).map(d=>`<button type="button" class="${d===a.duree?"on":""}" onclick="StoryEd.dureeMusique(${d})"><span data-i18n="off">${d}</span> s</button>`).join("")}</div>
-      <div class="se-mu-actions">
-        <button type="button" class="se-mu-b" id="se-mu-play" onclick="StoryEd.ecouter()">▶ Écouter</button>
-        <button type="button" class="se-mu-b is-ok" id="se-mu-ok" onclick="StoryEd.validerMusique()">Ajouter la musique</button>
+      <div class="se-mu-temps" dir="ltr">
+        <span>Début<b id="se-mu-t1" data-i18n="off"></b></span>
+        <span class="se-mu-tot" id="se-mu-tot" data-i18n="off"></span>
+        <span>Fin<b id="se-mu-t2" data-i18n="off"></b></span>
       </div>
+      <div class="se-mu-wave" id="se-mu-wave" dir="ltr"><canvas id="se-mu-cv"></canvas></div>
+      <div class="se-mu-hint">Faites glisser la piste pour choisir le passage. Le cercle change la durée.</div>
+      <div class="se-mu-ctrl">
+        <button type="button" class="se-mu-dur" id="se-mu-dur" onclick="StoryEd.dureeSuivante()" aria-label="Durée"><b data-i18n="off">${a.duree}</b><small data-i18n="off">s</small></button>
+        <button type="button" class="se-mu-chg" onclick="StoryEd.choisirMusique()">Changer de musique</button>
+        <button type="button" class="se-mu-pp" id="se-mu-play" onclick="StoryEd.ecouter()" aria-label="Écouter" data-i18n="off">▶</button>
+      </div>
+      <div class="se-mu-actions"><button type="button" class="se-mu-b is-ok" id="se-mu-ok" onclick="StoryEd.validerMusique()">${regl ? "Valider" : "Ajouter la musique"}</button></div>
       <div class="se-mu-note">Utilisez une musique libre de droits (ex. bibliothèque audio YouTube, Pixabay Music) : les chansons connues sont protégées.</div>`;
-    this._el("se-mu-debut").addEventListener("input", e=>{ a.debut=+e.target.value; this._el("se-mu-pos").textContent=f(a.debut); if(this._ecoute) this.ecouter(true); });
+    this._lierOnde(); this._majTemps();
+    requestAnimationFrame(()=>this._onde(0));
   },
-  dureeMusique(d){ if(this._aud){ this._aud.duree=Math.min(d, Math.max(1, Math.floor(this._aud.buf.duration))); this._stopEcoute(); this._uiMusique(); } },
+  _majTemps(){
+    const a=this._aud; if(!a) return;
+    const t1=this._el("se-mu-t1"), t2=this._el("se-mu-t2"), tt=this._el("se-mu-tot");
+    if(t1) t1.textContent=" "+this._fmt(a.debut);
+    if(t2) t2.textContent=" "+this._fmt(a.debut+a.duree);
+    if(tt) tt.textContent=a.duree+" s · "+this._fmt(a.buf.duration);
+  },
+  dureeSuivante(){
+    const a=this._aud; if(!a) return;
+    const o=this._dureesMu(), i=o.indexOf(a.duree);
+    a.duree=o[(i+1)%o.length];
+    a.debut=Math.max(0, Math.min(a.debut, a.buf.duration - a.duree));
+    const b=this._el("se-mu-dur"); if(b && b.firstChild) b.firstChild.textContent=a.duree;
+    this._majTemps();
+    if(this._ecoute) this.ecouter(true); else this._onde(0);
+  },
+  // Glisser la piste sous le cadre : le cadre = le passage gardé.
+  _lierOnde(){
+    const w=this._el("se-mu-wave"); if(!w) return;
+    let g=null;
+    w.addEventListener("pointerdown", e=>{
+      const a=this._aud; if(!a) return;
+      g={ x:e.clientX, d:a.debut, id:e.pointerId, bouge:false };
+      try{ w.setPointerCapture(e.pointerId); }catch(_){}
+      w.classList.add("drag");
+    });
+    w.addEventListener("pointermove", e=>{
+      if(!g || e.pointerId!==g.id) return;
+      const a=this._aud, dx=e.clientX-g.x;
+      if(!g.bouge && Math.abs(dx)<4) return;
+      if(!g.bouge){ g.bouge=true; this._stopEcoute(); }
+      a.debut=Math.max(0, Math.min(a.buf.duration - a.duree, g.d - dx/(this._ppsV||10)));
+      this._majTemps(); this._onde(0);
+    });
+    const fin=()=>{ if(!g) return; g=null; w.classList.remove("drag"); this.ecouter(true); };
+    w.addEventListener("pointerup", fin); w.addEventListener("pointercancel", fin);
+  },
+  // Dessin de la piste : barres, cadre blanc, remplissage pendant l'écoute.
+  _onde(p){
+    const a=this._aud, cv=this._el("se-mu-cv"); if(!a || !cv) return;
+    const cw=cv.clientWidth, ch=cv.clientHeight; if(!cw || !ch) return;
+    const dpr=Math.min(2.5, window.devicePixelRatio||1);
+    if(cv.width!==Math.round(cw*dpr)){ cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr); }
+    const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,cw,ch);
+    const winW=Math.round(Math.min(cw*0.62, 320)), x0=(cw-winW)/2, pps=winW/a.duree; this._ppsV=pps;
+    const pk=a.peaks, pas=5, bw=3, dt=pas/pps, H=ch-20, cy=ch/2;
+    if(p>0){
+      ctx.save(); this._rond(ctx, x0, 3, winW, ch-6, 11); ctx.clip();
+      const gr=ctx.createLinearGradient(x0,0,x0+winW,0); gr.addColorStop(0,"#FFD200"); gr.addColorStop(1,"#FF8A3C");
+      ctx.fillStyle=gr; ctx.fillRect(x0, 0, winW*p, ch); ctx.restore();
+    }
+    const k0=Math.max(0, Math.floor((a.debut - x0/pps)/dt)), k1=Math.ceil((a.debut + (cw-x0)/pps)/dt);
+    for(let k=k0;k<=k1;k++){
+      const t=k*dt; if(t>=a.buf.duration) break;
+      const x=x0+(t-a.debut)*pps; if(x<-bw || x>cw) continue;
+      const b0=Math.floor(t*20), b1=Math.max(b0+1, Math.ceil((t+dt)*20)); let m=0;
+      for(let b=b0;b<b1 && b<pk.length;b++) if(pk[b]>m) m=pk[b];
+      const h=Math.max(4, m*H);
+      ctx.fillStyle = (x+bw>x0 && x<x0+winW) ? "#FFFFFF" : "rgba(255,255,255,.3)";
+      this._rond(ctx, x, cy-h/2, bw, h, 1.5); ctx.fill();
+    }
+    ctx.lineWidth=3; ctx.strokeStyle="#FFFFFF"; this._rond(ctx, x0, 3, winW, ch-6, 11); ctx.stroke();
+  },
+  // Écoute du passage choisi, en boucle, avec la progression dans le cadre.
   ecouter(relancer){
     const a=this._aud; if(!a) return;
     if(this._ecoute && !relancer){ this._stopEcoute(); return; }
     this._stopEcoute();
     try{
-      const AC=window.AudioContext||window.webkitAudioContext;
-      this._ac=this._ac||new AC();
-      const src=this._ac.createBufferSource(); src.buffer=a.buf; src.connect(this._ac.destination);
-      src.onended=()=>{ if(this._ecoute===src){ this._ecoute=null; const b=this._el("se-mu-play"); if(b) b.textContent="▶ Écouter"; } };
-      src.start(0, a.debut, a.duree); this._ecoute=src;
-      const b=this._el("se-mu-play"); if(b) b.textContent="⏸ Arrêter";
+      this._debloquerAudio();
+      const ac=this._ac, src=ac.createBufferSource(); src.buffer=a.buf; src.connect(ac.destination);
+      src.loop=true; src.loopStart=a.debut; src.loopEnd=Math.min(a.buf.duration, a.debut+a.duree);
+      src.start(0, a.debut); this._ecoute=src; this._ecT0=ac.currentTime;
+      const b=this._el("se-mu-play"); if(b){ b.textContent="■"; b.setAttribute("aria-label","Arrêter"); }
+      const anim=()=>{
+        if(this._ecoute!==src) return;
+        this._onde(((ac.currentTime-this._ecT0)%a.duree)/a.duree);
+        this._ecRaf=requestAnimationFrame(anim);
+      };
+      anim();
     }catch(e){}
   },
   _stopEcoute(){
     if(this._ecoute){ try{ this._ecoute.onended=null; this._ecoute.stop(); }catch(e){} this._ecoute=null; }
-    const b=this._el("se-mu-play"); if(b) b.textContent="▶ Écouter";
+    if(this._ecRaf){ cancelAnimationFrame(this._ecRaf); this._ecRaf=0; }
+    const b=this._el("se-mu-play"); if(b){ b.textContent="▶"; b.setAttribute("aria-label","Écouter"); }
+    this._onde(0);
   },
   _lame(){
     if(window.lamejs && window.lamejs.Mp3Encoder) return Promise.resolve();
@@ -5722,9 +5916,10 @@ const StoryEd = {
       await this._lame();
       const data=await this._mp3(a.buf, a.debut, a.duree);
       const st=this.st; if(!st) return;
-      st.musique={ data, titre:a.titre, dur:a.duree*1000 };
+      st.musique={ data, titre:a.titre, dur:a.duree*1000, aud:a, deb:a.debut };
+      // Le titre s'affiche seulement en haut de la story (sous l'heure),
+      // jamais sur l'image elle-même.
       st.items=st.items.filter(x=>x.type!=="musique");
-      st.items.push({ type:"musique", texte:"♪ "+a.titre, x:this.LW/2, y:this.LH*0.8, sc:1, r:0, fs:44 });
       this.fermerPanneau("se-music"); this._maj(); this.rendu();
       App.toast("Musique ajoutée ♪","ok");
     }catch(e){
@@ -5765,23 +5960,47 @@ const StoryEd = {
       try{ await Promise.race([document.fonts.ready, new Promise(r=>setTimeout(r,1500))]); }catch(e){}
       const cv=document.createElement("canvas"); cv.width=this.LW; cv.height=this.LH;
       const ctx=cv.getContext("2d"); st.sel=-1; this.dessiner(ctx, true);
-      // Un document Firestore ne dépasse pas 1 Mo : image + musique doivent tenir.
-      const max = st.musique ? 620000 : 760000;
+      // Calques gardés pour pouvoir modifier la story plus tard (✏️ Modifier).
+      const sansCache=o=>{ const r={}; Object.keys(o).forEach(k=>{ if(k[0]!=="_") r[k]=o[k]; }); return r; };
+      let edStr=JSON.stringify({ v:1, fond:st.fond, fondPhoto:st.fondPhoto,
+        items:st.items.filter(x=>x.type!=="musique").map(sansCache),
+        traits:st.traits.map(t=>({ c:t.c, l:t.l, pts:t.pts.map(q=>[Math.round(q[0]), Math.round(q[1])]) })),
+        photo: st.photo ? { x:+st.photo.x.toFixed(1), y:+st.photo.y.toFixed(1), s:+st.photo.s.toFixed(4), r:+(st.photo.r||0).toFixed(4) } : null });
+      let src = st.photo ? this._jpeg(st.photo.src, 1280, 230000) : "";
+      if(edStr.length>90000){ edStr=""; src=""; }
+      // Un document Firestore ne dépasse pas 1 Mo : image + musique + calques doivent tenir.
+      const LIM=985000, aLen = st.musique ? st.musique.data.length + 200 : 0;
+      let max=Math.min(760000, LIM - aLen - edStr.length - src.length);
+      if(max<300000){ edStr=""; src=""; max=Math.min(760000, LIM - aLen); }
       let q=0.86, img=cv.toDataURL("image/jpeg", q);
       while(img.length>max && q>0.42){ q-=0.08; img=cv.toDataURL("image/jpeg", q); }
       const extra={};
       if(st.musique){ extra.audio=st.musique.data; extra.audioTitle=st.musique.titre; extra.dur=st.musique.dur; }
-      await window.Cloud.addStory(img, "", extra);
+      if(edStr){ extra.ed=edStr; if(src) extra.src=src; }
+      const modif=st.edit;
+      if(modif) await window.Cloud.updateStory(modif.id, img, "", extra, modif);
+      else await window.Cloud.addStory(img, "", extra);
       this.fermer(true);
-      App.toast("Story publiée ! Elle disparaîtra dans 24 h. ✨","ok");
+      App.toast(modif ? "Story modifiée ✨" : "Story publiée ! Elle disparaîtra dans 24 h. ✨","ok");
       App.renderStoryRings();
     }catch(e){
-      if(e && e.message==="delai"){ this.fermer(true); App.toast("Connexion lente : la story sera publiée dès que le réseau le permet.","warn"); }
+      if(e && e.message==="delai"){ this.fermer(true); App.toast("Connexion lente : la story sera envoyée dès que le réseau le permet.","warn"); }
       else App.toast("Échec de la publication. Vérifiez la connexion et réessayez.","err");
     }finally{
       this._envoi=false;
-      if(btn){ btn.disabled=false; btn.textContent="Publier la story ›"; }
+      if(btn){ btn.disabled=false; btn.textContent = this.st && this.st.edit ? "Enregistrer ›" : "Publier la story ›"; }
     }
+  },
+  // Photo d'origine réduite (JPEG) pour la retouche : côté max, taille max.
+  _jpeg(canvas, cote, maxLen){
+    let k=Math.min(1, cote/Math.max(canvas.width, canvas.height)), out="";
+    for(let essai=0; essai<4; essai++){
+      const c=document.createElement("canvas"); c.width=Math.max(1, Math.round(canvas.width*k)); c.height=Math.max(1, Math.round(canvas.height*k));
+      const x=c.getContext("2d"); x.imageSmoothingQuality="high"; x.drawImage(canvas, 0, 0, c.width, c.height);
+      for(let q=0.8; q>=0.5; q-=0.1){ out=c.toDataURL("image/jpeg", q); if(out.length<=maxLen) return out; }
+      k*=0.8;
+    }
+    return out.length<=maxLen ? out : "";
   }
 };
 window.StoryEd = StoryEd;
@@ -6475,6 +6694,16 @@ document.addEventListener("DOMContentLoaded", function(){
     const data = Object.assign({ id, img, caption: String(caption || ""), createdAt: now, expiresAt: now + 24 * 3600 * 1000, by: user.uid }, extra || {});
     await avecDelai(setDoc(doc(db, "stories", id), data), 45000);
     if(!(Cloud.stories || []).some(s => s.id === id)) Cloud.stories = (Cloud.stories || []).concat([data]);
+  };
+  // ✏️ Modifier : même identifiant, même heure de fin (24 h depuis la publication).
+  Cloud.updateStory = async (id, img, caption, extra, meta) => {
+    const user = auth && auth.currentUser;
+    if(!db || !user) throw new Error("hors-ligne");
+    const now = Date.now(); meta = meta || {};
+    const data = Object.assign({ id: String(id), img, caption: String(caption || ""), createdAt: +meta.createdAt || now,
+      expiresAt: +meta.expiresAt || (now + 24 * 3600 * 1000), by: meta.by || user.uid, updatedAt: now }, extra || {});
+    await avecDelai(setDoc(doc(db, "stories", String(id)), data), 45000);
+    Cloud.stories = (Cloud.stories || []).filter(s => s.id !== String(id)).concat([data]);
   };
   Cloud.deleteStory = async (id) => { await avecDelai(deleteDoc(doc(db, "stories", String(id))), 15000); };
   Cloud.cleanupStories = async () => {
