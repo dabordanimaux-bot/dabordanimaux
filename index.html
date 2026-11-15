@@ -651,6 +651,9 @@ html.rtl .pw-eye{right:auto;left:6px}
 #boot .boot-title{font-family:var(--display);font-weight:800;font-size:1.5rem;color:var(--ink)}
 #boot .boot-title span{color:var(--rose-deep)}
 #boot .boot-spin{display:flex;gap:6px}
+#boot .boot-msg{display:none;flex-direction:column;align-items:center;gap:12px;max-width:300px;padding:0 20px}
+#boot .boot-msg.show{display:flex}
+#boot .boot-msg-txt{font-weight:700;color:var(--ink-2);font-size:.92rem;line-height:1.45}
 #boot .boot-spin i{width:10px;height:10px;border-radius:50%;background:var(--rose);animation:dots 1s ease-in-out infinite}
 #boot .boot-spin i:nth-child(2){background:var(--mango);animation-delay:.15s}
 #boot .boot-spin i:nth-child(3){background:var(--rose-deep);animation-delay:.3s}
@@ -1198,6 +1201,7 @@ html.rtl .mark-plus{right:auto;left:-4px}
     <div class="boot-badge"><img src="logo-mark.png" alt="Animaux d'abord" /></div>
     <div class="boot-title" data-i18n="off">Animaux <span>d'abord</span></div>
     <div class="boot-spin"><i></i><i></i><i></i></div>
+    <div class="boot-msg" id="boot-msg"></div>
   </div>
 </div>
 <script>
@@ -1368,9 +1372,11 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.3.5";
+const APP_VERSION = "1.3.6";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
+/* v1.3.6 : page Google Play de l'application (bouton « Donner mon avis »). */
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=tn.dabordanimaux.app";
 /* Conception et développement de l'application. */
 const DEV_INFO = { nom: "Rahmeni Hamdi", mail: "rahmenihamdi@gmail.com", tel: "+216 95 063 068" };
 
@@ -1777,6 +1783,18 @@ const AR_DICT = {
   "Remplacer les photos":"استبدال الصور",
   "Réaction à votre story":"تفاعل مع قصتك",
   "Réessayer":"أعد المحاولة",
+  // v1.3.6
+  "Connexion en cours… La connexion Internet semble lente.":"جارٍ الاتصال… يبدو أن الإنترنت بطيء.",
+  "Calendrier":"التقويم","Liste":"القائمة","À venir":"القادمة","Passés":"السابقة",
+  "Rechercher un client ou un animal…":"ابحث عن حريف أو حيوان…",
+  "Rien à afficher pour ce choix.":"لا شيء لعرضه لهذا الاختيار.",
+  "Utilisez la recherche pour affiner.":"استعمل البحث لتضييق النتائج.",
+  "Supprimer cette question ?":"حذف هذا السؤال؟",
+  "Supprimer cette conversation ? Elle sera aussi supprimée chez le client.":"حذف هذه المحادثة؟ ستُحذف أيضًا عند الحريف.",
+  "Question supprimée.":"تم حذف السؤال.",
+  "Votre avis":"رأيك","Donner mon avis":"أعطِ رأيي",
+  "Votre avis aide le cabinet à améliorer l'application. Merci !":"رأيك يساعد العيادة على تحسين التطبيق. شكرًا!",
+  "Donner mon avis sur Google Play":"أعطِ رأيي على Google Play",
 
 };
 const AR_TOKENS_LIST = [
@@ -1832,7 +1850,9 @@ const App = {
       }
       // Filet de sécurité : si l'état de connexion n'arrive jamais (réseau
       // coupé), on quitte l'écran de démarrage au bout de 5 secondes.
-      setTimeout(()=>{ if(!this._authReady){ this.showBoot(false); this.route(); } }, 5000);
+      // v1.3.6 : si cet appareil était connecté, on n'affiche plus l'écran de
+      // connexion au bout de 5 s (le compte l'est toujours) : voir _bootLent().
+      setTimeout(()=>{ if(!this._authReady) this._bootLent(); }, 5000);
     } else {
       this._localFallback();
     }
@@ -1845,6 +1865,25 @@ const App = {
     this.session = DB.get("session", null);
     this.ensureSeed();
     setTimeout(()=>{ this.showBoot(false); this.route(); }, 650);
+  },
+
+  // v1.3.6 : Firebase tarde à répondre (connexion lente, ou app pas ouverte
+  // depuis plusieurs jours). Avant, l'app affichait l'écran de connexion au
+  // bout de 5 s alors que le compte était toujours connecté. Maintenant, si cet
+  // appareil était connecté, on patiente avec un message et « Réessayer ».
+  _bootLent(){
+    let etaitConnecte=false;
+    try{ etaitConnecte=!!localStorage.getItem("ad_connecte"); }catch(e){}
+    if(!etaitConnecte){ this.showBoot(false); this.route(); return; }
+    const m=document.getElementById("boot-msg");
+    if(m){
+      m.innerHTML=`<div class="boot-msg-txt">Connexion en cours… La connexion Internet semble lente.</div>
+        <button class="btn btn-primary" onclick="location.reload()">Réessayer</button>`;
+      m.classList.add("show");
+      try{ this.translateDOM(); }catch(e){}
+    }
+    // Toujours rien au bout de 45 s : on laisse l'écran de connexion s'afficher.
+    setTimeout(()=>{ if(!this._authReady){ this.showBoot(false); this.route(); } }, 45000);
   },
 
   // v1.3.2 : la vétérinaire a supprimé ce compte. On efface aussi l'accès
@@ -1865,6 +1904,8 @@ const App = {
   // Appelé par Firebase Auth à chaque connexion / déconnexion.
   async _onAuthChanged(user){
     this._authReady = true;
+    // v1.3.6 : mémorise que cet appareil est connecté (voir _bootLent).
+    try{ if(user) localStorage.setItem("ad_connecte","1"); else localStorage.removeItem("ad_connecte"); }catch(e){}
     if(user){
       this.session = { userId: user.uid };
 
@@ -2045,7 +2086,8 @@ const App = {
     // rôle est passé à « admin » dans la console Firebase (Firestore → users
     // → champ role). Aucun mot de passe n'est jamais stocké dans la base.
   },
-  showBoot(on){ const b=document.getElementById("boot"); if(b) b.classList.toggle("show",!!on); },
+  showBoot(on){ const b=document.getElementById("boot"); if(b) b.classList.toggle("show",!!on);
+    if(!on){ const m=document.getElementById("boot-msg"); if(m){ m.classList.remove("show"); m.innerHTML=""; } } },
   spawnPaws(){
     const box=document.getElementById("paws"); if(!box) return;
     const emos=["🐾","🐾","🐾","🦴","🐾"];
@@ -3832,7 +3874,7 @@ const App = {
       html+=`<div class="stagger">`+advices.map(a=>{
         const scope=a.animalId?(this.speciesEmo((DB.find("animals",a.animalId)||{}).espece)+" "+this.escape(this.animalName(a.animalId))+" · "):"";
         const dateStr=this.fmtDate(this.dstr(new Date(a.createdAt)));
-        const rev=!!a.revealed;
+        const rev=!!a.revealed || this._advVu(a.id);   // v1.3.6 : + mémoire locale
         return `<div class="scratch-card${rev?" revealed":""}" data-adv-id="${a.id}">
           <div class="scratch-head">
             <div class="sc-badge">💡</div>
@@ -3896,6 +3938,11 @@ const App = {
   /* ============================================================
      Conseils « à gratter » : le client gratte la carte pour révéler
      ============================================================ */
+  // v1.3.6 : conseils déjà grattés, retenus sur l'appareil (en plus de Firebase),
+  // pour qu'une carte révélée ne revienne jamais « à gratter ».
+  _advVus(){ try{ const l=JSON.parse(localStorage.getItem("ad_advVus")||"[]"); return Array.isArray(l)?l:[]; }catch(e){ return []; } },
+  _advVu(id){ return this._advVus().indexOf(String(id))>=0; },
+  _advMarquerVu(id){ try{ const l=this._advVus(); if(l.indexOf(String(id))<0){ l.push(String(id)); localStorage.setItem("ad_advVus", JSON.stringify(l.slice(-300))); } }catch(e){} },
   initScratchCards(){
     document.querySelectorAll(".scratch-card:not(.revealed) .scratch-cover").forEach(cv=>{
       if(cv.dataset.ready) return;
@@ -3968,6 +4015,7 @@ const App = {
       if(hint) hint.style.opacity="0";
       if(card) card.classList.add("revealed","just-revealed");
       setTimeout(()=>{ try{ canvas.remove(); if(hint) hint.remove(); }catch(e){} },560);
+      try{ App._advMarquerVu(advId); }catch(e){}   // v1.3.6 : retenu sur l'appareil
       try{ DB.update("advices",advId,{revealed:true}); }catch(e){}
       try{ App.toast(App.lang==="ar"?"تمّ كشف النصيحة ✨":"Conseil révélé ✨","ok"); }catch(e){}
     }
@@ -4068,7 +4116,9 @@ const App = {
   deleteQuestion(id){
     const q=DB.find("questions",id); const u=this.currentUser();
     if(!q || (u && u.role!=="admin" && q.clientId!==u.id)) return;
-    if(!confirm("Supprimer cette question ?")) return;
+    const parDocteur = u && u.role==="admin";
+    const qMsg = parDocteur ? "Supprimer cette conversation ? Elle sera aussi supprimée chez le client." : "Supprimer cette question ?";
+    if(!confirm(this.lang==="ar" && AR_DICT[qMsg] ? AR_DICT[qMsg] : qMsg)) return;
     DB.del("questions",id);
     this.closeSheet(); this.toast("Question supprimée.","ok"); this.renderAll();
   },
@@ -4132,6 +4182,11 @@ const App = {
         </div>
       </div>
 
+      ${role==="c"?`<div class="card mb">
+        <div class="section-head" style="margin-bottom:8px"><div><div class="eyebrow">Votre avis</div><h2 style="font-size:1.2rem">Donner mon avis</h2></div></div>
+        <div class="hint" style="margin-bottom:12px">Votre avis aide le cabinet à améliorer l'application. Merci ! 🐾</div>
+        <a class="btn btn-primary btn-block" style="text-decoration:none" href="${PLAY_STORE_URL}" target="_blank" rel="noopener">⭐ Donner mon avis sur Google Play</a>
+      </div>`:""}
       <div class="card mb">
         <div class="section-head" style="margin-bottom:6px"><div><div class="eyebrow">Application</div><h2 style="font-size:1.2rem">À propos de l'application</h2></div>
           <span class="badge b-grey" data-i18n="off">v${APP_VERSION}</span></div>
@@ -5041,8 +5096,18 @@ const App = {
   renderAgenda(){
     const w=document.getElementById("agenda-c"); if(!w) return;
     if(!this._agMonth) this._agMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+    // v1.3.6 : deux vues — calendrier (jour par jour) ou liste de tous les RDV.
+    const vue=this._agVue||"cal";
+    const bascule=`<div class="chip-row mb">
+      <button class="chip ${vue==="cal"?"on":""}" onclick="App.setAgVue('cal')">📅 Calendrier</button>
+      <button class="chip ${vue==="liste"?"on":""}" onclick="App.setAgVue('liste')">📋 Liste</button></div>`;
+    if(vue==="liste"){
+      // ne pas reconstruire le champ de recherche pendant que la docteure tape
+      if(document.activeElement && document.activeElement.id==="ag-q" && document.getElementById("ag-liste-res")){ this._agMajListe(); return; }
+      w.innerHTML=bascule+this._agListeHtml(); return;
+    }
     const counts=this.rdvCountsForMonth(this._agMonth);
-    let html=`<div class="card mb">${this.calHead("ag")}${this.calGrid(this._agMonth, this._agSel, counts, false)}</div>`;
+    let html=bascule+`<div class="card mb">${this.calHead("ag")}${this.calGrid(this._agMonth, this._agSel, counts, false)}</div>`;
 
     // demandes en attente (priorité)
     const pending=this.pendingRdv().sort((a,b)=> (a.date+a.time) > (b.date+b.time) ? 1 : -1);
@@ -5061,6 +5126,45 @@ const App = {
       html+=dayRdv.map(r=>this.rdvAdminCard(r)).join("");
     }
     w.innerHTML=html;
+  },
+  setAgVue(v){ this._agVue=v; this.renderAgenda(); },
+  setAgFiltre(f){ this._agFiltre=f; this.renderAgenda(); },
+  _agListeHtml(){
+    const f=this._agFiltre||"avenir";
+    const chip=(id,lbl)=>`<button class="chip ${f===id?"on":""}" onclick="App.setAgFiltre('${id}')">${lbl}</button>`;
+    return `<div class="chip-row mb">${chip("avenir","🗓️ À venir")}${chip("attente","⏳ En attente")}${chip("passes","🕘 Passés")}${chip("tous","📚 Tous")}</div>
+      <div class="field" style="margin-bottom:12px"><input class="input" id="ag-q" type="search" value="${this.escape(this._agQ||"")}"
+        placeholder="Rechercher un client ou un animal…" oninput="App._agQ=this.value;App._agMajListe()" autocomplete="off"></div>
+      <div id="ag-liste-res">${this._agListeRes()}</div>`;
+  },
+  _agMajListe(){ const r=document.getElementById("ag-liste-res"); if(r){ r.innerHTML=this._agListeRes(); try{ this.translateDOM(); }catch(e){} } },
+  _agListeRes(){
+    const f=this._agFiltre||"avenir";
+    const maint=this.todayStr()+"T"+this.min2hm(this.nowMin());
+    const cle=r=>(r.date||"")+"T"+(r.time||"");
+    const q=(this._agQ||"").trim().toLowerCase();
+    let l=DB.get("rdv",[]).filter(r=>r && r.date);
+    if(f==="avenir") l=l.filter(r=>cle(r)>=maint && (r.status==="attente"||r.status==="confirme"));
+    else if(f==="attente") l=l.filter(r=>r.status==="attente");
+    else if(f==="passes") l=l.filter(r=>cle(r)<maint);
+    if(q){
+      l=l.filter(r=>{
+        const c=DB.find("users",r.clientId)||{}, a=r.animalId?(DB.find("animals",r.animalId)||{}):{};
+        return [r.clientNom,c.nom,c.tel,a.nom,r.motif].some(x=>x && String(x).toLowerCase().indexOf(q)>=0);
+      });
+    }
+    const desc=(f==="passes"||f==="tous");
+    l.sort((a,b)=> desc ? (cle(a)<cle(b)?1:-1) : (cle(a)>cle(b)?1:-1));
+    if(!l.length) return `<div class="empty"><span class="ic">📋</span><div class="et">Aucun rendez-vous</div><div class="hint">Rien à afficher pour ce choix.</div></div>`;
+    const max=150, trop=l.length>max; if(trop) l=l.slice(0,max);
+    const parJour=[]; l.forEach(r=>{ const g=parJour[parJour.length-1]; if(g && g.date===r.date) g.rdv.push(r); else parJour.push({date:r.date, rdv:[r]}); });
+    const auj=this.todayStr();
+    return parJour.map(g=>{
+      const d=this.parseD(g.date);
+      const eyebrow=g.date===auj?"Aujourd'hui":this.DOW_FULL[d.getDay()];
+      return `<div class="section-head mt"><div><div class="eyebrow">${eyebrow}</div><h2 style="font-size:1.1rem">${this.fmtDate(g.date)}</h2></div><span class="badge b-grey">${g.rdv.length}</span></div>`
+        + g.rdv.map(r=>this.rdvAdminCard(r)).join("");
+    }).join("") + (trop?`<div class="hint" style="text-align:center;margin:12px 0">Affichage limité aux ${max} premiers. Utilisez la recherche pour affiner.</div>`:"");
   },
   selectAgDate(ds){ this._agSel=ds; this.renderAgenda(); },
   clearAgSel(){ this._agSel=null; this.renderAgenda(); },
@@ -5775,6 +5879,7 @@ const App = {
       <div class="msg-list">${bubbles}</div>
       <div class="o-foot" style="justify-content:flex-end;gap:6px">
         ${cli&&cli.tel?`<a href="tel:+${this.phoneDigits(cli.tel)}" class="btn btn-ghost btn-sm" style="text-decoration:none">📞</a>`:""}
+        <button class="btn btn-danger btn-sm" onclick="App.deleteQuestion('${q.id}')" title="Supprimer la conversation">🗑️</button>
         <button class="btn ${awaiting?"btn-primary":"btn-soft"} btn-sm" onclick="App.openReply('${q.id}')">Répondre ✍️</button>
       </div>
     </div>`;

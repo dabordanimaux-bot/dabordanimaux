@@ -8,7 +8,10 @@
      au réseau, JAMAIS interceptées → la synchro cloud temps réel fonctionne.
    Pense à incrémenter CACHE_VERSION à chaque mise à jour du site.
    ===================================================================== */
-const CACHE_VERSION = "animaux-dabord-v28";
+const CACHE_VERSION = "animaux-dabord-v29";
+// v1.3.6 : bibliothèques Firebase (gstatic, versions figées) gardées sur le
+// téléphone → l'app démarre vite même après plusieurs jours sans l'ouvrir.
+const LIBS_CACHE = "animaux-dabord-libs-firebase-10.12.2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -37,7 +40,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION && k !== LIBS_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -47,7 +50,21 @@ self.addEventListener("fetch", (event) => {
 
   // On ne gère que les requêtes GET de même origine.
   if (req.method !== "GET") return;
-  const sameOrigin = new URL(req.url).origin === self.location.origin;
+
+  // v1.3.6 : SDK Firebase (https://www.gstatic.com/firebasejs/<version>/…) :
+  // cache d'abord. L'adresse contient la version : le fichier ne change jamais.
+  const u = new URL(req.url);
+  if (u.origin === "https://www.gstatic.com" && u.pathname.indexOf("/firebasejs/") === 0) {
+    event.respondWith(
+      caches.open(LIBS_CACHE).then((c) => c.match(req).then((hit) => hit || fetch(req).then((res) => {
+        if (res && res.ok) c.put(req, res.clone()).catch(() => {});
+        return res;
+      })))
+    );
+    return;
+  }
+
+  const sameOrigin = u.origin === self.location.origin;
   if (!sameOrigin) return; // Firebase, gstatic, Google Fonts, CDN → réseau direct
 
   // Navigation (ouverture de page) : réseau d'abord, repli hors-ligne.
