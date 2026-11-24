@@ -1372,7 +1372,7 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.3.7";
+const APP_VERSION = "1.3.8";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
 /* v1.3.6 : page Google Play de l'application (bouton « Donner mon avis »). */
@@ -1799,6 +1799,13 @@ const AR_DICT = {
   "Votre avis":"رأيك","Donner mon avis":"أعطِ رأيي",
   "Votre avis aide le cabinet à améliorer l'application. Merci !":"رأيك يساعد العيادة على تحسين التطبيق. شكرًا!",
   "Donner mon avis sur Google Play":"أعطِ رأيي على Google Play",
+  // v1.3.8 : récapitulatif du cabinet, mise à jour automatique
+  "Demain au cabinet":"غدًا في العيادة","Aujourd'hui au cabinet":"اليوم في العيادة",
+  // (traductions de 12 caractères ou plus : remplacées aussi au milieu d'une phrase, dans les deux sens)
+  "rendez-vous confirmés":"مواعيد تم تأكيدها","rendez-vous confirmé":"موعد تم تأكيده",
+  "demandes à confirmer":"طلبات في انتظار التأكيد","demande à confirmer":"طلب في انتظار التأكيد",
+  "rappels de vaccin":"تذكيرات بموعد التلقيح","rappel de vaccin":"تذكير بموعد التلقيح",
+  "Mise à jour de l'application…":"جارٍ تحديث التطبيق…",
 
 };
 const AR_TOKENS_LIST = [
@@ -2121,7 +2128,15 @@ const App = {
       const k=this._notifKind; this._notifKind=null;
       try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
       setTimeout(()=>{ try{ this.onNotifClick(k); }catch(e){} }, 400);
+      return;
     }
+    // v1.3.8 : après une mise à jour automatique, on rouvre le même onglet.
+    try{
+      const o=JSON.parse(sessionStorage.getItem("ad_majOnglet")||"null");
+      sessionStorage.removeItem("ad_majOnglet");
+      if(o && o.t && o.n && Date.now()-(+o.at||0) < 5*60000)
+        setTimeout(()=>{ try{ this.showTab(o.t, o.n); }catch(e){} }, 300);
+    }catch(e){}
   },
   normPhone(s){ return (s||"").replace(/\s+/g,"").trim(); },
   // Réduit un numéro à sa forme canonique (chiffres seuls, sans indicatif +216)
@@ -2514,6 +2529,7 @@ const App = {
   show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id)); window.scrollTo(0,0); },
   showTab(tabId, navId){
     const nav=document.getElementById(navId); if(!nav) return;
+    this._onglet=[tabId, navId];          // v1.3.8 : rouvert après une mise à jour automatique
     const screen=nav.closest(".screen");
     screen.querySelectorAll(".screen-tab").forEach(t=>t.classList.toggle("active",t.id===tabId));
     nav.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tabId));
@@ -2800,7 +2816,8 @@ const App = {
 
   /* ---------- NOTIFICATIONS ---------- */
   // v1.3.7 : « pushed:false » = à envoyer sur le téléphone. Le robot GitHub
-  // (toutes les 5 min) l'envoie puis passe « pushed » à true.
+  // (réveillé toutes les 5 min par cron-job.org, v1.3.8) l'envoie puis passe
+  // « pushed » à true.
   notify(target, kind, title, body){
     DB.push("notifs",{id:this.uid("n"),target,kind,title,body,ts:Date.now(),lu:false,pushed:false});
     // secoue la cloche du destinataire s'il est connecté
@@ -4413,18 +4430,41 @@ const App = {
   // --- Récapitulatif pour le cabinet (une seule alerte par journée) ---
   // Réservé à l'appareil de la vétérinaire : elle seule dispose de la
   // totalité des rendez-vous et des rappels, donc du bon décompte.
+  // v1.3.8 : créé seulement aux heures fixes, comme le robot (la veille
+  // 18:00-22:00, le jour J 07:30-12:00, heure de Tunis) — jamais juste après
+  // une réservation — et les demandes en attente sont comptées à part :
+  // « 2 rendez-vous confirmés · 1 demande à confirmer · 1 rappel de vaccin ».
   _adminRecap(today, tomorrow){
-    [["j1", tomorrow, "Demain"], ["j0", today, "Aujourd'hui"]].forEach(pair=>{
+    const m=this._minutesTunis();
+    const veille = m>=18*60 && m<22*60, matin = m>=7*60+30 && m<12*60;
+    [["j1", tomorrow, "Demain", veille], ["j0", today, "Aujourd'hui", matin]].forEach(pair=>{
       const tag=pair[0], d=pair[1], label=pair[2];
-      const rdvs = DB.get("rdv",[]).filter(r=>r.date===d && (r.status==="confirme"||r.status==="attente"));
-      const vaxs = DB.get("records",[]).filter(r=>r.nextDate===d);
-      if(!rdvs.length && !vaxs.length) return;
-      const parts=[];
-      if(rdvs.length) parts.push(`${rdvs.length} rendez-vous`);
-      if(vaxs.length) parts.push(`${vaxs.length} rappel${vaxs.length>1?"s":""} de vaccin`);
-      this.notifyOnce(`adm_${tag}_${d}`, "admin", "rdv",
-        `📋 ${label} au cabinet`, parts.join(" · "));
+      if(!pair[3]) return;
+      const duJour = DB.get("rdv",[]).filter(r=>r.date===d);
+      const texte = this._texteRecap(
+        duJour.filter(r=>r.status==="confirme").length,
+        duJour.filter(r=>r.status==="attente").length,
+        DB.get("records",[]).filter(r=>r.nextDate===d).length);
+      if(!texte) return;
+      this.notifyOnce(`adm_${tag}_${d}`, "admin", "rdv", `📋 ${label} au cabinet`, texte);
     });
+  },
+  // Même texte que le robot (scripts/envoyer-rappels.mjs → texteRecap).
+  _texteRecap(nbConf, nbAtt, nbVax){
+    const parts=[];
+    if(nbConf) parts.push(`${nbConf} rendez-vous confirmé${nbConf>1?"s":""}`);
+    if(nbAtt)  parts.push(`${nbAtt} demande${nbAtt>1?"s":""} à confirmer`);
+    if(nbVax)  parts.push(`${nbVax} rappel${nbVax>1?"s":""} de vaccin`);
+    return parts.join(" · ");
+  },
+  // Heure de Tunis en minutes depuis minuit (repli : heure du téléphone).
+  _minutesTunis(){
+    try{
+      const p=new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Tunis",hour:"2-digit",minute:"2-digit",hour12:false})
+        .format(new Date()).replace(/^24:/,"00:").split(":");
+      const v=(+p[0])*60+(+p[1]); if(!isNaN(v)) return v;
+    }catch(e){}
+    const d=new Date(); return d.getHours()*60+d.getMinutes();
   },
   // Ancien nom conservé pour compatibilité.
   checkRdvReminders(){ this.checkReminders(); },
@@ -7056,6 +7096,68 @@ document.addEventListener("DOMContentLoaded", function(){
         try{ App.markAllRead(); App.onNotifClick(d.kind || ""); }catch(err){}
       }
     });
+
+    /* ---------------------------------------------------------------
+       v1.3.8 — MISE À JOUR AUTOMATIQUE
+       Une nouvelle version en ligne = un nouveau sw.js. Il prend la main
+       tout de suite (skipWaiting + clients.claim) : la page reçoit alors
+       « controllerchange » et se recharge, mais seulement à un moment
+       sans risque :
+         • l'app est en arrière-plan ;
+         • ou on vient d'y revenir et on n'a encore rien touché ;
+         • ou personne ne l'a touchée depuis 2 minutes ;
+       et jamais pendant une saisie ni avec une fenêtre ouverte.
+       Le même onglet est rouvert après le rechargement.
+       --------------------------------------------------------------- */
+    (function(){
+      var sw = navigator.serviceWorker;
+      var controlee = !!sw.controller;          // false au tout premier lancement
+      var prete = false, faite = false;
+      var retour = Date.now(), action = 0;
+      ["pointerdown","keydown","input","touchstart","wheel"].forEach(function(t){
+        window.addEventListener(t, function(){ action = Date.now(); }, { passive: true, capture: true });
+      });
+      function sansRisque(){
+        var a = document.activeElement;
+        if(a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT" || a.isContentEditable)) return false;
+        if(document.querySelector("#sheet-backdrop.show, #story-editor.show, #story-viewer.show, #img-viewer.show, #notif-panel.show")) return false;
+        return true;
+      }
+      function recharger(){
+        faite = true;
+        try{
+          sessionStorage.setItem("ad_majRecharge", String(Date.now()));
+          if(App._onglet) sessionStorage.setItem("ad_majOnglet", JSON.stringify({ t: App._onglet[0], n: App._onglet[1], at: Date.now() }));
+        }catch(e){}
+        if(!document.hidden){ try{ App.toast("Mise à jour de l'application…", "ok", 1500); }catch(e){} }
+        setTimeout(function(){ location.reload(); }, document.hidden ? 0 : 600);
+      }
+      function essayer(){
+        if(!prete || faite) return;
+        var t = Date.now();
+        if(document.hidden) return recharger();
+        if(!sansRisque()) return;
+        if(t - retour < 15000 && action <= retour) return recharger();   // on vient de revenir, rien touché
+        if(t - Math.max(action, retour) > 120000) return recharger();     // inactive depuis 2 minutes
+      }
+      function verifier(){
+        sw.getRegistration().then(function(r){ if(r) return r.update(); }).catch(function(){});
+      }
+      sw.addEventListener("controllerchange", function(){
+        if(!controlee){ controlee = true; return; }   // premier lancement : rien à recharger
+        // anti-boucle : jamais deux rechargements automatiques à moins d'une minute
+        try{ if(Date.now() - (+sessionStorage.getItem("ad_majRecharge") || 0) < 60000) return; }catch(e){}
+        prete = true; essayer();
+      });
+      document.addEventListener("visibilitychange", function(){
+        if(document.hidden){ essayer(); return; }
+        retour = Date.now();
+        verifier();                                    // retour dans l'app : nouvelle version ?
+      });
+      setInterval(essayer, 3000);
+      setInterval(verifier, 30 * 60000);               // et toutes les 30 minutes
+      App._majTest = { essayer: essayer, etat: function(){ return { prete: prete, faite: faite, retour: retour, action: action, controlee: controlee }; } };
+    })();
   }
 });
 </script>

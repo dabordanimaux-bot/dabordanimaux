@@ -8,7 +8,7 @@
      au réseau, JAMAIS interceptées → la synchro cloud temps réel fonctionne.
    Pense à incrémenter CACHE_VERSION à chaque mise à jour du site.
    ===================================================================== */
-const CACHE_VERSION = "animaux-dabord-v30";
+const CACHE_VERSION = "animaux-dabord-v31";
 // v1.3.6 : bibliothèques Firebase (gstatic, versions figées) gardées sur le
 // téléphone → l'app démarre vite même après plusieurs jours sans l'ouvrir.
 const LIBS_CACHE = "animaux-dabord-libs-firebase-10.12.2";
@@ -30,7 +30,9 @@ const APP_SHELL = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_VERSION)
-      .then((cache) => cache.addAll(APP_SHELL))
+      // v1.3.8 : { cache: "reload" } → toujours les fichiers frais du serveur,
+      // jamais une copie gardée par le navigateur.
+      .then((cache) => cache.addAll(APP_SHELL.map((u) => new Request(u, { cache: "reload" }))))
       .then(() => self.skipWaiting())
       .catch(() => {}) // si une ressource manque, on n'échoue pas l'installation
   );
