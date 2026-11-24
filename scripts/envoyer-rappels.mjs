@@ -1,11 +1,18 @@
 /* =====================================================================
-   ANIMAUX D'ABORD — Robot des notifications push (v1.3.7)
+   ANIMAUX D'ABORD — Robot des notifications push (v1.3.8)
    ---------------------------------------------------------------------
    Ce script tourne SUR UN SERVEUR (GitHub Actions, gratuit), jamais dans
    le navigateur : il utilise une clé de service qui ne doit JAMAIS être
    publiée dans l'application.
 
-   v1.3.7 — lancé toutes les 5 minutes (.github/workflows/rappels.yml) :
+   v1.3.8 — réveillé toutes les 5 minutes par cron-job.org (gratuit), qui
+   appelle GitHub avec le mode « auto ». La programmation de GitHub reste en
+   secours (GitHub la retarde souvent de plusieurs heures, voire la saute).
+   Trois façons de le lancer :
+     • réveil cron-job.org (mode « auto »)  → comme un lancement programmé ;
+     • programmation GitHub (secours)        → idem ;
+     • bouton « Run workflow » (mode « manuel », par défaut) → tout est
+       envoyé tout de suite, rappels compris, + entretien.
 
    1) NOTIFICATIONS DE L'APP → TÉLÉPHONE
       Chaque notification créée dans l'app avec « pushed:false » est envoyée
@@ -17,11 +24,15 @@
         • « tous » : nouvelle astuce / actualité, nouvelle story (tous les
                     clients ; jamais plus d'une story toutes les 2 h).
       Les réactions (j'aime, cœur…) restent dans la cloche de l'app.
+      v1.3.8 : les notifications créées par une ANCIENNE version de l'app
+      (sans le champ « pushed ») sont aussi envoyées, si elles ont moins de
+      30 minutes.
 
    2) RAPPELS À HEURE FIXE (heure de Tunis)
         • la veille  : entre 18:00 et 22:00 → « Rendez-vous demain à 10:30 »
         • le jour J  : entre 07:30 et 12:00 → « Rendez-vous aujourd'hui… »
-      + vaccins / vermifuges, et un récapitulatif pour le cabinet.
+      + vaccins / vermifuges, et un récapitulatif pour le cabinet
+        (v1.3.8 : « 2 rendez-vous confirmés · 1 demande à confirmer »).
       Lancement manuel (bouton « Run workflow ») : rappels envoyés tout de suite.
 
    3) ENTRETIEN DE LA BASE (toutes les 3 h)
@@ -46,12 +57,22 @@ import { getMessaging } from "firebase-admin/messaging";
 /* ---------------------------------------------------------------- */
 const TZ       = "Africa/Tunis";   // fuseau du cabinet
 const DRY_RUN  = process.env.DRY_RUN === "1";
-// Bouton « Run workflow » (ou FORCER=1) : rappels envoyés sans attendre la fenêtre.
-const MANUEL   = process.env.GITHUB_EVENT_NAME === "workflow_dispatch" || process.env.FORCER === "1";
+// v1.3.8 — origine du lancement :
+//   • cron-job.org appelle GitHub avec le mode « auto » → lancement automatique ;
+//   • bouton « Run workflow » (mode « manuel » par défaut) → rappels envoyés
+//     tout de suite, sans attendre les heures d'envoi (ou FORCER=1 en local).
+const EVENEMENT = process.env.GITHUB_EVENT_NAME || "";
+const MODE      = String(process.env.MODE_LANCEMENT || "").trim().toLowerCase();
+const MANUEL    = process.env.FORCER === "1" || (EVENEMENT === "workflow_dispatch" && MODE !== "auto");
+const ORIGINE   = MANUEL ? "lancement manuel"
+                : EVENEMENT === "workflow_dispatch" ? "réveil cron-job.org"
+                : EVENEMENT === "schedule" ? "programmation GitHub (secours)"
+                : "lancement local";
 const LOG_TTL_JOURS     = 60;            // durée de vie des traces d'envoi
 const FEN_VEILLE        = [18 * 60, 22 * 60];        // 18:00 → 22:00
 const FEN_JOUR          = [7 * 60 + 30, 12 * 60];    // 07:30 → 12:00
 const PERIME_MS         = 12 * 3600 * 1000;          // notification trop ancienne : on ne l'envoie plus
+const RATTRAPAGE_MS     = 30 * 60 * 1000;            // v1.3.8 : ancienne version de l'app → 30 dernières minutes
 const MAX_PAR_PERSONNE  = 3;                         // au-delà, un seul message résumé
 const PAUSE_STORY_MS    = 2 * 3600 * 1000;           // au plus une annonce de story toutes les 2 h
 const ENTRETIEN_MS      = 3 * 3600 * 1000;           // entretien toutes les 3 h
@@ -86,8 +107,7 @@ const HEURE       = hhmmTunis(new Date(MAINTENANT));
 const MIN_TUNIS   = enMinutes(HEURE);
 const dans = (f) => MIN_TUNIS >= f[0] && MIN_TUNIS < f[1];
 
-console.log(`— Robot du ${AUJOURD_HUI} à ${HEURE} (Tunis)` +
-            `${MANUEL ? " — lancement manuel" : ""}${DRY_RUN ? " — TEST À BLANC" : ""}`);
+console.log(`— Robot du ${AUJOURD_HUI} à ${HEURE} (Tunis) — ${ORIGINE}${DRY_RUN ? " — TEST À BLANC" : ""}`);
 
 /* ---------------------------------------------------------------- */
 /*  Textes en arabe (appareils réglés en arabe dans l'app)           */
@@ -104,6 +124,8 @@ const TITRES_AR = {
   "📸 Nouvelle story du cabinet": "📸 قصة جديدة من العيادة",
   "⏰ Rendez-vous demain": "⏰ موعدك غدًا",
   "📅 Rendez-vous aujourd'hui": "📅 موعدك اليوم",
+  "📋 Demain au cabinet": "📋 غدًا في العيادة",
+  "📋 Aujourd'hui au cabinet": "📋 اليوم في العيادة",
 };
 const TEXTES_AR = {
   "Le Dr. Asma vous a répondu.": "الدكتورة أسماء ردّت عليك.",
@@ -119,8 +141,28 @@ function enArabe(titre, texte) {
   STATUTS_AR.forEach(([fr, ar]) => { b = b.split(fr).join(ar); });
   b = b.replace(/^(\d+) nouvelles stories — découvrez-les dans l'app 🐾$/, "$1 قصص جديدة — اكتشفها في التطبيق 🐾")
        .replace(/ — et (\d+) autre\(s\) notification\(s\)$/, " — و$1 إشعارات أخرى")
-       .replace(/ — et (\d+) autre\(s\) publication\(s\)$/, " — و$1 منشورات أخرى");
+       .replace(/ — et (\d+) autre\(s\) publication\(s\)$/, " — و$1 منشورات أخرى")
+       // v1.3.8 : récapitulatif du cabinet
+       // (le pluriel d'abord ; « é » n'est pas une lettre pour \b, d'où (?!s))
+       .replace(/(\d+) rendez-vous confirmés/g, "$1 مواعيد تم تأكيدها")
+       .replace(/(\d+) rendez-vous confirmé(?!s)/g, "$1 موعد تم تأكيده")
+       .replace(/(\d+) demandes à confirmer/g, "$1 طلبات في انتظار التأكيد")
+       .replace(/(\d+) demande à confirmer/g, "$1 طلب في انتظار التأكيد")
+       .replace(/(\d+) rappels de vaccin/g, "$1 تذكيرات بموعد التلقيح")
+       .replace(/(\d+) rappel de vaccin/g, "$1 تذكير بموعد التلقيح");
   return { titre: t, texte: b };
+}
+
+/* ---------------------------------------------------------------- */
+/*  v1.3.8 — texte du récapitulatif du cabinet (identique à l'app)   */
+/* ---------------------------------------------------------------- */
+//   « 2 rendez-vous confirmés · 1 demande à confirmer · 1 rappel de vaccin »
+function texteRecap(nbConf, nbAtt, nbVax) {
+  const parts = [];
+  if (nbConf) parts.push(`${nbConf} rendez-vous confirmé${nbConf > 1 ? "s" : ""}`);
+  if (nbAtt)  parts.push(`${nbAtt} demande${nbAtt > 1 ? "s" : ""} à confirmer`);
+  if (nbVax)  parts.push(`${nbVax} rappel${nbVax > 1 ? "s" : ""} de vaccin`);
+  return parts.join(" · ");
 }
 
 /* ---------------------------------------------------------------- */
@@ -194,15 +236,33 @@ async function envoyer(appareils, { titre, texte, kind, cle, titreAr, texteAr })
 /* ================================================================ */
 /*  1) NOTIFICATIONS DE L'APP EN ATTENTE → TÉLÉPHONE                 */
 /* ================================================================ */
-let nAttente = 0, nPerimees = 0, nGroupees = 0;
+let nAttente = 0, nPerimees = 0, nGroupees = 0, nAnciennes = 0;
 try {
   const snap = await db.collection("notifs").where("pushed", "==", false).limit(300).get();
-  nAttente = snap.size;
+  const aTraiter = snap.docs.slice();
+
+  // v1.3.8 — RATTRAPAGE : un téléphone ou un onglet resté sur une ancienne
+  // version de l'app crée ses notifications SANS le champ « pushed ».
+  // On les envoie aussi, si elles ont moins de 30 minutes (jamais de vieux
+  // messages). Les « n_… » (rappels, réactions) restent exclues plus bas.
+  try {
+    const dejaVu = new Set(aTraiter.map((d) => d.id));
+    const recentes = await db.collection("notifs").where("ts", ">=", MAINTENANT - RATTRAPAGE_MS).limit(500).get();
+    for (const d of recentes.docs) {
+      const n = d.data();
+      if (!n || dejaVu.has(d.id) || Object.prototype.hasOwnProperty.call(n, "pushed")) continue;
+      if (String(d.id).startsWith("n_")) continue;     // « une seule fois » : jamais envoyées ici
+      aTraiter.push(d); nAnciennes++;
+    }
+  } catch (e) {
+    console.warn("  ! rattrapage des anciennes versions impossible :", e && e.message ? e.message : e);
+  }
+  nAttente = aTraiter.length;
 
   // Regroupement par destinataire
   const parCible = new Map();
   const ignorees = [];
-  for (const d of snap.docs) {
+  for (const d of aTraiter) {
     const n = d.data();
     // Sécurité : les notifications « une seule fois » (rappels, réactions)
     // ont un identifiant « n_… » : jamais envoyées par cette partie.
@@ -266,7 +326,8 @@ try {
     }
     await marquer(liste);
   }
-  console.log(`✓ Notifications — ${nAttente} en attente, ${nPerimees} trop ancienne(s) ignorée(s), ${nGroupees} regroupée(s).`);
+  console.log(`✓ Notifications — ${nAttente} en attente (dont ${nAnciennes} d'une ancienne version de l'app), ` +
+              `${nPerimees} trop ancienne(s) ignorée(s), ${nGroupees} regroupée(s).`);
 } catch (e) {
   console.warn("! Notifications interrompues :", e && e.message ? e.message : e);
 }
@@ -335,14 +396,14 @@ if (veilleOk || jourOk) {
     /* --- Récapitulatif → le cabinet --- */
     for (const [tag, jour, libelle, ok] of [["j1", DEMAIN, "Demain", veilleOk], ["j0", AUJOURD_HUI, "Aujourd'hui", jourOk]]) {
       if (!ok) continue;
-      const nbRdv = rdvs.filter((r) => r.date === jour && (r.status === "confirme" || r.status === "attente")).length;
-      const nbVax = rappels.filter((r) => r.nextDate === jour).length;
-      if (!nbRdv && !nbVax) continue;
-      const parts = [];
-      if (nbRdv) parts.push(`${nbRdv} rendez-vous`);
-      if (nbVax) parts.push(`${nbVax} rappel${nbVax > 1 ? "s" : ""} de vaccin`);
+      // v1.3.8 : confirmés et demandes en attente comptés à part.
+      const duJour = rdvs.filter((r) => r.date === jour);
+      const texte  = texteRecap(duJour.filter((r) => r.status === "confirme").length,
+                                duJour.filter((r) => r.status === "attente").length,
+                                rappels.filter((r) => r.nextDate === jour).length);
+      if (!texte) continue;
       jobs.push({ cle: `adm_${tag}_${jour}`, cible: "admin", kind: "rdv",
-                  titre: `📋 ${libelle} au cabinet`, texte: parts.join(" · ") });
+                  titre: `📋 ${libelle} au cabinet`, texte });
     }
 
     let deja = 0;
