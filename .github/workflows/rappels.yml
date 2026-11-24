@@ -1,7 +1,6 @@
 # =====================================================================
-#  ANIMAUX D'ABORD — Robot des notifications push (v1.3.7)
+#  ANIMAUX D'ABORD — Robot des notifications push (v1.3.8)
 #  ---------------------------------------------------------------------
-#  GitHub exécute ce robot toutes les 5 minutes, gratuitement (dépôt public).
 #  Il envoie sur les téléphones, même application fermée :
 #   • les notifications de l'app (rendez-vous confirmé, commande, message,
 #     nouvelle astuce, nouvelle story…) ;
@@ -9,8 +8,13 @@
 #     heure de Tunis) ;
 #  puis il fait l'entretien de la base toutes les 3 h.
 #
-#  Remarque : GitHub peut retarder une exécution programmée de quelques
-#  minutes quand ses serveurs sont chargés. C'est normal.
+#  QUI LE RÉVEILLE ?
+#   1) cron-job.org (gratuit), toutes les 5 minutes : il appelle GitHub avec
+#      le mode « auto ». C'est le réveil principal, fiable.
+#   2) La programmation de GitHub ci-dessous, en SECOURS seulement : GitHub
+#      la retarde souvent de plusieurs heures, ou la saute.
+#   3) Le bouton « Run workflow » (mode « manuel » par défaut) : tout est
+#      envoyé tout de suite, rappels compris, même hors des heures d'envoi.
 #
 #  À faire une seule fois : déposer la clé de service dans
 #  Settings → Secrets and variables → Actions → New repository secret
@@ -20,8 +24,16 @@ name: Rappels push (vaccins et rendez-vous)
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # toutes les 5 minutes
-  workflow_dispatch:         # bouton « Run workflow » : envoi immédiat (rappels compris)
+    - cron: "4,19,34,49 * * * *"   # secours : toutes les 15 min (hors des heures pleines)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "manuel = tout envoyer maintenant (rappels compris) · auto = comme un réveil automatique"
+        type: choice
+        options:
+          - manuel
+          - auto
+        default: manuel
 
 # Deux exécutions ne doivent jamais se chevaucher.
 concurrency:
@@ -49,4 +61,5 @@ jobs:
         working-directory: scripts
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          MODE_LANCEMENT: ${{ inputs.mode }}
         run: node envoyer-rappels.mjs
