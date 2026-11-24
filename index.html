@@ -1372,7 +1372,7 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.3.6";
+const APP_VERSION = "1.3.7";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
 /* v1.3.6 : page Google Play de l'application (bouton « Donner mon avis »). */
@@ -1786,6 +1786,10 @@ const AR_DICT = {
   // v1.3.6
   "Connexion en cours… La connexion Internet semble lente.":"جارٍ الاتصال… يبدو أن الإنترنت بطيء.",
   "Calendrier":"التقويم","Liste":"القائمة","À venir":"القادمة","Passés":"السابقة",
+  // v1.3.7
+  "À traiter":"للمعالجة","Prêtes":"جاهزة","Livrées":"تم تسليمها","Annulées":"ملغاة","Toutes":"الكل",
+  "Aucune commande":"لا توجد طلبات",
+  "Rechercher un client ou un n° de commande…":"ابحث عن حريف أو رقم طلب…",
   "Rechercher un client ou un animal…":"ابحث عن حريف أو حيوان…",
   "Rien à afficher pour ce choix.":"لا شيء لعرضه لهذا الاختيار.",
   "Utilisez la recherche pour affiner.":"استعمل البحث لتضييق النتائج.",
@@ -2109,6 +2113,15 @@ const App = {
     const u=this.currentUser();
     if(!u){ this.show("screen-auth"); this.switchAuth("login"); return; }
     if(u.role==="admin") this.openAdmin(); else this.openClient();
+    // v1.3.7 : ouverture depuis une notification (app fermée)
+    if(this._notifKind===undefined){
+      try{ const m=/(?:^#|&)n=([a-z_]+)/.exec(location.hash||""); this._notifKind=m?m[1]:null; }catch(e){ this._notifKind=null; }
+    }
+    if(this._notifKind){
+      const k=this._notifKind; this._notifKind=null;
+      try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
+      setTimeout(()=>{ try{ this.onNotifClick(k); }catch(e){} }, 400);
+    }
   },
   normPhone(s){ return (s||"").replace(/\s+/g,"").trim(); },
   // Réduit un numéro à sa forme canonique (chiffres seuls, sans indicatif +216)
@@ -2786,8 +2799,10 @@ const App = {
   },
 
   /* ---------- NOTIFICATIONS ---------- */
+  // v1.3.7 : « pushed:false » = à envoyer sur le téléphone. Le robot GitHub
+  // (toutes les 5 min) l'envoie puis passe « pushed » à true.
   notify(target, kind, title, body){
-    DB.push("notifs",{id:this.uid("n"),target,kind,title,body,ts:Date.now(),lu:false});
+    DB.push("notifs",{id:this.uid("n"),target,kind,title,body,ts:Date.now(),lu:false,pushed:false});
     // secoue la cloche du destinataire s'il est connecté
     const u=this.currentUser();
     if(u && (target==="admin"?u.role==="admin":target===u.id)) this.ringBell();
@@ -2795,13 +2810,31 @@ const App = {
   // Variante « une seule fois » : l'identifiant est calculé à partir de la clé
   // (ex. "rdv_j1_r175…"). Le serveur de rappels écrit exactement le même id,
   // donc les deux écritures fusionnent dans Firestore : jamais de doublon.
+  // v1.3.7 : « pushed:true » = jamais renvoyée par le robot (rappels : le robot
+  // les envoie lui-même à heure fixe ; réactions : cloche seulement).
+  // La clé est aussi retenue sur l'appareil : une notification effacée
+  // (« Tout effacer ») ne réapparaît plus toutes les 30 s.
   notifyOnce(key, target, kind, title, body){
     const id = "n_" + key;
     if(DB.get("notifs",[]).some(n=>String(n.id)===id)) return false;
-    DB.push("notifs",{id,target,kind,title,body,ts:Date.now(),lu:false});
+    if(this._notifDejaCree(id)) return false;
+    this._notifRetenir(id);
+    DB.push("notifs",{id,target,kind,title,body,ts:Date.now(),lu:false,pushed:true});
     const u=this.currentUser();
     if(u && (target==="admin"?u.role==="admin":target===u.id)) this.ringBell();
     return true;
+  },
+  _notifCrees(){ try{ const l=JSON.parse(localStorage.getItem("ad_notifCrees")||"[]"); return Array.isArray(l)?l:[]; }catch(e){ return []; } },
+  _notifDejaCree(id){ return this._notifCrees().indexOf(String(id))>=0; },
+  _notifRetenir(id){ try{ const l=this._notifCrees(); if(l.indexOf(String(id))<0){ l.push(String(id)); localStorage.setItem("ad_notifCrees", JSON.stringify(l.slice(-400))); } }catch(e){} },
+  // v1.3.7 : annonce envoyée sur le téléphone de TOUS les clients (nouvelle
+  // astuce, nouvelle story). Elle n'apparaît dans aucune cloche : le robot
+  // l'envoie puis la marque « pushed ».
+  _diffuser(kind, title, body){
+    try{
+      if(!this.isAdmin()) return;
+      DB.push("notifs",{id:this.uid("n"),target:"tous",kind,title,body:String(body||"").slice(0,140),ts:Date.now(),lu:true,pushed:false});
+    }catch(e){ console.warn("diffusion", e); }
   },
   myNotifs(){
     const u=this.currentUser(); if(!u) return [];
@@ -2848,7 +2881,7 @@ const App = {
     DB.set("notifs", DB.get("notifs",[]).filter(n=>n.target!==tg));
     this.renderNotifsPanel(); this.renderBell();
   },
-  notifIcon(k){ return ({rdv:"📅",rdv_ok:"✅",rdv_no:"❌",order:"📦",order_up:"📦",question:"💬",answer:"💬",advice:"💡",record:"🩺",vax:"💉",stock:"⚠️",account_del:"🗑️",com:"💬",com_rep:"↩️",story:"🥰"}[k])||"🔔"; },
+  notifIcon(k){ return ({post:"💡",rdv:"📅",rdv_ok:"✅",rdv_no:"❌",order:"📦",order_up:"📦",question:"💬",answer:"💬",advice:"💡",record:"🩺",vax:"💉",stock:"⚠️",account_del:"🗑️",com:"💬",com_rep:"↩️",story:"🥰"}[k])||"🔔"; },
   renderNotifsPanel(){
     const w=document.getElementById("notif-list"); if(!w) return;
     const list=this.myNotifs();
@@ -2866,9 +2899,12 @@ const App = {
     const go=(t,n)=>this.showTab(t,n);
     if(kind==="com" || kind==="com_rep"){ admin?go("atab-home","admin-nav"):go("tab-home","client-nav"); return; }   // anciennes notifications (v1.3.3)
     if(kind==="rdv") admin?go("atab-rdv","admin-nav"):go("tab-rdv","client-nav");
-    else if(kind==="rdv_ok"||kind==="rdv_no") go("tab-rdv","client-nav");
+    else if(kind==="rdv_ok"||kind==="rdv_no") admin?go("atab-rdv","admin-nav"):go("tab-rdv","client-nav");
     else if(kind==="order") go("atab-orders","admin-nav");
-    else if(kind==="order_up") go("tab-shop","client-nav");
+    else if(kind==="order_up") admin?go("atab-orders","admin-nav"):go("tab-shop","client-nav");
+    else if(kind==="stock" && admin) go("atab-shop","admin-nav");                                  // v1.3.7
+    else if(kind==="post" && !admin) go("tab-home","client-nav");                                  // v1.3.7
+    else if(kind==="story" && !admin){ go("tab-home","client-nav"); if(this.activeStories().length) this.openStories(); }   // v1.3.7
     else if(kind==="question") go("atab-msg","admin-nav");
     else if(kind==="answer"||kind==="advice") go("tab-msg","client-nav");
     else if(kind==="record"||kind==="vax") go("tab-pets","client-nav");
@@ -5071,7 +5107,11 @@ const App = {
     if(!titre||!contenu){ this.toast("Titre et contenu requis.","err"); return; }
     const data={ type:document.getElementById("po-type").value, emo:(document.getElementById("po-emo").value||"").trim(), titre, contenu, image:this._postImg||null };
     if(this._postEdit){ DB.update("posts",this._postEdit,data); this.toast("Publication mise à jour ✓","ok"); }
-    else { DB.push("posts",Object.assign({id:this.uid("post"),date:Date.now(),createdAt:Date.now()},data)); this.toast("Publiée sur l'accueil des clients ! 📢","ok"); }
+    else {
+      DB.push("posts",Object.assign({id:this.uid("post"),date:Date.now(),createdAt:Date.now()},data)); this.toast("Publiée sur l'accueil des clients ! 📢","ok");
+      // v1.3.7 : notification sur le téléphone de tous les clients
+      this._diffuser("post", data.type==="astuce" ? "💡 Nouvelle astuce du Dr. Asma" : "📰 Nouvelle actualité du cabinet", titre);
+    }
     this.closeSheet(); this.renderAll();
   },
   deletePost(id){
@@ -5446,6 +5486,7 @@ const App = {
      ============================================================ */
   renderOrders(){
     const w=document.getElementById("aorders-c"); if(!w) return;
+    if(document.activeElement && document.activeElement.id==="ord-q" && document.getElementById("ord-liste-res")){ this._ordMajListe(); return; }
     const orders=DB.get("orders",[]).slice().sort((a,b)=>b.createdAt-a.createdAt);
     const pending=orders.filter(o=>o.status==="attente"||o.status==="preparation");
     let html=`<div class="stat-grid">
@@ -5456,8 +5497,32 @@ const App = {
       html+=`<div class="empty"><span class="ic">📦</span><div class="et">Aucune commande</div><div class="hint">Les commandes des clients apparaîtront ici.</div></div>`;
       w.innerHTML=html; return;
     }
+    // v1.3.7 : filtres par statut + recherche (comme la liste de l'agenda)
+    const f=this._ordFiltre||"atraiter";
+    const nb=k=> k==="atraiter" ? pending.length : (k==="toutes" ? orders.length : orders.filter(o=>o.status===k).length);
+    const chip=(id,lbl)=>`<button class="chip ${f===id?"on":""}" onclick="App.setOrdFiltre('${id}')">${lbl} <span class="badge b-grey" style="padding:1px 7px">${nb(id)}</span></button>`;
+    html+=`<div class="chip-row mb" style="margin-top:12px">${chip("atraiter","📦 À traiter")}${chip("attente","⏳ En attente")}${chip("preparation","🧑‍🍳 En préparation")}${chip("prete","✅ Prêtes")}${chip("livree","🚚 Livrées")}${chip("annulee","✖️ Annulées")}${chip("toutes","📚 Toutes")}</div>
+      <div class="field" style="margin-bottom:12px"><input class="input" id="ord-q" type="search" value="${this.escape(this._ordQ||"")}"
+        placeholder="Rechercher un client ou un n° de commande…" oninput="App._ordQ=this.value;App._ordMajListe()" autocomplete="off"></div>
+      <div id="ord-liste-res">${this._ordListeRes(orders)}</div>`;
+    w.innerHTML=html;
+  },
+  setOrdFiltre(f){ this._ordFiltre=f; this.renderOrders(); },
+  _ordMajListe(){ const r=document.getElementById("ord-liste-res"); if(r){ r.innerHTML=this._ordListeRes(DB.get("orders",[]).slice().sort((a,b)=>b.createdAt-a.createdAt)); try{ this.translateDOM(); }catch(e){} } },
+  _ordListeRes(all){
+    const f=this._ordFiltre||"atraiter";
+    let orders = f==="atraiter" ? all.filter(o=>o.status==="attente"||o.status==="preparation")
+               : (f==="toutes" ? all : all.filter(o=>o.status===f));
+    const q=(this._ordQ||"").trim().toLowerCase().replace(/^#/,"");
+    if(q){
+      orders=orders.filter(o=>{
+        const cli=DB.find("users",o.clientId)||{};
+        return [o.clientNom, cli.nom, cli.tel, String(o.id||"").slice(-4)].some(x=>x && String(x).toLowerCase().indexOf(q)>=0);
+      });
+    }
+    if(!orders.length) return `<div class="empty"><span class="ic">📦</span><div class="et">Aucune commande</div><div class="hint">Rien à afficher pour ce choix.</div></div>`;
     const statusOpts=(cur)=>Object.keys(ORDER_STATUS).map(k=>`<option value="${k}" ${k===cur?"selected":""}>${ORDER_STATUS[k].label}</option>`).join("");
-    html+=`<div class="stagger">`+orders.map(o=>{ const st=ORDER_STATUS[o.status]||ORDER_STATUS.attente;
+    return `<div class="stagger">`+orders.map(o=>{ const st=ORDER_STATUS[o.status]||ORDER_STATUS.attente;
       const cli=DB.find("users",o.clientId);
       return `<div class="order">
         <div class="o-top"><span class="o-id">#${o.id.slice(-4).toUpperCase()} · ${this.escape(o.clientNom||"Client")}</span><span class="badge ${st.badge}">${st.label}</span></div>
@@ -5472,7 +5537,6 @@ const App = {
             ${(o.status==="livree"||o.status==="annulee")?`<button class="btn btn-danger btn-sm" onclick="App.deleteOrder('${o.id}')" title="Supprimer la commande">🗑️</button>`:""}
           </div></div>
       </div>`; }).join("")+`</div>`;
-    w.innerHTML=html;
   },
   setOrderStatus(id,status){
     const patch={status};
@@ -6817,7 +6881,10 @@ const StoryEd = {
       if(edStr){ extra.ed=edStr; if(src) extra.src=src; }
       const modif=st.edit;
       if(modif) await window.Cloud.updateStory(modif.id, img, "", extra, modif);
-      else await window.Cloud.addStory(img, "", extra);
+      else {
+        await window.Cloud.addStory(img, "", extra);
+        App._diffuser("story", "📸 Nouvelle story du cabinet", "Découvrez-la dans l'app 🐾");   // v1.3.7
+      }
       this.fermer(true);
       App.toast(modif ? "Story modifiée ✨" : "Story publiée ! Elle disparaîtra dans 24 h. ✨","ok");
       App.renderStoryRings();
@@ -7160,8 +7227,9 @@ document.addEventListener("DOMContentLoaded", function(){
       const A = appRef();
       const u = (A && A.currentUser) ? A.currentUser() : null;
       if(!u) throw new Error("aucun-compte-connecte");
+      let lang = "fr"; try{ lang = localStorage.getItem("ad_lang") || "fr"; }catch(e){}
       await setDoc(doc(db, TOKENS_COLL, deviceId()),
-        { userId:u.id, role:u.role || null, nom:u.nom || "", updatedAt:Date.now() },
+        { userId:u.id, role:u.role || null, nom:u.nom || "", lang, updatedAt:Date.now() },
         { merge:true });
       this.linkedTo = u.id;      // confirme : l'ecriture a reussi
       return u.id;

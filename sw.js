@@ -8,7 +8,7 @@
      au réseau, JAMAIS interceptées → la synchro cloud temps réel fonctionne.
    Pense à incrémenter CACHE_VERSION à chaque mise à jour du site.
    ===================================================================== */
-const CACHE_VERSION = "animaux-dabord-v29";
+const CACHE_VERSION = "animaux-dabord-v30";
 // v1.3.6 : bibliothèques Firebase (gstatic, versions figées) gardées sur le
 // téléphone → l'app démarre vite même après plusieurs jours sans l'ouvrir.
 const LIBS_CACHE = "animaux-dabord-libs-firebase-10.12.2";
@@ -145,7 +145,10 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const info = event.notification.data || {};
-  const target = new URL(info.url || "./index.html", self.location.href).href;
+  // v1.3.7 : « #n=<type> » → l'app ouvre directement le bon onglet.
+  const u = new URL(info.url || "./index.html", self.location.href);
+  if (info.kind && /^[a-z_]+$/.test(info.kind)) u.hash = "n=" + info.kind;
+  const target = u.href;
 
   event.waitUntil((async () => {
     const wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
