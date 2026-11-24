@@ -1,24 +1,27 @@
 # =====================================================================
-#  ANIMAUX D'ABORD — Rappels automatiques (vaccins et rendez-vous)
+#  ANIMAUX D'ABORD — Robot des notifications push (v1.3.7)
 #  ---------------------------------------------------------------------
-#  GitHub exécute ce robot deux fois par jour, gratuitement. Il envoie les
-#  notifications push aux clients et au cabinet, même application fermée.
+#  GitHub exécute ce robot toutes les 5 minutes, gratuitement (dépôt public).
+#  Il envoie sur les téléphones, même application fermée :
+#   • les notifications de l'app (rendez-vous confirmé, commande, message,
+#     nouvelle astuce, nouvelle story…) ;
+#   • les rappels à heure fixe (veille 18:00-22:00, jour J 07:30-12:00,
+#     heure de Tunis) ;
+#  puis il fait l'entretien de la base toutes les 3 h.
 #
-#  Les heures sont en UTC. La Tunisie est à UTC+1 toute l'année :
-#     06:30 UTC = 07:30 à Tunis  → rappels du jour même + veille
-#     17:00 UTC = 18:00 à Tunis  → rattrapage de fin de journée
+#  Remarque : GitHub peut retarder une exécution programmée de quelques
+#  minutes quand ses serveurs sont chargés. C'est normal.
 #
 #  À faire une seule fois : déposer la clé de service dans
 #  Settings → Secrets and variables → Actions → New repository secret
-#  Nom du secret : FIREBASE_SERVICE_ACCOUNT
+#  Nom du secret : FIREBASE_SERVICE_ACCOUNT   (déjà fait)
 # =====================================================================
 name: Rappels push (vaccins et rendez-vous)
 
 on:
   schedule:
-    - cron: "30 6 * * *"    # 07:30 heure de Tunis
-    - cron: "0 17 * * *"    # 18:00 heure de Tunis
-  workflow_dispatch:         # bouton « Run workflow » pour tester à la demande
+    - cron: "*/5 * * * *"   # toutes les 5 minutes
+  workflow_dispatch:         # bouton « Run workflow » : envoi immédiat (rappels compris)
 
 # Deux exécutions ne doivent jamais se chevaucher.
 concurrency:
@@ -28,7 +31,7 @@ concurrency:
 jobs:
   envoyer:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - name: Récupérer le code
         uses: actions/checkout@v5
@@ -42,7 +45,7 @@ jobs:
         working-directory: scripts
         run: npm install --omit=dev --no-audit --no-fund
 
-      - name: Envoyer les rappels
+      - name: Envoyer les notifications
         working-directory: scripts
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
