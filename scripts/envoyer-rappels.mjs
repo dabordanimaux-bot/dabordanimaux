@@ -22,7 +22,9 @@
         • cabinet : nouveau rendez-vous, nouvelle commande, question,
                     annulation, stock faible ;
         • « tous » : nouvelle astuce / actualité, nouvelle story (tous les
-                    clients ; jamais plus d'une story toutes les 2 h).
+                    clients ; au plus une annonce de story toutes les 2 h —
+                    v1.3.8 : les stories publiées pendant cette pause sont
+                    gardées et annoncées ensemble dès la fin de la pause).
       Les réactions (j'aime, cœur…) restent dans la cloche de l'app.
       v1.3.8 : les notifications créées par une ANCIENNE version de l'app
       (sans le champ « pushed ») sont aussi envoyées, si elles ont moins de
@@ -236,7 +238,7 @@ async function envoyer(appareils, { titre, texte, kind, cle, titreAr, texteAr })
 /* ================================================================ */
 /*  1) NOTIFICATIONS DE L'APP EN ATTENTE → TÉLÉPHONE                 */
 /* ================================================================ */
-let nAttente = 0, nPerimees = 0, nGroupees = 0, nAnciennes = 0;
+let nAttente = 0, nPerimees = 0, nGroupees = 0, nAnciennes = 0, nEnPause = 0, finPauseTxt = "";
 try {
   const snap = await db.collection("notifs").where("pushed", "==", false).limit(300).get();
   const aTraiter = snap.docs.slice();
@@ -283,6 +285,7 @@ try {
     liste.sort((a, b) => (+a.ts || 0) - (+b.ts || 0));
     const fraiches = liste.filter((n) => MAINTENANT - (+n.ts || 0) <= PERIME_MS);
     nPerimees += liste.length - fraiches.length;
+    const garder = new Set();   // v1.3.8 : stories gardées pendant la pause (non marquées)
 
     if (cible === "tous") {
       // Annonces à tous les clients, regroupées par type.
@@ -292,7 +295,15 @@ try {
         if (kind === "story") {
           const refPause = db.collection("pushLog").doc("pause_story");
           const pause = await refPause.get();
-          if (pause.exists && MAINTENANT - (+pause.data().ts || 0) < PAUSE_STORY_MS) { nGroupees += items.length; continue; }
+          const finPause = pause.exists ? (+pause.data().ts || 0) + PAUSE_STORY_MS : 0;
+          if (MAINTENANT < finPause) {
+            // v1.3.8 : pendant la pause, les stories ne sont plus perdues :
+            // elles restent « à envoyer » et partent ensemble à la fin de la pause.
+            items.forEach((n) => garder.add(n.id));
+            nEnPause += items.length;
+            finPauseTxt = hhmmTunis(new Date(finPause));
+            continue;
+          }
           await envoyer(await jetonsDe("tous"), {
             titre: dernier.title || "📸 Nouvelle story du cabinet",
             texte: items.length > 1 ? `${items.length} nouvelles stories — découvrez-les dans l'app 🐾` : (dernier.body || ""),
@@ -324,10 +335,13 @@ try {
         nGroupees += fraiches.length - 1;
       }
     }
-    await marquer(liste);
+    await marquer(liste.filter((n) => !garder.has(n.id)));
   }
   console.log(`✓ Notifications — ${nAttente} en attente (dont ${nAnciennes} d'une ancienne version de l'app), ` +
               `${nPerimees} trop ancienne(s) ignorée(s), ${nGroupees} regroupée(s).`);
+  if (nEnPause)
+    console.log(`• Stories — ${nEnPause} nouvelle(s) story(s) gardée(s) : pause de 2 h entre deux annonces, ` +
+                `annonce prévue vers ${finPauseTxt}.`);
 } catch (e) {
   console.warn("! Notifications interrompues :", e && e.message ? e.message : e);
 }
