@@ -22,7 +22,8 @@
         • cabinet : nouveau rendez-vous, nouvelle commande, question,
                     annulation, stock faible ;
         • « tous » : nouvelle astuce / actualité, nouvelle story (tous les
-                    clients ; v1.3.8 : chaque story est annoncée au réveil
+                    téléphones rattachés à un compte client, même sans
+                    l'étiquette « client » ; v1.3.8 : chaque story est annoncée au réveil
                     suivant, sans pause — plusieurs stories publiées entre
                     deux réveils = une seule annonce).
       Les réactions (j'aime, cœur…) restent dans la cloche de l'app.
@@ -172,16 +173,41 @@ function texteRecap(nbConf, nbAtt, nbVax) {
 //   "admin" → les appareils du cabinet ; "tous" → tous les clients ;
 //   sinon → les appareils du compte client.
 const cacheJetons = new Map();
+let nonMarques = 0;   // v1.3.8 : téléphones clients sans l'étiquette « client » (journal)
+
 async function jetonsDe(cible) {
   if (cacheJetons.has(cible)) return cacheJetons.get(cible);
   const col = db.collection("pushTokens");
-  const q = cible === "admin" ? col.where("role", "==", "admin")
-          : cible === "tous"  ? col.where("role", "==", "client")
-          : col.where("userId", "==", cible);
-  const snap = await q.get();
-  const liste = snap.docs
-    .map((d) => ({ docId: d.id, token: d.data().token, lang: d.data().lang === "ar" ? "ar" : "fr" }))
-    .filter((x) => !!x.token);
+  const versAppareil = (d) => ({ docId: d.id, token: d.data().token, lang: d.data().lang === "ar" ? "ar" : "fr" });
+  let liste;
+  if (cible === "tous") {
+    // v1.3.8 — ANNONCES À TOUS LES CLIENTS : l'étiquette « role » n'est écrite
+    // sur la fiche qu'à la prochaine ouverture de l'app ; on ne s'y fie donc
+    // plus. On prend toutes les fiches rattachées à un compte, sauf celles du
+    // cabinet (étiquette « admin » ou compte du docteur). Un même téléphone
+    // n'est servi qu'une fois.
+    const [fiches, admins] = await Promise.all([
+      col.get(),
+      db.collection("users").where("role", "==", "admin").get()
+    ]);
+    const idsAdmin = new Set(admins.docs.map((d) => d.id));
+    const vus = new Set();
+    liste = [];
+    nonMarques = 0;
+    for (const d of fiches.docs) {
+      const f = d.data() || {};
+      if (!f.token || !f.userId) continue;                       // téléphone déconnecté
+      if (f.role === "admin" || idsAdmin.has(String(f.userId))) continue;
+      if (vus.has(f.token)) continue;
+      vus.add(f.token);
+      if (f.role !== "client") nonMarques++;
+      liste.push(versAppareil(d));
+    }
+  } else {
+    const q = cible === "admin" ? col.where("role", "==", "admin") : col.where("userId", "==", cible);
+    const snap = await q.get();
+    liste = snap.docs.map(versAppareil).filter((x) => !!x.token);
+  }
   cacheJetons.set(cible, liste);
   return liste;
 }
@@ -307,7 +333,8 @@ try {
             kind: "post", cle: "diff_" + dernier.id
           });
         }
-        annonces.push(`${kind === "story" ? "story" : "publication"} (${items.length}) → ${recus}/${clients.length} téléphone(s) client(s)`);
+        annonces.push(`${kind === "story" ? "story" : "publication"} (${items.length}) → ${recus}/${clients.length} téléphone(s) client(s)` +
+                      (nonMarques ? `, dont ${nonMarques} pas encore marqué(s) « client »` : ""));
         nGroupees += items.length - 1;
       }
     } else if (fraiches.length) {
