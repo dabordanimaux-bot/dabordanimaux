@@ -22,9 +22,9 @@
         • cabinet : nouveau rendez-vous, nouvelle commande, question,
                     annulation, stock faible ;
         • « tous » : nouvelle astuce / actualité, nouvelle story (tous les
-                    clients ; au plus une annonce de story toutes les 2 h —
-                    v1.3.8 : les stories publiées pendant cette pause sont
-                    gardées et annoncées ensemble dès la fin de la pause).
+                    clients ; v1.3.8 : chaque story est annoncée au réveil
+                    suivant, sans pause — plusieurs stories publiées entre
+                    deux réveils = une seule annonce).
       Les réactions (j'aime, cœur…) restent dans la cloche de l'app.
       v1.3.8 : les notifications créées par une ANCIENNE version de l'app
       (sans le champ « pushed ») sont aussi envoyées, si elles ont moins de
@@ -76,7 +76,6 @@ const FEN_JOUR          = [7 * 60 + 30, 12 * 60];    // 07:30 → 12:00
 const PERIME_MS         = 12 * 3600 * 1000;          // notification trop ancienne : on ne l'envoie plus
 const RATTRAPAGE_MS     = 30 * 60 * 1000;            // v1.3.8 : ancienne version de l'app → 30 dernières minutes
 const MAX_PAR_PERSONNE  = 3;                         // au-delà, un seul message résumé
-const PAUSE_STORY_MS    = 2 * 3600 * 1000;           // au plus une annonce de story toutes les 2 h
 const ENTRETIEN_MS      = 3 * 3600 * 1000;           // entretien toutes les 3 h
 
 /* ---------------------------------------------------------------- */
@@ -238,7 +237,8 @@ async function envoyer(appareils, { titre, texte, kind, cle, titreAr, texteAr })
 /* ================================================================ */
 /*  1) NOTIFICATIONS DE L'APP EN ATTENTE → TÉLÉPHONE                 */
 /* ================================================================ */
-let nAttente = 0, nPerimees = 0, nGroupees = 0, nAnciennes = 0, nEnPause = 0, finPauseTxt = "";
+let nAttente = 0, nPerimees = 0, nGroupees = 0, nAnciennes = 0;
+const annonces = [];   // v1.3.8 : détail des annonces à tous les clients (journal)
 try {
   const snap = await db.collection("notifs").where("pushed", "==", false).limit(300).get();
   const aTraiter = snap.docs.slice();
@@ -285,38 +285,29 @@ try {
     liste.sort((a, b) => (+a.ts || 0) - (+b.ts || 0));
     const fraiches = liste.filter((n) => MAINTENANT - (+n.ts || 0) <= PERIME_MS);
     nPerimees += liste.length - fraiches.length;
-    const garder = new Set();   // v1.3.8 : stories gardées pendant la pause (non marquées)
 
     if (cible === "tous") {
       // Annonces à tous les clients, regroupées par type.
       for (const kind of [...new Set(fraiches.map((n) => n.kind || "post"))]) {
         const items = fraiches.filter((n) => (n.kind || "post") === kind);
         const dernier = items[items.length - 1];
+        // v1.3.8 : plus de pause — chaque annonce part au réveil suivant.
+        const clients = await jetonsDe("tous");
+        let recus;
         if (kind === "story") {
-          const refPause = db.collection("pushLog").doc("pause_story");
-          const pause = await refPause.get();
-          const finPause = pause.exists ? (+pause.data().ts || 0) + PAUSE_STORY_MS : 0;
-          if (MAINTENANT < finPause) {
-            // v1.3.8 : pendant la pause, les stories ne sont plus perdues :
-            // elles restent « à envoyer » et partent ensemble à la fin de la pause.
-            items.forEach((n) => garder.add(n.id));
-            nEnPause += items.length;
-            finPauseTxt = hhmmTunis(new Date(finPause));
-            continue;
-          }
-          await envoyer(await jetonsDe("tous"), {
+          recus = await envoyer(clients, {
             titre: dernier.title || "📸 Nouvelle story du cabinet",
             texte: items.length > 1 ? `${items.length} nouvelles stories — découvrez-les dans l'app 🐾` : (dernier.body || ""),
             kind: "story", cle: "diff_" + dernier.id
           });
-          if (!DRY_RUN) await refPause.set({ ts: MAINTENANT, expireAt: new Date(MAINTENANT + 86400000) });
         } else {
-          await envoyer(await jetonsDe("tous"), {
+          recus = await envoyer(clients, {
             titre: dernier.title || "💡 Nouvelle astuce du Dr. Asma",
             texte: items.length > 1 ? `${dernier.body || ""} — et ${items.length - 1} autre(s) publication(s)` : (dernier.body || ""),
             kind: "post", cle: "diff_" + dernier.id
           });
         }
+        annonces.push(`${kind === "story" ? "story" : "publication"} (${items.length}) → ${recus}/${clients.length} téléphone(s) client(s)`);
         nGroupees += items.length - 1;
       }
     } else if (fraiches.length) {
@@ -335,13 +326,11 @@ try {
         nGroupees += fraiches.length - 1;
       }
     }
-    await marquer(liste.filter((n) => !garder.has(n.id)));
+    await marquer(liste);
   }
   console.log(`✓ Notifications — ${nAttente} en attente (dont ${nAnciennes} d'une ancienne version de l'app), ` +
               `${nPerimees} trop ancienne(s) ignorée(s), ${nGroupees} regroupée(s).`);
-  if (nEnPause)
-    console.log(`• Stories — ${nEnPause} nouvelle(s) story(s) gardée(s) : pause de 2 h entre deux annonces, ` +
-                `annonce prévue vers ${finPauseTxt}.`);
+  if (annonces.length) console.log(`• Annonces à tous les clients — ${annonces.join(" ; ")}.`);
 } catch (e) {
   console.warn("! Notifications interrompues :", e && e.message ? e.message : e);
 }
