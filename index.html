@@ -1241,6 +1241,26 @@ try{ window.App = App; }catch(e){}
      écrits, et seulement les champs qui ont changé (avant v1.2 : toute la
      collection était réécrite à chaque modification → quotas Firestore).
    --------------------------------------------------------------------- */
+/* v1.3.9 : la date et l'heure DU CABINET (Tunis), même si le téléphone est
+   réglé sur un autre pays (client à l'étranger, téléphone de test Google…).
+   Avant, un téléphone à l'heure de New York voyait encore libres des
+   créneaux déjà passés à Tunis. En Tunisie, rien ne change. */
+function adTunis(){
+  const d=new Date();
+  try{
+    const p={};
+    new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Tunis",year:"numeric",month:"2-digit",day:"2-digit",
+      hour:"2-digit",minute:"2-digit",weekday:"short",hour12:false})
+      .formatToParts(d).forEach(x=>{ p[x.type]=x.value; });
+    const y=+p.year, mo=+p.month, j=+p.day, hh=(+p.hour)%24, mi=+p.minute;
+    const dow=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(p.weekday);
+    if(y && mo && j && !isNaN(hh) && !isNaN(mi) && dow>=0)
+      return { str:y+"-"+String(mo).padStart(2,"0")+"-"+String(j).padStart(2,"0"), y, m:mo-1, d:j, dow, min:hh*60+mi };
+  }catch(e){}
+  // Navigateur très ancien : heure du téléphone (comme avant).
+  return { str:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"),
+           y:d.getFullYear(), m:d.getMonth(), d:d.getDate(), dow:d.getDay(), min:d.getHours()*60+d.getMinutes() };
+}
 const DB = {
   _mem:Object.create(null),        // clé → texte JSON (source de vérité de la session)
   _horsDisque:Object.create(null), // clés gardées en mémoire seulement (localStorage plein)
@@ -1372,7 +1392,7 @@ const DEFAULT_POSTS = [];
    TRADUCTION ARABE (اللغة العربية) — dictionnaire FR → AR
    ============================================================ */
 /* Version affichée dans « À propos » (à augmenter à chaque mise à jour). */
-const APP_VERSION = "1.3.8";
+const APP_VERSION = "1.3.9";
 /* Adresse publique de l'application (GitHub Pages). */
 const PUBLIC_APP_URL = "https://dabordanimaux-bot.github.io/dabordanimaux/";
 /* v1.3.6 : page Google Play de l'application (bouton « Donner mon avis »). */
@@ -1757,6 +1777,7 @@ const AR_DICT = {
   "Musique indisponible : vérifiez la connexion Internet.":"الموسيقى غير متاحة: تحقّق من الاتصال بالإنترنت.",
   "Ajoutez une photo ou un texte.":"أضف صورة أو نصًا.",
   "Quitter sans publier ?":"الخروج دون نشر؟",
+  "Appuyez encore sur retour pour quitter":"اضغط على رجوع مرة أخرى للخروج",
   "Cabinet de Manouba":"عيادة منوبة",
   "Urgences 24h/24":"طوارئ 24/24",
   "Vaccination":"تلقيح",
@@ -2117,6 +2138,9 @@ const App = {
   currentUser(){ if(!this.session) return null; return DB.find("users", this.session.userId); },
   isAdmin(){ const u=this.currentUser(); return !!(u&&u.role==="admin"); },
   route(){
+    try{ this._route(); } finally { this._retourInit(); }   // v1.3.9 : bouton « retour »
+  },
+  _route(){
     const u=this.currentUser();
     if(!u){ this.show("screen-auth"); this.switchAuth("login"); return; }
     if(u.role==="admin") this.openAdmin(); else this.openClient();
@@ -2126,7 +2150,7 @@ const App = {
     }
     if(this._notifKind){
       const k=this._notifKind; this._notifKind=null;
-      try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
+      try{ history.replaceState(history.state,"",location.pathname+location.search); }catch(e){}
       setTimeout(()=>{ try{ this.onNotifClick(k); }catch(e){} }, 400);
       return;
     }
@@ -2525,6 +2549,83 @@ const App = {
     this.refreshInstall(); this.renderAll(); this.syncPushToken();
   },
 
+  /* ---------- v1.3.9 : bouton « retour » du téléphone ----------
+     Avant, « retour » quittait toute l'app (dans l'app Android, il n'y a pas
+     de page précédente). Maintenant, on garde quelques « marque-pages »
+     invisibles dans l'historique du navigateur. Chaque appui sur retour en
+     consomme un : on ferme ce qui est ouvert (story, photo, fenêtre…) ou on
+     revient à l'Accueil. Sur l'Accueil, rien d'ouvert : un message, et le
+     2e appui quitte l'app.
+     Les marque-pages ne sont ajoutés que pendant un toucher de l'utilisateur :
+     Chrome ignore ceux ajoutés sans geste (protection anti-piège). */
+  RETOUR_MAX:3,
+  _retourInit(){
+    if(this._retourPret) return; this._retourPret=true;
+    try{
+      const recharger=()=>this._retourRecharger();
+      ["pointerup","click","keydown"].forEach(ev=>document.addEventListener(ev, recharger, true));
+      window.addEventListener("popstate", ()=>this._retour());
+    }catch(e){}
+  },
+  _retourNiveau(){ try{ const s=history.state; return (s && +s.adRetour>0) ? +s.adRetour : 0; }catch(e){ return 0; } },
+  _retourRecharger(){
+    try{
+      if(this._retourSortie) return;               // on est en train de quitter
+      let n=this._retourNiveau();
+      while(n<this.RETOUR_MAX){ n++; history.pushState({adRetour:n}, ""); }
+    }catch(e){}
+  },
+  _retour(){
+    if(this._retourIgnorer){ this._retourIgnorer=false; clearTimeout(this._retourIgnT); return; }
+    let fait=false;
+    try{ fait=this._retourFermer() || this._retourAccueil(); }catch(e){ console.warn("retour", e); fait=true; }
+    if(fait) return;
+    // Accueil, rien d'ouvert : le prochain appui sur « retour » quitte l'app.
+    this.toast("Appuyez encore sur retour pour quitter","info",2500);
+    const k=this._retourNiveau();
+    if(k>0){
+      this._retourIgnorer=true; this._retourSortie=true;
+      clearTimeout(this._retourIgnT); this._retourIgnT=setTimeout(()=>{ this._retourIgnorer=false; }, 1500);
+      try{ history.go(-k); }catch(e){ this._retourIgnorer=false; }
+    }
+    // Si l'utilisateur continue à utiliser l'app, le retour est réarmé.
+    clearTimeout(this._retourSortT); this._retourSortT=setTimeout(()=>{ this._retourSortie=false; }, 2500);
+  },
+  // Ferme ce qui est au-dessus (du plus haut au plus bas). true = quelque chose a été fermé.
+  _retourFermer(){
+    const vu=id=>{ const e=document.getElementById(id); return !!(e && e.classList.contains("show")); };
+    if(window.StoryEd && StoryEd.ouvert()){
+      const st=StoryEd.st||{};
+      if(vu("se-textedit")) StoryEd.finTexte();
+      else if(vu("se-stickers")) StoryEd.fermerPanneau("se-stickers");
+      else if(vu("se-music")) StoryEd.fermerPanneau("se-music");
+      else if(st.dessin) StoryEd.modeDessin(false);
+      else StoryEd.fermer();                        // demande « Quitter sans publier ? » s'il y a du contenu
+      return true;
+    }
+    if(vu("img-viewer")){ this.closeZoom(); return true; }
+    if(vu("story-viewer")){ if(vu("sv-vues")) this.closeStoryViews(); else this.closeStories(); return true; }
+    if(vu("sheet-backdrop")){ this.closeSheet(); return true; }
+    if(vu("notif-panel")){ this.closeNotifs(); return true; }
+    const pick=document.querySelector(".ps-pick.show");
+    if(pick){ pick.classList.remove("show"); return true; }
+    return false;
+  },
+  // Autre onglet → Accueil ; inscription → connexion.
+  _retourAccueil(){
+    const actif=document.querySelector(".screen.active"); if(!actif) return false;
+    if(actif.id==="screen-auth"){
+      if(this.authMode==="register"){ this.switchAuth("login"); return true; }
+      return false;
+    }
+    const nav = actif.id==="app-admin" ? "admin-nav" : (actif.id==="app-client" ? "client-nav" : null);
+    const home = actif.id==="app-admin" ? "atab-home" : "tab-home";
+    if(!nav) return false;
+    const t=document.getElementById(home);
+    if(t && !t.classList.contains("active")){ this.showTab(home, nav); return true; }
+    return false;
+  },
+
   /* ---------- écrans / onglets ---------- */
   show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id)); window.scrollTo(0,0); },
   showTab(tabId, navId){
@@ -2544,7 +2645,8 @@ const App = {
   uid(p){ return (p||"x")+Date.now()+Math.floor(Math.random()*1000); },
   escape(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); },
   money(n){ const v=Math.round((+n||0)*1000)/1000; return v + " DT"; },
-  todayStr(){ const d=new Date(); return this.dstr(d); },
+  todayStr(){ return adTunis().str; },                  // v1.3.9 : date de Tunis
+  _moisCourant(){ const t=adTunis(); return new Date(t.y, t.m, 1); },
   dstr(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); },
   parseD(s){ const p=(s||"").split("-"); return new Date(+p[0],(+p[1]||1)-1,+p[2]||1); },
   MONTHS:["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"],
@@ -3358,12 +3460,12 @@ const App = {
   /* ---- Horaires : helpers temps ---- */
   hm2min(t){ const p=(t||"0:0").split(":"); return (+p[0]||0)*60+(+p[1]||0); },
   min2hm(m){ m=((m%1440)+1440)%1440; return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"); },
-  nowMin(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); },
+  nowMin(){ return adTunis().min; },                     // v1.3.9 : heure de Tunis
 
   /* ---- Statut du cabinet (ouvert / fermé / pause) ---- */
   clinicStatus(){
     const s=this.settings();
-    const now=new Date(); const day=now.getDay(); const cur=this.nowMin();
+    const day=adTunis().dow; const cur=this.nowMin();     // v1.3.9 : jour de Tunis
     const h=(s.hours&&(s.hours[day]||s.hours[String(day)]))||null;
     if(!h||!h.open) return {open:false, text:this.nextOpenText(day)};
     const from=this.hm2min(h.from), to=this.hm2min(h.to);
@@ -3716,7 +3818,7 @@ const App = {
      ============================================================ */
   renderRdvClient(){
     const w=document.getElementById("rdv-c"); if(!w) return;
-    if(!this._rdvMonth) this._rdvMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+    if(!this._rdvMonth) this._rdvMonth=this._moisCourant();
     w.innerHTML=`
       <div class="card mb">
         ${this.calHead("rdv")}
@@ -3734,7 +3836,7 @@ const App = {
       <div class="m">${label}</div>
       <button class="cal-nav" onclick="App.calMove('${ns}',1)">›</button></div>`;
   },
-  _monthOf(ns){ return ns==="ag" ? (this._agMonth||(this._agMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1))) : (this._rdvMonth||(this._rdvMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1))); },
+  _monthOf(ns){ return ns==="ag" ? (this._agMonth||(this._agMonth=this._moisCourant())) : (this._rdvMonth||(this._rdvMonth=this._moisCourant())); },
   calMove(ns,delta){
     const m=this._monthOf(ns); const nm=new Date(m.getFullYear(),m.getMonth()+delta,1);
     if(ns==="ag") this._agMonth=nm; else this._rdvMonth=nm;
@@ -4189,7 +4291,7 @@ const App = {
     const mapSrc=`https://www.google.com/maps?q=${mapQ}&z=16&output=embed`;
     const mapLink=`https://www.google.com/maps/search/?api=1&query=${mapQ}`;
     // ordre d'affichage : Lundi → Dimanche
-    const order=[1,2,3,4,5,6,0]; const today=new Date().getDay();
+    const order=[1,2,3,4,5,6,0]; const today=adTunis().dow;   // v1.3.9 : jour de Tunis
     const hoursRows=order.map(d=>{
       const h=(s.hours&&(s.hours[d]||s.hours[String(d)]))||null;
       const txt = (h&&h.open) ? (h.from+"–"+(h.bfrom?h.bfrom+", "+h.bto+"–":"")+h.to) : `<span class="cl">Fermé</span>`;
@@ -5175,7 +5277,7 @@ const App = {
   },
   renderAgenda(){
     const w=document.getElementById("agenda-c"); if(!w) return;
-    if(!this._agMonth) this._agMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+    if(!this._agMonth) this._agMonth=this._moisCourant();
     // v1.3.6 : deux vues — calendrier (jour par jour) ou liste de tous les RDV.
     const vue=this._agVue||"cal";
     const bascule=`<div class="chip-row mb">
@@ -7387,7 +7489,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
   const ACTIF = s => s === "attente" || s === "confirme";
   const idCreneau = (date, time) => String(date) + "_" + String(time);
-  const aujourdHui = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+  const aujourdHui = () => { if(typeof adTunis==="function") return adTunis().str;   // v1.3.9 : date de Tunis
+    const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
   const avecDelai = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("delai")), ms))]);
   const codeErr = e => (e && (e.code || e.message)) || String(e);
 

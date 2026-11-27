@@ -8,7 +8,7 @@
      au réseau, JAMAIS interceptées → la synchro cloud temps réel fonctionne.
    Pense à incrémenter CACHE_VERSION à chaque mise à jour du site.
    ===================================================================== */
-const CACHE_VERSION = "animaux-dabord-v31";
+const CACHE_VERSION = "animaux-dabord-v32";
 // v1.3.6 : bibliothèques Firebase (gstatic, versions figées) gardées sur le
 // téléphone → l'app démarre vite même après plusieurs jours sans l'ouvrir.
 const LIBS_CACHE = "animaux-dabord-libs-firebase-10.12.2";
